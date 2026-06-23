@@ -13,7 +13,7 @@ namespace Entities.Models
         public long CategoryId { get; set; } 
         public Category Category { get; set; }
         
-        public int SellerId { get; set; } 
+        public long SellerId { get; set; } 
         public Seller Seller { get; set; }
 
        

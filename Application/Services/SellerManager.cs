@@ -1,12 +1,16 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Entities.Models;
+using FluentValidation;
 using SirenStore.Application.DTOs;
 using SirenStore.Application.Interfaces; 
 
 namespace SirenStore.Application.Services
 {
     // IMapper mapper parametresini sınıfın yanına (Primary Constructor) ekledim
-    public class SellerManager(IRepository<Seller> sellerRepository, IMapper mapper) : ISellerService
+    public class SellerManager(
+        IRepository<Seller> sellerRepository,
+        IMapper mapper,
+        IValidator<CreateSellerDto> createSellerValidator) : ISellerService
     {
         public async Task<IEnumerable<SellerDto>> GetAllSellersAsync()
         {
@@ -24,6 +28,13 @@ namespace SirenStore.Application.Services
 
         public async Task CreateSellerAsync(CreateSellerDto dto)
         {
+            var validationResult = await createSellerValidator.ValidateAsync(dto);
+            if (!validationResult.IsValid)
+            {
+                var errors = string.Join(" | ", validationResult.Errors.Select(e => e.ErrorMessage));
+                throw new ValidationException(errors);
+            }
+
             var seller = mapper.Map<Seller>(dto);
 
             seller.IsApproved = false;
@@ -44,4 +55,4 @@ namespace SirenStore.Application.Services
             await sellerRepository.SaveChangesAsync();
         }
     }
-}
+}

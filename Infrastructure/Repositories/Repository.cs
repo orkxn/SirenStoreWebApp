@@ -14,7 +14,8 @@ namespace SirenStore.Infrastructure.Repositories
         protected readonly ApplicationDbContext _context = context;
         private readonly DbSet<T> _dbSet = context.Set<T>();
 
-        public async Task<T?> GetByIdAsync(long id) => await _dbSet.FindAsync(id);
+        public async Task<T?> GetByIdAsync(long id) =>
+            await _dbSet.FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
 
         public async Task<IEnumerable<T>> GetAllAsync() =>
             await _dbSet.Where(x => !x.IsDeleted).ToListAsync();

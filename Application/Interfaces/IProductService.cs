@@ -1,6 +1,6 @@
-﻿using SirenStore.Application.DTOs;
+using SirenStore.Application.DTOs;
 
-namespace SirenStore.Application.Services
+namespace SirenStore.Application.Interfaces
 {
     public interface IProductService
     {

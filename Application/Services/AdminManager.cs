@@ -1,12 +1,16 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Entities.Models;
 using Entities.Enums;
+using FluentValidation;
 using SirenStore.Application.DTOs;
 using SirenStore.Application.Interfaces;
 
 namespace SirenStore.Application.Services
 {
-    public class AdminManager(IRepository<User> userRepository, IMapper mapper) : IAdminService
+    public class AdminManager(
+        IRepository<User> userRepository,
+        IMapper mapper,
+        IValidator<CreateAdminDto> createAdminValidator) : IAdminService
     {
         public async Task<AdminDto?> GetAdminByIdAsync(long id)
         {
@@ -23,6 +27,13 @@ namespace SirenStore.Application.Services
 
         public async Task CreateAdminWithPasswordAsync(CreateAdminDto dto)
         {
+            var validationResult = await createAdminValidator.ValidateAsync(dto);
+            if (!validationResult.IsValid)
+            {
+                var errors = string.Join(" | ", validationResult.Errors.Select(e => e.ErrorMessage));
+                throw new ValidationException(errors);
+            }
+
             // Burası gelen Username'i alıp User'ın FirstName alanına pürüzsüzce yazacak
             var user = mapper.Map<User>(dto);
 
@@ -40,4 +51,4 @@ namespace SirenStore.Application.Services
             return $"hashed_{password}_siren_salt";
         }
     }
-}
+}

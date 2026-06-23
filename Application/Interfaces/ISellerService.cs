@@ -1,6 +1,6 @@
-﻿using SirenStore.Application.DTOs; // Birazdan oluşturacağınız DTO'lar için
+using SirenStore.Application.DTOs; // Birazdan oluşturacağınız DTO'lar için
 
-namespace SirenStore.Application.Services
+namespace SirenStore.Application.Interfaces
 {
     public interface ISellerService
     {

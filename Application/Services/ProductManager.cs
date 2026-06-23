@@ -1,11 +1,15 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Entities.Models;
+using FluentValidation;
 using SirenStore.Application.DTOs;
 using SirenStore.Application.Interfaces;
 
 namespace SirenStore.Application.Services
 {
-    public class ProductManager(IRepository<Product> productRepository, IMapper mapper) : IProductService
+    public class ProductManager(
+        IRepository<Product> productRepository,
+        IMapper mapper,
+        IValidator<CreateProductDto> createProductValidator) : IProductService
     {
         public async Task<IEnumerable<ProductDto>> GetAllProductsAsync()
         {
@@ -25,8 +29,12 @@ namespace SirenStore.Application.Services
 
         public async Task CreateProductAsync(CreateProductDto dto)
         {
-            // İş mantığı: Fiyat 0 veya negatif olamaz kontrolü (Validasyon)
-            if (dto.Price <= 0) throw new Exception("Ürün fiyatı 0 veya daha az olamaz!");
+            var validationResult = await createProductValidator.ValidateAsync(dto);
+            if (!validationResult.IsValid)
+            {
+                var errors = string.Join(" | ", validationResult.Errors.Select(e => e.ErrorMessage));
+                throw new ValidationException(errors);
+            }
 
             var product = mapper.Map<Product>(dto);
             product.IsActive = true; // Ürün ilk eklendiğinde doğrudan satışa çıksın
@@ -49,4 +57,4 @@ namespace SirenStore.Application.Services
             await productRepository.SaveChangesAsync();
         }
     }
-}
+}
