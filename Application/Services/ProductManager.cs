@@ -2,6 +2,7 @@ using AutoMapper;
 using Entities.Models;
 using FluentValidation;
 using SirenStore.Application.DTOs;
+using SirenStore.Application.Exceptions;
 using SirenStore.Application.Interfaces;
 
 namespace SirenStore.Application.Services
@@ -13,9 +14,8 @@ namespace SirenStore.Application.Services
     {
         public async Task<IEnumerable<ProductDto>> GetAllProductsAsync()
         {
-            var products = await productRepository.GetAllAsync();
-            // İş mantığı: Sadece aktif olan ürünleri Angular'a dönmek isteyebiliriz
-            var activeProducts = products.Where(p => p.IsActive);
+            // İş mantığı: Sadece aktif ürünleri DB seviyesinde filtreleyerek çekiyoruz
+            var activeProducts = await productRepository.GetAllAsync(p => p.IsActive);
             return mapper.Map<IEnumerable<ProductDto>>(activeProducts);
         }
 
@@ -46,11 +46,11 @@ namespace SirenStore.Application.Services
         public async Task UpdateStockAsync(long productId, int quantity)
         {
             var product = await productRepository.GetByIdAsync(productId);
-            if (product == null) throw new Exception("Ürün bulunamadı!");
+            if (product == null) throw new NotFoundException("Ürün", productId);
 
             // İş mantığı: Stok kontrolü
             if (product.Stock + quantity < 0)
-                throw new Exception("Yetersiz stok! Mevcut stoktan daha fazla düşüm yapılamaz.");
+                throw new BusinessRuleException("Yetersiz stok! Mevcut stoktan daha fazla düşüm yapılamaz.");
 
             product.Stock += quantity;
             productRepository.Update(product);
