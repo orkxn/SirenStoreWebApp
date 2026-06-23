@@ -2,6 +2,7 @@ using AutoMapper;
 using Entities.Models;
 using FluentValidation;
 using SirenStore.Application.DTOs;
+using SirenStore.Application.Exceptions;
 using SirenStore.Application.Interfaces; 
 
 namespace SirenStore.Application.Services
@@ -48,7 +49,7 @@ namespace SirenStore.Application.Services
         public async Task ApproveSellerAsync(long sellerId)
         {
             var seller = await sellerRepository.GetByIdAsync(sellerId);
-            if (seller == null) throw new Exception("Satıcı bulunamadı!");
+            if (seller == null) throw new NotFoundException("Satıcı", sellerId);
 
             seller.IsApproved = true;
             sellerRepository.Update(seller);
