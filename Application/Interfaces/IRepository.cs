@@ -1,4 +1,5 @@
-﻿using Entities.Models;
+using System.Linq.Expressions;
+using Entities.Models;
 
 namespace SirenStore.Application.Interfaces
 {
@@ -10,6 +11,7 @@ namespace SirenStore.Application.Interfaces
     {
         Task<T?> GetByIdAsync(long id);
         Task<IEnumerable<T>> GetAllAsync();
+        Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>> predicate);
         Task AddAsync(T entity);
         void Update(T entity);
         void Remove(T entity);
