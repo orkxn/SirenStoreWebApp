@@ -5,7 +5,7 @@ using SirenStore.Application.Interfaces; // IRepository'nin olduğu yer
 
 namespace SirenStore.Application.Services
 {
-    // DÜZELTME 1: IMapper mapper parametresini sınıfın yanına (Primary Constructor) ekledik
+    // IMapper mapper parametresini sınıfın yanına (Primary Constructor) ekledim
     public class SellerManager(IRepository<Seller> sellerRepository, IMapper mapper) : ISellerService
     {
         public async Task<IEnumerable<SellerDto>> GetAllSellersAsync()
@@ -30,10 +30,10 @@ namespace SirenStore.Application.Services
             seller.IsActive = true;
 
             await sellerRepository.AddAsync(seller);
-            await sellerRepository.SaveChangesAsync(); // Değişiklikleri kaydetmeyi unutmayalım
+            await sellerRepository.SaveChangesAsync();
         }
 
-        // DÜZELTME 2: ISellerService sözleşmesinde yer alan eksik metodu ekledik
+        // ISellerService sözleşmesinde yer alan eksik metodu ekledim
         public async Task ApproveSellerAsync(long sellerId)
         {
             var seller = await sellerRepository.GetByIdAsync(sellerId);
