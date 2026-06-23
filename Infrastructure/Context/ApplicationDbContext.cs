@@ -99,7 +99,6 @@ namespace SirenStore.Infrastructure.Context
 
         /// <summary>
         /// PascalCase veya camelCase string'i PostgreSQL uyumlu snake_case'e çevirir.
-        /// Örnek: "CreationDate" -> "creation_date", "ProductImage" -> "product_image"
         /// </summary>
         private static string ToSnakeCase(string input)
         {
