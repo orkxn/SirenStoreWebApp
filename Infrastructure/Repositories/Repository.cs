@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Entities.Models;
 using Microsoft.EntityFrameworkCore;
 using SirenStore.Application.Interfaces;
@@ -19,6 +20,9 @@ namespace SirenStore.Infrastructure.Repositories
 
         public async Task<IEnumerable<T>> GetAllAsync() =>
             await _dbSet.Where(x => !x.IsDeleted).ToListAsync();
+
+        public async Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>> predicate) =>
+            await _dbSet.Where(x => !x.IsDeleted).Where(predicate).ToListAsync();
 
         public async Task AddAsync(T entity)
         {
