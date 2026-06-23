@@ -4,7 +4,7 @@
         long Id,
         string Name,
         string Description,
-        string brand,
+        string Brand,
         decimal Price,
         int Stock,
         long SellerId,
