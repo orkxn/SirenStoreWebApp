@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using Entities.Models;
 using SirenStore.Application.DTOs;
-using SirenStore.Application.Interfaces; // IRepository'nin olduğu yer
+using SirenStore.Application.Interfaces; 
 
 namespace SirenStore.Application.Services
 {
