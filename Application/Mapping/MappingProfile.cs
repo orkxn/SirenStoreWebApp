@@ -8,21 +8,24 @@ namespace SirenStore.Application.Mapping
     {
         public MappingProfile()
         {
-            // CreateSellerDto'yu Seller entity nesnesine çevir (Veri tabanına kaydederken)
+            // Seller
             CreateMap<CreateSellerDto, Seller>();
-
-            // Seller entity nesnesini SellerDto'ya çevir (Angular'a veri gönderirken)
             CreateMap<Seller, SellerDto>();
 
-
-            // ---------- PRODUCT MODÜLÜ EŞLEŞTİRMELERİ ----------
+            // Product
             CreateMap<CreateProductDto, Product>();
             CreateMap<Product, ProductDto>();
 
+            // Admin
+            // 1. Kaydederken: CreateAdminDto içindeki Username'i, User'ın FirstName alanına yaz
+            CreateMap<CreateAdminDto, User>()
+                .ForMember(dest => dest.FirstName, opt => opt.MapFrom(src => src.Username))
+                .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => string.Empty)); // Boş geçmemek için
 
-            // Hatırla: Admin için ayrı tablo yoktu, User tablosunu kullanıyorduk.
-            CreateMap<CreateAdminDto, User>();
-            CreateMap<User, AdminDto>();
+            // 2. Çekerken: User'ın FirstName alanını Username'e, UserType enum'ını string olarak Role alanına yaz
+            CreateMap<User, AdminDto>()
+                .ForMember(dest => dest.Username, opt => opt.MapFrom(src => src.FirstName))
+                .ForMember(dest => dest.Role, opt => opt.MapFrom(src => src.UserType.ToString()));
         }
     }
 }
