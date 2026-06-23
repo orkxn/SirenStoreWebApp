@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Entities.Models; // Modellerinin olduğu namespace
+using Entities.Models;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
