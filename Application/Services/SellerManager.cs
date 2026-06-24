@@ -19,10 +19,11 @@ namespace SirenStore.Application.Services
             return mapper.Map<IEnumerable<SellerDto>>(sellers);
         }
 
-        public async Task<SellerDto?> GetSellerByIdAsync(long id)
+        public async Task<SellerDto> GetSellerByIdAsync(long id)
         {
             var seller = await sellerRepository.GetByIdAsync(id);
-            if (seller == null) return null;
+            if (seller == null)
+                throw new NotFoundException("Satıcı", id);
 
             return mapper.Map<SellerDto>(seller);
         }
@@ -41,12 +42,17 @@ namespace SirenStore.Application.Services
         }
 
         // ISellerService sözleşmesinde yer alan eksik metodu ekledim
-        public async Task ApproveSellerAsync(long sellerId)
+        public async Task ToggleAccountStatusAsync(long sellerId)
         {
             var seller = await sellerRepository.GetByIdAsync(sellerId);
-            if (seller == null) throw new NotFoundException("Satıcı", sellerId);
 
-            seller.IsApproved = true;
+            // KONTROL: Satıcı veri tabanında hiç yoksa VEYA Admin tarafından tamamen silinmişse (IsDeleted) işlem yapma!
+            if (seller == null || seller.IsDeleted)
+                throw new NotFoundException("Satıcı", sellerId);
+
+            // 🔄 SİHİRLİ SATIR: Aktifse pasif, pasifse aktif yapar!
+            seller.IsActive = !seller.IsActive;
+
             sellerRepository.Update(seller);
             await sellerRepository.SaveChangesAsync();
         }

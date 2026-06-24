@@ -15,6 +15,8 @@ namespace SirenStore.Application.Interfaces
         Task AddAsync(T entity);
         void Update(T entity);
         void Remove(T entity);
+        Task<bool> AnyAsync(Expression<Func<T, bool>> predicate);
+        Task<T?> GetAsync(Expression<Func<T, bool>> predicate);
         Task<int> SaveChangesAsync();
     }
 }

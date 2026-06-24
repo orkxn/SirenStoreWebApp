@@ -44,6 +44,12 @@ namespace SirenStore.Infrastructure.Repositories
             _dbSet.Update(entity);
         }
 
+        public async Task<bool> AnyAsync(Expression<Func<T, bool>> predicate) =>
+            await _dbSet.Where(x => !x.IsDeleted).AnyAsync(predicate);
+
+        public async Task<T?> GetAsync(Expression<Func<T, bool>> predicate) =>
+            await _dbSet.Where(x => !x.IsDeleted).FirstOrDefaultAsync(predicate);
+
         public async Task<int> SaveChangesAsync() => await _context.SaveChangesAsync();
     }
 }

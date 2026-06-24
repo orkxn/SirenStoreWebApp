@@ -12,7 +12,7 @@ using SirenStore.Infrastructure.Context;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260623193715_InitialCreate")]
+    [Migration("20260624112028_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -24,6 +24,69 @@ namespace Infrastructure.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("Entities.Models.Address", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("ıd");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("city");
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creation_date");
+
+                    b.Property<string>("District")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("district");
+
+                    b.Property<string>("FullAddress")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("full_address");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("ıs_deleted");
+
+                    b.Property<string>("Neighborhood")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("neighborhood");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("title");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_date");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("user_ıd");
+
+                    b.Property<string>("ZipCode")
+                        .HasColumnType("text")
+                        .HasColumnName("zip_code");
+
+                    b.HasKey("Id")
+                        .HasName("pk_address");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ıx_address_user_ıd");
+
+                    b.ToTable("address");
+                });
 
             modelBuilder.Entity("Entities.Models.AuditLog", b =>
                 {
@@ -252,13 +315,9 @@ namespace Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("name");
 
-                    b.Property<int?>("ParentCategoryId")
-                        .HasColumnType("integer")
-                        .HasColumnName("parent_category_ıd");
-
-                    b.Property<long>("ParentCategoryId1")
+                    b.Property<long?>("ParentCategoryId")
                         .HasColumnType("bigint")
-                        .HasColumnName("parent_category_ıd1");
+                        .HasColumnName("parent_category_ıd");
 
                     b.Property<DateTime?>("UpdatedDate")
                         .HasColumnType("timestamp with time zone")
@@ -267,8 +326,8 @@ namespace Infrastructure.Migrations
                     b.HasKey("Id")
                         .HasName("pk_categories");
 
-                    b.HasIndex("ParentCategoryId1")
-                        .HasDatabaseName("ıx_categories_parent_category_ıd1");
+                    b.HasIndex("ParentCategoryId")
+                        .HasDatabaseName("ıx_categories_parent_category_ıd");
 
                     b.ToTable("categories");
                 });
@@ -1114,6 +1173,14 @@ namespace Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("phone_number");
 
+                    b.Property<string>("RefreshToken")
+                        .HasColumnType("text")
+                        .HasColumnName("refresh_token");
+
+                    b.Property<DateTime?>("RefreshTokenExpiryTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("refresh_token_expiry_time");
+
                     b.Property<long?>("SellerId")
                         .HasColumnType("bigint")
                         .HasColumnName("seller_ıd");
@@ -1273,6 +1340,18 @@ namespace Infrastructure.Migrations
                     b.ToTable("warning_records");
                 });
 
+            modelBuilder.Entity("Entities.Models.Address", b =>
+                {
+                    b.HasOne("Entities.Models.User", "User")
+                        .WithMany("Addresses")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_address_users_user_ıd");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Entities.Models.BanRecord", b =>
                 {
                     b.HasOne("Entities.Models.User", "User")
@@ -1322,10 +1401,8 @@ namespace Infrastructure.Migrations
                 {
                     b.HasOne("Entities.Models.Category", "ParentCategory")
                         .WithMany("SubCategories")
-                        .HasForeignKey("ParentCategoryId1")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_categories_categories_parent_category_ıd1");
+                        .HasForeignKey("ParentCategoryId")
+                        .HasConstraintName("fk_categories_categories_parent_category_ıd");
 
                     b.Navigation("ParentCategory");
                 });
@@ -1514,6 +1591,8 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Entities.Models.User", b =>
                 {
+                    b.Navigation("Addresses");
+
                     b.Navigation("LoginHistories");
                 });
 #pragma warning restore 612, 618

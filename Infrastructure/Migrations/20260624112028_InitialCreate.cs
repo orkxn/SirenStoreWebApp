@@ -43,8 +43,7 @@ namespace Infrastructure.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     name = table.Column<string>(type: "text", nullable: false),
                     description = table.Column<string>(type: "text", nullable: false),
-                    parent_category_ıd = table.Column<int>(type: "integer", nullable: true),
-                    parent_category_ıd1 = table.Column<long>(type: "bigint", nullable: false),
+                    parent_category_ıd = table.Column<long>(type: "bigint", nullable: true),
                     creation_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     updated_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     ıs_deleted = table.Column<bool>(type: "boolean", nullable: false)
@@ -53,11 +52,10 @@ namespace Infrastructure.Migrations
                 {
                     table.PrimaryKey("pk_categories", x => x.ıd);
                     table.ForeignKey(
-                        name: "fk_categories_categories_parent_category_ıd1",
-                        column: x => x.parent_category_ıd1,
+                        name: "fk_categories_categories_parent_category_ıd",
+                        column: x => x.parent_category_ıd,
                         principalTable: "categories",
-                        principalColumn: "ıd",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "ıd");
                 });
 
             migrationBuilder.CreateTable(
@@ -304,6 +302,8 @@ namespace Infrastructure.Migrations
                     user_type = table.Column<int>(type: "integer", nullable: false),
                     ıs_active = table.Column<bool>(type: "boolean", nullable: false),
                     ıs_email_confirmed = table.Column<bool>(type: "boolean", nullable: false),
+                    refresh_token = table.Column<string>(type: "text", nullable: true),
+                    refresh_token_expiry_time = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     seller_ıd = table.Column<long>(type: "bigint", nullable: true),
                     creation_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     updated_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
@@ -390,6 +390,34 @@ namespace Infrastructure.Migrations
                         name: "fk_product_reviews_products_product_ıd",
                         column: x => x.product_ıd,
                         principalTable: "products",
+                        principalColumn: "ıd",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "address",
+                columns: table => new
+                {
+                    ıd = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    title = table.Column<string>(type: "text", nullable: false),
+                    city = table.Column<string>(type: "text", nullable: false),
+                    district = table.Column<string>(type: "text", nullable: false),
+                    neighborhood = table.Column<string>(type: "text", nullable: false),
+                    full_address = table.Column<string>(type: "text", nullable: false),
+                    zip_code = table.Column<string>(type: "text", nullable: true),
+                    user_ıd = table.Column<long>(type: "bigint", nullable: false),
+                    creation_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    updated_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    ıs_deleted = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_address", x => x.ıd);
+                    table.ForeignKey(
+                        name: "fk_address_users_user_ıd",
+                        column: x => x.user_ıd,
+                        principalTable: "users",
                         principalColumn: "ıd",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -585,6 +613,11 @@ namespace Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "ıx_address_user_ıd",
+                table: "address",
+                column: "user_ıd");
+
+            migrationBuilder.CreateIndex(
                 name: "ıx_ban_records_user_ıd",
                 table: "ban_records",
                 column: "user_ıd");
@@ -605,9 +638,9 @@ namespace Infrastructure.Migrations
                 column: "user_ıd");
 
             migrationBuilder.CreateIndex(
-                name: "ıx_categories_parent_category_ıd1",
+                name: "ıx_categories_parent_category_ıd",
                 table: "categories",
-                column: "parent_category_ıd1");
+                column: "parent_category_ıd");
 
             migrationBuilder.CreateIndex(
                 name: "ıx_login_histories_user_ıd",
@@ -679,6 +712,9 @@ namespace Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "address");
+
             migrationBuilder.DropTable(
                 name: "audit_logs");
 

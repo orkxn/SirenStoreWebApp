@@ -4,7 +4,11 @@ namespace SirenStore.Application.Interfaces
 {
     public interface IAdminService
     {
-        Task<AdminDto?> GetAdminByIdAsync(long id);
-        Task CreateAdminWithPasswordAsync(CreateAdminDto dto); // Şifreleme mantığı içerecek
+        Task ApproveSellerAsync(long sellerId);
+        Task SoftDeleteSellerAsync(long sellerId);
+
+        Task SoftDeleteProductAsync(long productId);
+
+        Task SoftDeleteUserAsync(long userId);
     }
 }

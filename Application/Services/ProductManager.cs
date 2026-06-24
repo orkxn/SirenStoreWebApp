@@ -20,10 +20,11 @@ namespace SirenStore.Application.Services
             return mapper.Map<IEnumerable<ProductDto>>(activeProducts);
         }
 
-        public async Task<ProductDto?> GetProductByIdAsync(long id)
+        public async Task<ProductDto> GetProductByIdAsync(long id)
         {
             var product = await productRepository.GetByIdAsync(id);
-            if (product == null || !product.IsActive) return null;
+            if (product == null || !product.IsActive)
+                throw new NotFoundException("Ürün", id);
 
             return mapper.Map<ProductDto>(product);
         }
@@ -45,7 +46,7 @@ namespace SirenStore.Application.Services
         public async Task UpdateStockAsync(long productId, int quantity)
         {
             var product = await productRepository.GetByIdAsync(productId);
-            if (product == null) throw new NotFoundException("Ürün", productId);
+            if (product == null || !product.IsActive || product.IsDeleted) throw new NotFoundException("Ürün", productId);
 
             // İş mantığı: Stok kontrolü
             if (quantity < 0)
@@ -56,12 +57,15 @@ namespace SirenStore.Application.Services
             await productRepository.SaveChangesAsync();
         }
 
-        public async Task DeleteProductAsync(long productId)
+        public async Task ToggleProductStatusAsync(long productId)
         {
             var product = await productRepository.GetByIdAsync(productId);
-            if (product == null) throw new NotFoundException("Ürün", productId);
-            // İş mantığı: Ürünü silmek yerine pasif hale getiriyoruz
-            product.IsActive = false;
+
+            if (product == null || product.IsDeleted)
+                throw new NotFoundException("Ürün", productId);
+
+            product.IsActive = !product.IsActive;
+
             productRepository.Update(product);
             await productRepository.SaveChangesAsync();
         }

@@ -1,49 +1,74 @@
-using AutoMapper;
+using SirenStore.Application.Interfaces;
+using SirenStore.Application.Exceptions;
 using Entities.Models;
 using Entities.Enums;
-using FluentValidation;
-using SirenStore.Application.DTOs;
-using SirenStore.Application.Interfaces;
 
 namespace SirenStore.Application.Services
 {
     public class AdminManager(
-        IRepository<User> userRepository,
-        IMapper mapper,
-        IValidator<CreateAdminDto> createAdminValidator) : IAdminService
+        IRepository<Seller> sellerRepository,
+        IRepository<Product> productRepository,
+        IRepository<User> userRepository) : IAdminService
     {
-        public async Task<AdminDto?> GetAdminByIdAsync(long id)
+        // 1. SATICIYI ONAYLAMA
+        public async Task ApproveSellerAsync(long sellerId)
         {
-            var user = await userRepository.GetByIdAsync(id);
+            var seller = await sellerRepository.GetByIdAsync(sellerId);
+            if (seller == null || seller.IsDeleted)
+                throw new NotFoundException("Satıcı", sellerId);
 
-            if (user == null || (user.UserType != UserTypes.Admin && user.UserType != UserTypes.SuperAdmin))
+            seller.IsApproved = true;
+            sellerRepository.Update(seller);
+            await sellerRepository.SaveChangesAsync();
+        }
+
+        // 2. SATICIYI SOFT DELETE ETME
+        public async Task SoftDeleteSellerAsync(long sellerId)
+        {
+            var seller = await sellerRepository.GetByIdAsync(sellerId);
+            if (seller == null || seller.IsDeleted)
+                throw new NotFoundException("Satıcı", sellerId);
+
+            seller.IsDeleted = true;
+            seller.IsActive = false; // Silinen satıcı doğal olarak pasif olur
+
+            sellerRepository.Update(seller);
+            await sellerRepository.SaveChangesAsync();
+        }
+
+        // 3. ÜRÜNÜ SOFT DELETE ETME (Kalıcı Gizleme)
+        public async Task SoftDeleteProductAsync(long productId)
+        {
+            var product = await productRepository.GetByIdAsync(productId);
+            if (product == null || product.IsDeleted)
+                throw new NotFoundException("Ürün", productId);
+
+            product.IsDeleted = true;
+            product.IsActive = false;
+
+            productRepository.Update(product);
+            await productRepository.SaveChangesAsync();
+        }
+
+        // 4. DİĞER USERLARI SOFT DELETE ETME (KRİTİK KORUMA BURADA!)
+        public async Task SoftDeleteUserAsync(long userId)
+        {
+            var user = await userRepository.GetByIdAsync(userId);
+            if (user == null || user.IsDeleted)
+                throw new NotFoundException("Kullanıcı", userId);
+
+            // KORUMA KURALI: Eğer silinmeye çalışılan kişi Admin veya SuperAdmin ise ENGELLE!
+            if (user.UserType == UserTypes.Admin || user.UserType == UserTypes.SuperAdmin || user.UserType == UserTypes.Seller)
             {
-                return null;
+                throw new BusinessRuleException("Silme işlemi yetki dolayısıyla geçersizdir.");
             }
 
-            // Burası artık MappingProfile'daki özel kurallara göre Username ve Role alanlarını dolduracak
-            return mapper.Map<AdminDto>(user);
-        }
+            // Eğer kuralı geçtiyse (yani Customer vb. ise) soft delete yap
+            user.IsDeleted = true;
+            user.IsActive = false;
 
-        public async Task CreateAdminWithPasswordAsync(CreateAdminDto dto)
-        {
-            await createAdminValidator.ValidateAndThrowAsync(dto);
-
-            // Burası gelen Username'i alıp User'ın FirstName alanına pürüzsüzce yazacak
-            var user = mapper.Map<User>(dto);
-
-            user.UserType = UserTypes.Admin;
-            user.IsActive = true;
-            user.IsEmailConfirmed = true;
-            user.PasswordHash = FakePasswordHasher(dto.Password);
-
-            await userRepository.AddAsync(user);
+            userRepository.Update(user);
             await userRepository.SaveChangesAsync();
         }
-
-        private string FakePasswordHasher(string password)
-        {
-            return $"hashed_{password}_siren_salt";
-        }
     }
-}
+}

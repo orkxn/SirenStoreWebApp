@@ -22,6 +22,69 @@ namespace Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Entities.Models.Address", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("ıd");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("city");
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creation_date");
+
+                    b.Property<string>("District")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("district");
+
+                    b.Property<string>("FullAddress")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("full_address");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("ıs_deleted");
+
+                    b.Property<string>("Neighborhood")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("neighborhood");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("title");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_date");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("user_ıd");
+
+                    b.Property<string>("ZipCode")
+                        .HasColumnType("text")
+                        .HasColumnName("zip_code");
+
+                    b.HasKey("Id")
+                        .HasName("pk_address");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ıx_address_user_ıd");
+
+                    b.ToTable("address");
+                });
+
             modelBuilder.Entity("Entities.Models.AuditLog", b =>
                 {
                     b.Property<long>("Id")
@@ -1107,6 +1170,14 @@ namespace Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("phone_number");
 
+                    b.Property<string>("RefreshToken")
+                        .HasColumnType("text")
+                        .HasColumnName("refresh_token");
+
+                    b.Property<DateTime?>("RefreshTokenExpiryTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("refresh_token_expiry_time");
+
                     b.Property<long?>("SellerId")
                         .HasColumnType("bigint")
                         .HasColumnName("seller_ıd");
@@ -1264,6 +1335,18 @@ namespace Infrastructure.Migrations
                         .HasDatabaseName("ıx_warning_records_user_ıd");
 
                     b.ToTable("warning_records");
+                });
+
+            modelBuilder.Entity("Entities.Models.Address", b =>
+                {
+                    b.HasOne("Entities.Models.User", "User")
+                        .WithMany("Addresses")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_address_users_user_ıd");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Entities.Models.BanRecord", b =>
@@ -1505,6 +1588,8 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Entities.Models.User", b =>
                 {
+                    b.Navigation("Addresses");
+
                     b.Navigation("LoginHistories");
                 });
 #pragma warning restore 612, 618

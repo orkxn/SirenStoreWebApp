@@ -5,8 +5,8 @@ namespace SirenStore.Application.Interfaces
     public interface ISellerService
     {
         Task<IEnumerable<SellerDto>> GetAllSellersAsync();
-        Task<SellerDto?> GetSellerByIdAsync(long id);
+        Task<SellerDto> GetSellerByIdAsync(long id);
         Task CreateSellerAsync(CreateSellerDto dto);
-        Task ApproveSellerAsync(long sellerId); // Satıcıyı onaylama iş mantığı
+        Task ToggleAccountStatusAsync(long sellerId);
     }
 }

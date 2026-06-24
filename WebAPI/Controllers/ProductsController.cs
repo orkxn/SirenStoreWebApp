@@ -21,10 +21,6 @@ namespace SirenStore.WebAPI.Controllers
         public async Task<IActionResult> GetById(long id)
         {
             var product = await productService.GetProductByIdAsync(id);
-            if (product == null)
-            {
-                return NotFound(new { Message = $"{id} numaralı aktif ürün bulunamadı." }); // HTTP 404
-            }
             return Ok(product);
         }
 
@@ -46,11 +42,11 @@ namespace SirenStore.WebAPI.Controllers
         }
 
         // 5. DELETE: api/products/5 (Soft Delete)
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(long id)
+        [HttpPatch("{id}/toggle-status")]
+        public async Task<IActionResult> ToggleProductStatus(long id)
         {
-            await productService.DeleteProductAsync(id);
-            return Ok(new { Message = "Ürün başarıyla satıştan kaldırıldı." });
+            await productService.ToggleProductStatusAsync(id);
+            return Ok(new { Message = "Ürünün satışta olma (aktiflik) durumu başarıyla değiştirildi." });
         }
     }
 }

@@ -1,13 +1,17 @@
 using AutoMapper;
-using FluentValidation;
-using Microsoft.EntityFrameworkCore;
-using SirenStore.Application.Interfaces;
 using Entities.Models;
+using FluentValidation;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+// using Microsoft.OpenApi.Models; // removed to avoid dependency/version mismatch
+using SirenStore.Application.Interfaces;
 using SirenStore.Application.Mapping;
 using SirenStore.Application.Services;
 using SirenStore.Application.Validators;
 using SirenStore.Infrastructure.Context;
 using SirenStore.Infrastructure.Repositories;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,47 +21,62 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
 
 // 2. REPOSITORY & SERVICE KAYITLARI (DEPENDENCY INJECTION)
-// Generic Repository kaydı
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-
-// Bizim yazdığımız Manager servislerinin kaydı
 builder.Services.AddScoped<IAdminService, AdminManager>();
 builder.Services.AddScoped<IProductService, ProductManager>();
 builder.Services.AddScoped<ISellerService, SellerManager>();
+builder.Services.AddScoped<IAuthService, AuthManager>();
 
 // 3. AUTOMAPPER & FLUENTVALIDATION ENTEGRASYONLARI
-// AutoMapper profillerimizi tara ve hafızaya yükle
-// Projedeki tüm MappingProfile sınıflarını otomatik bulur ve hatasız yükler
 builder.Services.AddSingleton<IMapper>(provider =>
 {
-    // .NET'in kendi içindeki entegre LoggerFactory servisini çekiyoruz
     var loggerFactory = provider.GetRequiredService<ILoggerFactory>();
-
     var config = new AutoMapper.MapperConfiguration(cfg =>
     {
         cfg.AddProfile<SirenStore.Application.Mapping.MappingProfile>();
     }, loggerFactory);
-
     return new AutoMapper.Mapper(config);
 });
 
-// Validator'ları Application katmanından bul ve otomatik yükle
 builder.Services.AddValidatorsFromAssemblyContaining<CreateProductValidator>();
 
-// 4. KONTROLLER VE SWAGGER GÜVENLİK AYARLARI
+// 4. JWT KIMLIK DOGRULAMA (AUTHENTICATION) AYARLARI
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
+        ValidAudience = builder.Configuration["JwtSettings:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:SecretKey"]))
+    };
+});
+
+// 5. KONTROLLER VE SWAGGER AYARLARI
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        // JSON dönüşümlerinde sonsuz döngüye girilmesini (Object Cycle) engeller
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
     });
+
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
+// Use default Swagger generation. If you need specific OpenAPI models (e.g. OpenApiInfo,
+// security schemes) add a compatible Microsoft.OpenApi package or configure via
+// custom operation filters. Kept minimal to avoid package version conflicts.
+builder.Services.AddOpenApi(); // .NET 10 Yerleşik OpenAPI servisi
 
 var app = builder.Build();
 
 // GLOBAL EXCEPTION HANDLING MIDDLEWARE
-// Tüm Application katmanı exception'larını tek bir noktada yakalayıp doğru HTTP yanıtına çeviren middleware
 app.UseExceptionHandler(errorApp =>
 {
     errorApp.Run(async context =>
@@ -96,18 +115,16 @@ app.UseExceptionHandler(errorApp =>
     });
 });
 
-// HTTP İstek Hattı Yapılandırması (Middleware Pipeline)
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.MapOpenApi(); // .NET 10 Yerleşik OpenAPI endpoint'ini açar
 }
 
 app.UseHttpsRedirection();
 
-// Angular istek atabilsin diye CORS politikası (İleride burayı esneteceğiz)
 app.UseCors(opt => opt.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
