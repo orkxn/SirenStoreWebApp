@@ -27,12 +27,7 @@ namespace SirenStore.Application.Services
 
         public async Task CreateAdminWithPasswordAsync(CreateAdminDto dto)
         {
-            var validationResult = await createAdminValidator.ValidateAsync(dto);
-            if (!validationResult.IsValid)
-            {
-                var errors = string.Join(" | ", validationResult.Errors.Select(e => e.ErrorMessage));
-                throw new ValidationException(errors);
-            }
+            await createAdminValidator.ValidateAndThrowAsync(dto);
 
             // Burası gelen Username'i alıp User'ın FirstName alanına pürüzsüzce yazacak
             var user = mapper.Map<User>(dto);
