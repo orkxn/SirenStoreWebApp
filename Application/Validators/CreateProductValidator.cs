@@ -3,9 +3,14 @@ using SirenStore.Application.DTOs;
 
 namespace SirenStore.Application.Validators
 {
+using SirenStore.Application.Interfaces;
+using Entities.Models;
+
     public class CreateProductValidator : AbstractValidator<CreateProductDto>
     {
-        public CreateProductValidator()
+        public CreateProductValidator(
+            IRepository<Category> categoryRepository,
+            IRepository<Seller> sellerRepository)
         {
             RuleFor(p => p.Name)
                 .NotEmpty().WithMessage("Ürün adı boş bırakılamaz.")
@@ -26,10 +31,15 @@ namespace SirenStore.Application.Validators
                 .GreaterThanOrEqualTo(0).WithMessage("Stok adedi negatif olamaz.");
 
             RuleFor(p => p.SellerId)
-                .GreaterThan(0).WithMessage("Ürünün mutlaka geçerli bir satıcısı (SellerId) olmalıdır.");
+                .GreaterThan(0).WithMessage("Ürünün mutlaka geçerli bir satıcısı (SellerId) olmalıdır.")
+                .MustAsync(async (id, ct) => await sellerRepository.GetByIdAsync(id) != null)
+                .WithMessage("Gönderilen ID'ye sahip bir satıcı (Seller) bulunamadı.");
 
+            // Validate category exists in DB
             RuleFor(p => p.CategoryId)
-                .GreaterThan(0).WithMessage("Ürünün mutlaka geçerli bir kategorisi (CategoryId) olmalıdır.");
+                .GreaterThan(0).WithMessage("Ürünün mutlaka geçerli bir kategorisi (CategoryId) olmalıdır.")
+                .MustAsync(async (id, ct) => await categoryRepository.GetByIdAsync(id) != null)
+                .WithMessage("Gönderilen ID'ye sahip bir kategori (Category) bulunamadı.");
         }
     }
-}
+}
