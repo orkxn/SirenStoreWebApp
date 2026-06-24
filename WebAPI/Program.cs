@@ -20,9 +20,6 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // Generic Repository kaydı
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
-// Explicit registration for Category repository (optional - open generic already covers this)
-builder.Services.AddScoped<IRepository<Category>, Repository<Category>>();
-
 // Bizim yazdığımız Manager servislerinin kaydı
 builder.Services.AddScoped<IAdminService, AdminManager>();
 builder.Services.AddScoped<IProductService, ProductManager>();
@@ -58,6 +55,46 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+// GLOBAL EXCEPTION HANDLING MIDDLEWARE
+// Tüm Application katmanı exception'larını tek bir noktada yakalayıp doğru HTTP yanıtına çeviren middleware
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        var exceptionFeature = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>();
+        var exception = exceptionFeature?.Error;
+
+        context.Response.ContentType = "application/json";
+
+        var (statusCode, response) = exception switch
+        {
+            FluentValidation.ValidationException valEx => (
+                StatusCodes.Status400BadRequest,
+                new
+                {
+                    Type = "ValidationError",
+                    Errors = valEx.Errors.Select(e => new { e.PropertyName, e.ErrorMessage })
+                } as object
+            ),
+            SirenStore.Application.Exceptions.NotFoundException notFoundEx => (
+                StatusCodes.Status404NotFound,
+                new { Type = "NotFound", Message = notFoundEx.Message } as object
+            ),
+            SirenStore.Application.Exceptions.BusinessRuleException businessEx => (
+                StatusCodes.Status422UnprocessableEntity,
+                new { Type = "BusinessRuleViolation", Message = businessEx.Message } as object
+            ),
+            _ => (
+                StatusCodes.Status500InternalServerError,
+                new { Type = "UnexpectedError", Message = "Beklenmeyen bir hata oluştu." } as object
+            )
+        };
+
+        context.Response.StatusCode = statusCode;
+        await context.Response.WriteAsJsonAsync(response);
+    });
+});
 
 // HTTP İstek Hattı Yapılandırması (Middleware Pipeline)
 if (app.Environment.IsDevelopment())
