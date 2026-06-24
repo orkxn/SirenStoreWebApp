@@ -25,8 +25,8 @@ namespace SirenStore.Application.Services
         public AuthManager(
             IRepository<User> userRepository,
             IConfiguration configuration,
-            IValidator<RegisterDto> registerValidator,   // Dependency Injection ile içeri alıyoruz
-            IValidator<LoginDto> loginValidator)         // Dependency Injection ile içeri alıyoruz
+            IValidator<RegisterDto> registerValidator,   
+            IValidator<LoginDto> loginValidator)         
         {
             _userRepository = userRepository;
             _configuration = configuration;

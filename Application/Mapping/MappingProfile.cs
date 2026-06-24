@@ -26,6 +26,9 @@ namespace SirenStore.Application.Mapping
             CreateMap<User, AdminDto>()
                 .ForMember(dest => dest.Username, opt => opt.MapFrom(src => src.FirstName))
                 .ForMember(dest => dest.Role, opt => opt.MapFrom(src => src.UserType.ToString()));
+
+            // User
+            CreateMap<User, UserProfileDto>();
         }
     }
 }

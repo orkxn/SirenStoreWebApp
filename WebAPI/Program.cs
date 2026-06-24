@@ -25,6 +25,7 @@ builder.Services.AddScoped<IAdminService, AdminManager>();
 builder.Services.AddScoped<IProductService, ProductManager>();
 builder.Services.AddScoped<ISellerService, SellerManager>();
 builder.Services.AddScoped<IAuthService, AuthManager>();
+builder.Services.AddScoped<IUserService, UserManager>();
 
 // 3. AUTOMAPPER & FLUENTVALIDATION ENTEGRASYONLARI
 builder.Services.AddSingleton<IMapper>(provider =>
@@ -67,7 +68,7 @@ builder.Services.AddControllers()
     });
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddOpenApi(); 
+builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
