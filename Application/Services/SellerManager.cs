@@ -29,12 +29,7 @@ namespace SirenStore.Application.Services
 
         public async Task CreateSellerAsync(CreateSellerDto dto)
         {
-            var validationResult = await createSellerValidator.ValidateAsync(dto);
-            if (!validationResult.IsValid)
-            {
-                var errors = string.Join(" | ", validationResult.Errors.Select(e => e.ErrorMessage));
-                throw new ValidationException(errors);
-            }
+            await createSellerValidator.ValidateAndThrowAsync(dto);
 
             var seller = mapper.Map<Seller>(dto);
 
