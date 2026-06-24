@@ -5,7 +5,7 @@ using SirenStore.Application.Interfaces;
 namespace SirenStore.WebAPI.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")] // Erişim adresi: api/auth
+    [Route("api/[controller]")] // api/auth
     public class AuthController(IAuthService authService) : ControllerBase
     {
         // 1. YENİ KULLANICI KAYDI
@@ -27,6 +27,14 @@ namespace SirenStore.WebAPI.Controllers
 
             // Token paketini doğrudan 200 OK ile müşteriye veriyoruz
             return Ok(tokenResult);
+        }
+
+        // 3. JWT TOKEN YENİLEME
+        [HttpPost("refresh")]
+        public async Task<IActionResult> Refresh([FromBody] string refreshToken)
+        {
+            var result = await authService.RefreshTokenAsync(refreshToken);
+            return Ok(result);
         }
     }
 }

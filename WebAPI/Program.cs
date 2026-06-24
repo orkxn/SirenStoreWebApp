@@ -4,7 +4,6 @@ using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-// using Microsoft.OpenApi.Models; // removed to avoid dependency/version mismatch
 using SirenStore.Application.Interfaces;
 using SirenStore.Application.Mapping;
 using SirenStore.Application.Services;
@@ -68,11 +67,7 @@ builder.Services.AddControllers()
     });
 
 builder.Services.AddEndpointsApiExplorer();
-
-// Use default Swagger generation. If you need specific OpenAPI models (e.g. OpenApiInfo,
-// security schemes) add a compatible Microsoft.OpenApi package or configure via
-// custom operation filters. Kept minimal to avoid package version conflicts.
-builder.Services.AddOpenApi(); // .NET 10 Yerleşik OpenAPI servisi
+builder.Services.AddOpenApi(); 
 
 var app = builder.Build();
 
@@ -117,7 +112,7 @@ app.UseExceptionHandler(errorApp =>
 
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi(); // .NET 10 Yerleşik OpenAPI endpoint'ini açar
+    app.MapOpenApi();
 }
 
 app.UseHttpsRedirection();

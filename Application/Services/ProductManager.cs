@@ -9,7 +9,6 @@ namespace SirenStore.Application.Services
 {
     public class ProductManager(
         IRepository<Product> productRepository,
-        IRepository<Category> categoryRepository,
         IMapper mapper,
         IValidator<CreateProductDto> createProductValidator) : IProductService
     {
