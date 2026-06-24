@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using SirenStore.Application.DTOs;
 using SirenStore.Application.Interfaces;
 
@@ -32,17 +32,9 @@ namespace SirenStore.WebAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateProductDto dto)
         {
-            try
-            {
-                // Bu metot tetiklendiğinde Manager içindeki FluentValidation mekanizman otomatik çalışacak
-                await productService.CreateProductAsync(dto);
-                return StatusCode(201, new { Message = "Ürün başarıyla eklendi." }); // HTTP 201 Created
-            }
-            catch (FluentValidation.ValidationException ex)
-            {
-                // Return HTTP 400 with validation errors
-                return BadRequest(new { Errors = ex.Message });
-            }
+            // Bu metot tetiklendiğinde Manager içindeki FluentValidation mekanizman otomatik çalışacak
+            await productService.CreateProductAsync(dto);
+            return StatusCode(201, new { Message = "Ürün başarıyla eklendi." }); // HTTP 201 Created
         }
 
         // 4. PUT: api/products/5/stock (Stok güncelleme iş mantığı)

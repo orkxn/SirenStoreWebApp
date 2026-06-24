@@ -15,6 +15,8 @@ namespace SirenStore.Infrastructure.Configurations
             builder.Property(p => p.Name).HasMaxLength(60).IsRequired();
             builder.Property(p => p.Brand).HasMaxLength(30).IsRequired();
             builder.Property(p => p.Description).HasMaxLength(150).IsRequired();
+            builder.Property(p => p.SellerId).IsRequired();
+            builder.Property(p => p.CategoryId).IsRequired();
         }
     }
 }

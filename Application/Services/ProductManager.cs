@@ -30,12 +30,7 @@ namespace SirenStore.Application.Services
 
         public async Task CreateProductAsync(CreateProductDto dto)
         {
-            var validationResult = await createProductValidator.ValidateAsync(dto);
-            if (!validationResult.IsValid)
-            {
-                var errors = string.Join(" | ", validationResult.Errors.Select(e => e.ErrorMessage));
-                throw new ValidationException(errors);
-            }
+            await createProductValidator.ValidateAndThrowAsync(dto);
 
             // Category existence is validated by FluentValidation (CreateProductValidator)
             // so no need to check it again here to avoid duplicate DB calls.
@@ -53,10 +48,10 @@ namespace SirenStore.Application.Services
             if (product == null) throw new NotFoundException("Ürün", productId);
 
             // İş mantığı: Stok kontrolü
-            if (product.Stock + quantity < 0)
-                throw new BusinessRuleException("Yetersiz stok! Mevcut stoktan daha fazla düşüm yapılamaz.");
+            if (quantity < 0)
+                throw new BusinessRuleException("Yeni stok sayınız geçersiz!");
 
-            product.Stock += quantity;
+            product.Stock = quantity;
             productRepository.Update(product);
             await productRepository.SaveChangesAsync();
         }
