@@ -8,5 +8,6 @@ namespace SirenStore.Application.Interfaces
         Task<ProductDto?> GetProductByIdAsync(long id);
         Task CreateProductAsync(CreateProductDto dto);
         Task UpdateStockAsync(long productId, int quantity); // Ürüne has iş mantığı
+        Task DeleteProductAsync(long id);
     }
 }

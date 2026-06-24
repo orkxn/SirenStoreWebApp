@@ -9,6 +9,7 @@ namespace SirenStore.Application.Services
 {
     public class ProductManager(
         IRepository<Product> productRepository,
+        IRepository<Category> categoryRepository,
         IMapper mapper,
         IValidator<CreateProductDto> createProductValidator) : IProductService
     {
@@ -36,6 +37,9 @@ namespace SirenStore.Application.Services
                 throw new ValidationException(errors);
             }
 
+            // Category existence is validated by FluentValidation (CreateProductValidator)
+            // so no need to check it again here to avoid duplicate DB calls.
+
             var product = mapper.Map<Product>(dto);
             product.IsActive = true; // Ürün ilk eklendiğinde doğrudan satışa çıksın
 
@@ -56,5 +60,16 @@ namespace SirenStore.Application.Services
             productRepository.Update(product);
             await productRepository.SaveChangesAsync();
         }
+
+        public async Task DeleteProductAsync(long productId)
+        {
+            var product = await productRepository.GetByIdAsync(productId);
+            if (product == null) throw new NotFoundException("Ürün", productId);
+            // İş mantığı: Ürünü silmek yerine pasif hale getiriyoruz
+            product.IsActive = false;
+            productRepository.Update(product);
+            await productRepository.SaveChangesAsync();
+        }
+
     }
-}
+}
