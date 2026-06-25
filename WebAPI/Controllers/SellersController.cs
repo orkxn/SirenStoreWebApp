@@ -1,43 +1,66 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SirenStore.Application.DTOs;
 using SirenStore.Application.Interfaces;
+using System.Security.Claims;
 
 namespace SirenStore.WebAPI.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")] // İnternet adresi otomatik olarak: api/sellers olacak
-    public class SellersController(ISellerService sellerService) : ControllerBase
+    [Route("api/[controller]")]
+    public class SellersController : ControllerBase
     {
-        // 1. GET: api/sellers (Tüm satıcıları listeler)
-        [HttpGet]
-        public async Task<IActionResult> GetAll()
+        private readonly ISellerService _sellerService;
+
+        public SellersController(ISellerService sellerService)
         {
-            var sellers = await sellerService.GetAllSellersAsync();
-            return Ok(sellers); // HTTP 200
+            _sellerService = sellerService;
         }
 
-        // 2. GET: api/sellers/5 (ID'ye göre tek bir satıcı getirir)
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(long id)
+        // Herkes Bir Mağazanın Profilini ve Ürünlerini Görebilir
+        // GET: api/sellers/{id}/profile
+        [HttpGet("{id:long}/profile")]
+        public async Task<IActionResult> GetSellerProfile(long id)
         {
-            var seller = await sellerService.GetSellerByIdAsync(id);
-            // Not: Eğer satıcı bulunamadıysa Manager katmanında yazdığın NotFoundException tetiklenecek
-            return Ok(seller);
+            var profile = await _sellerService.GetSellerProfileAsync(id);
+            return Ok(profile);
         }
 
-        // 3. POST: api/sellers (Yeni satıcı ekler)
-        [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CreateSellerDto dto)
+        // 1. SATICI BAŞVURUSU YAPMA
+        // Sadece giriş yapmış müşteriler veya genel kullanıcılar başvurabilir.
+        [Authorize]
+        [HttpPost("apply")]
+        public async Task<IActionResult> BecomeSeller([FromBody] BecomeSellerRequestDto dto)
         {
-            await sellerService.CreateSellerAsync(dto);
-            return StatusCode(201, new { Message = "Satıcı başarıyla eklendi." }); // HTTP 201 Created
+            // Token içerisinden güvenli bir şekilde userId sökülüyor (IDOR Koruması)
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out long userId))
+                return Unauthorized("Geçersiz kullanıcı oturumu.");
+
+            await _sellerService.BecomeSellerAsync(userId, dto);
+
+            return Ok(new { message = "Satıcı başvurunuz başarıyla alındı. Admin onayı bekleniyor." });
         }
 
-        [HttpPatch("{id}/toggle-status")]
-        public async Task<IActionResult> ToggleAccountStatus(long id)
+        // 2. ADMIN: BAŞVURUYU ONAYLAMA
+        // Sadece Admin rolüne sahip kullanıcılar tetikleyebilir.
+        [Authorize(Roles = "Admin")]
+        [HttpPost("approve/{sellerId}")]
+        public async Task<IActionResult> ApproveSeller(long sellerId)
         {
-            await sellerService.ToggleAccountStatusAsync(id);
-            return Ok(new { Message = "Mağaza aktiflik durumu başarıyla değiştirildi." });
+            await _sellerService.ApproveSellerAsync(sellerId);
+            return Ok(new { message = "Satıcı başvurusu başarıyla onaylandı. Kullanıcı rolü 'Seller' olarak güncellendi." });
+        }
+
+        // 3. ADMIN: BAŞVURUYU REDDETME
+        // Sadece Admin rolüne sahip kullanıcılar tetikleyebilir.
+        [Authorize(Roles = "Admin")]
+        [HttpPost("reject/{sellerId}")]
+        public async Task<IActionResult> RejectSeller(long sellerId)
+        {
+            await _sellerService.RejectSellerAsync(sellerId);
+            return Ok(new { message = "Satıcı başvurusu reddedildi." });
         }
     }
 }

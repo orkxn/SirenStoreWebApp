@@ -21,11 +21,13 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 // 2. REPOSITORY & SERVICE KAYITLARI (DEPENDENCY INJECTION)
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-builder.Services.AddScoped<IAdminService, AdminManager>();
-builder.Services.AddScoped<IProductService, ProductManager>();
-builder.Services.AddScoped<ISellerService, SellerManager>();
 builder.Services.AddScoped<IAuthService, AuthManager>();
 builder.Services.AddScoped<IUserService, UserManager>();
+builder.Services.AddScoped<ISellerService, SellerManager>();
+builder.Services.AddScoped<IProductService, ProductManager>();
+builder.Services.AddScoped<IBasketService, BasketManager>();
+builder.Services.AddScoped<IOrderService, OrderManager>();
+builder.Services.AddScoped<ICategoryService, CategoryManager>();
 
 // 3. AUTOMAPPER & FLUENTVALIDATION ENTEGRASYONLARI
 builder.Services.AddSingleton<IMapper>(provider =>
@@ -38,7 +40,7 @@ builder.Services.AddSingleton<IMapper>(provider =>
     return new AutoMapper.Mapper(config);
 });
 
-builder.Services.AddValidatorsFromAssemblyContaining<CreateProductValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<CreateProductDtoValidator>();
 
 // 4. JWT KIMLIK DOGRULAMA (AUTHENTICATION) AYARLARI
 builder.Services.AddAuthentication(options =>
@@ -91,6 +93,14 @@ app.UseExceptionHandler(errorApp =>
                     Type = "ValidationError",
                     Errors = valEx.Errors.Select(e => new { e.PropertyName, e.ErrorMessage })
                 } as object
+            ),
+            UnauthorizedAccessException _ => (
+                StatusCodes.Status401Unauthorized,
+                new { Type = "Unauthorized", Message = "Geçerli kimlik bilgisi bulunamadı veya oturum açmanız gerekiyor." } as object
+            ),
+            SirenStore.Application.Exceptions.ForbiddenException forbiddenEx => (
+                StatusCodes.Status403Forbidden,
+                new { Type = "Forbidden", Message = forbiddenEx.Message } as object
             ),
             SirenStore.Application.Exceptions.NotFoundException notFoundEx => (
                 StatusCodes.Status404NotFound,

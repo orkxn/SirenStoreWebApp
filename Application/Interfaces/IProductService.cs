@@ -4,10 +4,13 @@ namespace SirenStore.Application.Interfaces
 {
     public interface IProductService
     {
-        Task<IEnumerable<ProductDto>> GetAllProductsAsync();
-        Task<ProductDto> GetProductByIdAsync(long id);
-        Task CreateProductAsync(CreateProductDto dto);
-        Task UpdateStockAsync(long productId, int quantity); // Ürüne has iş mantığı
-        Task ToggleProductStatusAsync(long productId);
+        Task<IEnumerable<ProductListDto>> GetAllAsync(); 
+        Task<IEnumerable<ProductListDto>> GetByCategoryIdAsync(long categoryId);
+        Task<ProductListDto> GetByIdAsync(long id); // Ürün detayını getirir
+
+        // Satıcıya Özel Yönetim İşlemleri (Sadece Mağaza Sahibi)
+        Task CreateAsync(long userId, CreateProductDto dto); // Ürün oluşturma işlemi
+        Task UpdateAsync(long userId, UpdateProductDto dto); // Ürün güncelleme işlemi
+        Task DeleteAsync(long userId, long productId); // Ürün silme işlemi
     }
 }

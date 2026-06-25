@@ -1,12 +1,11 @@
-namespace Entities.Enums
+﻿namespace Entities.Enums
 {
     public enum OrderStatus
     {
-        Pending = 1,
-        Processing = 2,
-        Shipped = 3,
-        Delivered = 4,
-        Cancelled = 5,
-        Refunded = 6
+        Received = 1,    // Sipariş Alındı
+        Preparing = 2,   // Hazırlanıyor
+        Shipped = 3,     // Kargoda
+        Delivered = 4,   // Teslim Edildi
+        Cancelled = 5    // İptal Edildi
     }
 }

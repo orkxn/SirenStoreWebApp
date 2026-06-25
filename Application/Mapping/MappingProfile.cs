@@ -29,6 +29,25 @@ namespace SirenStore.Application.Mapping
 
             // User
             CreateMap<User, UserProfileDto>();
+
+            // Basket
+            CreateMap<Basket, BasketDto>();
+            CreateMap<BasketItem, BasketItemDto>()
+                .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Product.Name))
+                .ForMember(dest => dest.Price, opt => opt.MapFrom(src => src.Product.Price))
+                .ForMember(dest => dest.ProductImageUrl, opt => opt.MapFrom(src => src.Product.ProductImages.FirstOrDefault(img => img.IsMain).ImageUrl));
+
+            // Order
+            CreateMap<Order, OrderDto>()
+                // Enum durumunu string metne çeviriyoruz ("Received", "Shipped" vb.)
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
+                // Alt kalemlerin List<OrderItem> otomatik haritalanması için EF Core ilişkisini bağlıyoruz
+                .ForMember(dest => dest.OrderItems, opt => opt.MapFrom(src => src.OrderItems));
+
+            // 2. OrderItem -> OrderItemDto Haritalaması
+            CreateMap<OrderItem, OrderItemDto>()
+                // Düzleştirme (Flattening): Ürün adını bağlı olan Product tablosundan çekiyoruz
+                .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Product.Name));
         }
     }
 }

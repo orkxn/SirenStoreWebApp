@@ -20,6 +20,12 @@ namespace SirenStore.Application.Validators
 
             RuleFor(x => x.LastName)
                 .NotEmpty().WithMessage("Soyad alanı boş bırakılamaz.");
+
+            RuleFor(x => x.PhoneNumber)
+                .NotEmpty().WithMessage("Telefon alanı boş bırakılamaz.")
+                .MinimumLength(10).WithMessage("Telefon numaranız en az 10 karakter olmalıdır.")
+                .Matches(@"^\+?[1-9]\d{1,14}$").WithMessage("Lütfen geçerli bir telefon numarası giriniz.");
+
         }
     }
 }

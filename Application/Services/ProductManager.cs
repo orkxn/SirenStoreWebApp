@@ -1,73 +1,225 @@
-using AutoMapper;
-using Entities.Models;
+﻿using Entities.Models;
 using FluentValidation;
+using Microsoft.EntityFrameworkCore;
 using SirenStore.Application.DTOs;
 using SirenStore.Application.Exceptions;
 using SirenStore.Application.Interfaces;
 
 namespace SirenStore.Application.Services
 {
-    public class ProductManager(
-        IRepository<Product> productRepository,
-        IMapper mapper,
-        IValidator<CreateProductDto> createProductValidator) : IProductService
+    public class ProductManager : IProductService
     {
-        public async Task<IEnumerable<ProductDto>> GetAllProductsAsync()
+        private readonly IRepository<Product> _productRepository;
+        private readonly IRepository<Seller> _sellerRepository;
+        private readonly IRepository<Category> _categoryRepository;
+        private readonly IValidator<CreateProductDto> _createValidator;
+        private readonly IValidator<UpdateProductDto> _updateValidator;
+
+        public ProductManager(
+            IRepository<Product> productRepository,
+            IRepository<Seller> sellerRepository,
+            IRepository<Category> categoryRepository,
+            IValidator<CreateProductDto> createValidator,
+            IValidator<UpdateProductDto> updateValidator)
         {
-            // İş mantığı: Sadece aktif ürünleri DB seviyesinde filtreleyerek çekiyoruz
-            var activeProducts = await productRepository.GetAllAsync(p => p.IsActive);
-            return mapper.Map<IEnumerable<ProductDto>>(activeProducts);
+            _productRepository = productRepository;
+            _sellerRepository = sellerRepository;
+            _categoryRepository = categoryRepository;
+            _createValidator = createValidator;
+            _updateValidator = updateValidator;
         }
 
-        public async Task<ProductDto> GetProductByIdAsync(long id)
+        // 1. TÜM ÜRÜNLERİ LİSTELE (IQueryable & Projeksiyon Avantajı)
+        public async Task<IEnumerable<ProductListDto>> GetAllAsync()
         {
-            var product = await productRepository.GetByIdAsync(id);
-            if (product == null || !product.IsActive)
-                throw new NotFoundException("Ürün", id);
-
-            return mapper.Map<ProductDto>(product);
+            return await _productRepository.AsQueryable()
+                .Include(p => p.Category)
+                .Include(p => p.Seller)
+                .Include(p => p.ProductImages)
+                // Select ile sadece DTO'ya lazım olan kolonları SQL seviyesinde çekiyoruz
+                .Select(p => new ProductListDto
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Description = p.Description,
+                    Price = p.Price,
+                    Stock = p.Stock,
+                    CategoryName = p.Category.Name,
+                    StoreName = p.Seller.StoreName,
+                    // Ana resmi bul, yoksa ilk resmi al, o da yoksa null dön
+                    MainImageUrl = p.ProductImages.FirstOrDefault(img => img.IsMain).ImageUrl
+                                   ?? p.ProductImages.FirstOrDefault().ImageUrl
+                })
+                .ToListAsync();
         }
 
-        public async Task CreateProductAsync(CreateProductDto dto)
+        // 2. KATEGORİYE GÖRE LİSTELE
+        public async Task<IEnumerable<ProductListDto>> GetByCategoryIdAsync(long categoryId)
         {
-            await createProductValidator.ValidateAndThrowAsync(dto);
+            // Önce kategori var mı kontrolü
+            var categoryExists = await _categoryRepository.AsQueryable().AnyAsync(c => c.Id == categoryId);
+            if (!categoryExists)
+                throw new NotFoundException("Belirtilen kategori bulunamadı.");
 
-            // Category existence is validated by FluentValidation (CreateProductValidator)
-            // so no need to check it again here to avoid duplicate DB calls.
-
-            var product = mapper.Map<Product>(dto);
-            product.IsActive = true; // Ürün ilk eklendiğinde doğrudan satışa çıksın
-
-            await productRepository.AddAsync(product);
-            await productRepository.SaveChangesAsync();
+            return await _productRepository.AsQueryable()
+                .Where(p => p.CategoryId == categoryId)
+                .Include(p => p.Category)
+                .Include(p => p.Seller)
+                .Include(p => p.ProductImages)
+                .Select(p => new ProductListDto
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Description = p.Description,
+                    Price = p.Price,
+                    Stock = p.Stock,
+                    CategoryName = p.Category.Name,
+                    StoreName = p.Seller.StoreName,
+                    MainImageUrl = p.ProductImages.FirstOrDefault(img => img.IsMain).ImageUrl
+                                   ?? p.ProductImages.FirstOrDefault().ImageUrl
+                })
+                .ToListAsync();
         }
 
-        public async Task UpdateStockAsync(long productId, int quantity)
+        // 3. ÜRÜN DETAYI GETİR
+        public async Task<ProductListDto> GetByIdAsync(long id)
         {
-            var product = await productRepository.GetByIdAsync(productId);
-            if (product == null || !product.IsActive || product.IsDeleted) throw new NotFoundException("Ürün", productId);
+            var productDto = await _productRepository.AsQueryable()
+                .Where(p => p.Id == id)
+                .Include(p => p.Category)
+                .Include(p => p.Seller)
+                .Include(p => p.ProductImages)
+                .Select(p => new ProductListDto
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Description = p.Description,
+                    Price = p.Price,
+                    Stock = p.Stock,
+                    CategoryName = p.Category.Name,
+                    StoreName = p.Seller.StoreName,
+                    MainImageUrl = p.ProductImages.FirstOrDefault(img => img.IsMain).ImageUrl
+                                   ?? p.ProductImages.FirstOrDefault().ImageUrl
+                })
+                .FirstOrDefaultAsync();
 
-            // İş mantığı: Stok kontrolü
-            if (quantity < 0)
-                throw new BusinessRuleException("Yeni stok sayınız geçersiz!");
+            if (productDto == null)
+                throw new NotFoundException("Ürün bulunamadı.");
 
-            product.Stock = quantity;
-            productRepository.Update(product);
-            await productRepository.SaveChangesAsync();
+            return productDto;
         }
 
-        public async Task ToggleProductStatusAsync(long productId)
+        // 4. ÜRÜN EKLE
+        public async Task CreateAsync(long userId, CreateProductDto dto)
         {
-            var product = await productRepository.GetByIdAsync(productId);
+            // Kapıda doğrula
+            await _createValidator.ValidateAndThrowAsync(dto);
 
-            if (product == null || product.IsDeleted)
-                throw new NotFoundException("Ürün", productId);
+            // Bu işlemi yapmaya çalışan kullanıcının aktif bir satıcı kaydı var mı?
+            var seller = await _sellerRepository.GetAsync(s => s.UserId == userId);
+            if (seller == null || seller.Status != Entities.Enums.SellerStatus.Approved)
+                throw new BusinessRuleException("Sadece onaylanmış mağazalar ürün ekleyebilir.");
 
-            product.IsActive = !product.IsActive;
+            // Kategori kontrolü
+            var categoryExists = await _categoryRepository.AsQueryable().AnyAsync(c => c.Id == dto.CategoryId);
+            if (!categoryExists)
+                throw new NotFoundException("Seçilen kategori geçerli değil.");
 
-            productRepository.Update(product);
-            await productRepository.SaveChangesAsync();
+            var newProduct = new Product
+            {
+                Name = dto.Name,
+                Description = dto.Description,
+                Price = dto.Price,
+                Stock = dto.Stock,
+                CategoryId = dto.CategoryId,
+                SellerId = seller.Id // Token'dan bulduğumuz güvenli mağaza ID'si
+            };
+
+            if (dto.ImageUrls != null && dto.ImageUrls.Any())
+            {
+                for (int i = 0; i < dto.ImageUrls.Count; i++)
+                {
+                    newProduct.ProductImages.Add(new ProductImage
+                    {
+                        ImageUrl = dto.ImageUrls[i],
+                        IsMain = (i == 0)
+                    });
+                }
+            }
+
+            await _productRepository.AddAsync(newProduct);
+            await _productRepository.SaveChangesAsync();
         }
 
+        // 5. ÜRÜN GÜNCELLE (IDOR Korumalı)
+        public async Task UpdateAsync(long userId, UpdateProductDto dto)
+        {
+            await _updateValidator.ValidateAndThrowAsync(dto);
+
+            // İşlemi yapan kişinin mağazasını bul
+            var seller = await _sellerRepository.GetAsync(s => s.UserId == userId);
+            if (seller == null)
+                throw new BusinessRuleException("Satıcı profili bulunamadı.");
+
+            // Güncellenmek istenen ürünü getir
+            var product = await _productRepository.GetAsync(p => p.Id == dto.Id);
+            if (product == null)
+                throw new NotFoundException("Güncellenmek istenen ürün bulunamadı.");
+
+            // IDOR GÜVENLİK DUVARI: Bu ürün gerçekten bu satıcıya mı ait?
+            if (product.SellerId != seller.Id)
+                throw new BusinessRuleException("Bu ürünü güncelleme yetkiniz bulunmamaktadır!");
+
+            // Kategori kontrolü
+            var categoryExists = await _categoryRepository.AsQueryable().AnyAsync(c => c.Id == dto.CategoryId);
+            if (!categoryExists)
+                throw new NotFoundException("Seçilen kategori geçerli değil.");
+
+            // Güncelleme lojiği
+            product.Name = dto.Name;
+            product.Description = dto.Description;
+            product.Price = dto.Price;
+            product.Stock = dto.Stock;
+            product.CategoryId = dto.CategoryId;
+
+            product.ProductImages.Clear();
+
+            if (dto.ImageUrls != null && dto.ImageUrls.Any())
+            {
+                for (int i = 0; i < dto.ImageUrls.Count; i++)
+                {
+                    product.ProductImages.Add(new ProductImage
+                    {
+                        ImageUrl = dto.ImageUrls[i],
+                        IsMain = (i == 0) 
+                    });
+                }
+            }
+
+            _productRepository.Update(product);
+            await _productRepository.SaveChangesAsync();
+        }
+
+        // 6. ÜRÜN SİL (Soft Delete & IDOR Korumalı)
+        public async Task DeleteAsync(long userId, long productId)
+        {
+            var seller = await _sellerRepository.GetAsync(s => s.UserId == userId);
+            if (seller == null)
+                throw new BusinessRuleException("Satıcı profili bulunamadı.");
+
+            var product = await _productRepository.GetAsync(p => p.Id == productId);
+            if (product == null)
+                throw new NotFoundException("Silinmek istenen ürün bulunamadı.");
+
+            // IDOR GÜVENLİK DUVARI
+            if (product.SellerId != seller.Id)
+                throw new BusinessRuleException("Bu ürünü silme yetkiniz bulunmamaktadır!");
+
+            
+            product.IsDeleted = true;
+
+            _productRepository.Update(product);
+            await _productRepository.SaveChangesAsync();
+        }
     }
 }

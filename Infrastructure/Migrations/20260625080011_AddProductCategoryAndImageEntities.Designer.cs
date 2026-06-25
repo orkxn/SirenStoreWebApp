@@ -12,8 +12,8 @@ using SirenStore.Infrastructure.Context;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260624112028_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260625080011_AddProductCategoryAndImageEntities")]
+    partial class AddProductCategoryAndImageEntities
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -303,7 +303,8 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("description");
 
                     b.Property<bool>("IsDeleted")
@@ -312,12 +313,9 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("name");
-
-                    b.Property<long?>("ParentCategoryId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("parent_category_ıd");
 
                     b.Property<DateTime?>("UpdatedDate")
                         .HasColumnType("timestamp with time zone")
@@ -326,10 +324,7 @@ namespace Infrastructure.Migrations
                     b.HasKey("Id")
                         .HasName("pk_categories");
 
-                    b.HasIndex("ParentCategoryId")
-                        .HasDatabaseName("ıx_categories_parent_category_ıd");
-
-                    b.ToTable("categories");
+                    b.ToTable("categories", (string)null);
                 });
 
             modelBuilder.Entity("Entities.Models.CmsContent", b =>
@@ -739,12 +734,6 @@ namespace Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
-                    b.Property<string>("Brand")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("character varying(30)")
-                        .HasColumnName("brand");
-
                     b.Property<long>("CategoryId")
                         .HasColumnType("bigint")
                         .HasColumnName("category_ıd");
@@ -755,13 +744,9 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("character varying(150)")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
                         .HasColumnName("description");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean")
-                        .HasColumnName("ıs_active");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean")
@@ -769,12 +754,12 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(60)
-                        .HasColumnType("character varying(60)")
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
                         .HasColumnName("name");
 
                     b.Property<decimal>("Price")
-                        .HasColumnType("numeric")
+                        .HasColumnType("decimal(18,2)")
                         .HasColumnName("price");
 
                     b.Property<long>("SellerId")
@@ -798,7 +783,7 @@ namespace Infrastructure.Migrations
                     b.HasIndex("SellerId")
                         .HasDatabaseName("ıx_products_seller_ıd");
 
-                    b.ToTable("products");
+                    b.ToTable("products", (string)null);
                 });
 
             modelBuilder.Entity("Entities.Models.ProductImage", b =>
@@ -814,12 +799,20 @@ namespace Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("creation_date");
 
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("ımage_url");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean")
                         .HasColumnName("ıs_deleted");
 
                     b.Property<bool>("IsMain")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
+                        .HasDefaultValue(false)
                         .HasColumnName("ıs_main");
 
                     b.Property<long>("ProductId")
@@ -830,18 +823,13 @@ namespace Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_date");
 
-                    b.Property<string>("Url")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("url");
-
                     b.HasKey("Id")
-                        .HasName("pk_product_ımages");
+                        .HasName("pk_product_images");
 
                     b.HasIndex("ProductId")
-                        .HasDatabaseName("ıx_product_ımages_product_ıd");
+                        .HasDatabaseName("ıx_product_images_product_ıd");
 
-                    b.ToTable("product_ımages");
+                    b.ToTable("product_images", (string)null);
                 });
 
             modelBuilder.Entity("Entities.Models.ProductQuestion", b =>
@@ -954,54 +942,59 @@ namespace Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
-                    b.Property<string>("ContactEmail")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("contact_email");
-
-                    b.Property<string>("ContactPhone")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("contact_phone");
-
                     b.Property<DateTime>("CreationDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("creation_date");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean")
-                        .HasColumnName("ıs_active");
-
-                    b.Property<bool>("IsApproved")
-                        .HasColumnType("boolean")
-                        .HasColumnName("ıs_approved");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean")
                         .HasColumnName("ıs_deleted");
 
+                    b.Property<int>("Status")
+                        .HasColumnType("integer")
+                        .HasColumnName("status");
+
                     b.Property<string>("StoreName")
                         .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("character varying(150)")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("store_name");
 
-                    b.Property<string>("SupportLine")
+                    b.Property<string>("TaxNumber")
                         .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("character varying(30)")
-                        .HasColumnName("support_line");
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("tax_number");
+
+                    b.Property<string>("TaxOffice")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("tax_office");
 
                     b.Property<DateTime?>("UpdatedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_date");
 
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("user_ıd");
+
+                    b.Property<long?>("UserId1")
+                        .HasColumnType("bigint")
+                        .HasColumnName("user_ıd1");
+
                     b.HasKey("Id")
                         .HasName("pk_sellers");
 
-                    b.ToTable("sellers");
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasDatabaseName("ıx_sellers_user_ıd");
+
+                    b.HasIndex("UserId1")
+                        .IsUnique()
+                        .HasDatabaseName("ıx_sellers_user_ıd1");
+
+                    b.ToTable("sellers", (string)null);
                 });
 
             modelBuilder.Entity("Entities.Models.SellerAddress", b =>
@@ -1088,8 +1081,7 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("IbanNumber")
                         .IsRequired()
-                        .HasMaxLength(34)
-                        .HasColumnType("character varying(34)")
+                        .HasColumnType("text")
                         .HasColumnName("ıban_number");
 
                     b.Property<bool>("IsDeleted")
@@ -1118,7 +1110,6 @@ namespace Infrastructure.Migrations
                         .HasName("pk_seller_finances");
 
                     b.HasIndex("SellerId")
-                        .IsUnique()
                         .HasDatabaseName("ıx_seller_finances_seller_ıd");
 
                     b.ToTable("seller_finances");
@@ -1181,10 +1172,6 @@ namespace Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("refresh_token_expiry_time");
 
-                    b.Property<long?>("SellerId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("seller_ıd");
-
                     b.Property<DateTime?>("UpdatedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_date");
@@ -1195,9 +1182,6 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_users");
-
-                    b.HasIndex("SellerId")
-                        .HasDatabaseName("ıx_users_seller_ıd");
 
                     b.ToTable("users");
                 });
@@ -1397,16 +1381,6 @@ namespace Infrastructure.Migrations
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("Entities.Models.Category", b =>
-                {
-                    b.HasOne("Entities.Models.Category", "ParentCategory")
-                        .WithMany("SubCategories")
-                        .HasForeignKey("ParentCategoryId")
-                        .HasConstraintName("fk_categories_categories_parent_category_ıd");
-
-                    b.Navigation("ParentCategory");
-                });
-
             modelBuilder.Entity("Entities.Models.LoginHistory", b =>
                 {
                     b.HasOne("Entities.Models.User", "User")
@@ -1457,12 +1431,12 @@ namespace Infrastructure.Migrations
                     b.HasOne("Entities.Models.Category", "Category")
                         .WithMany("Products")
                         .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_products_categories_category_ıd");
 
                     b.HasOne("Entities.Models.Seller", "Seller")
-                        .WithMany()
+                        .WithMany("Products")
                         .HasForeignKey("SellerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
@@ -1476,11 +1450,11 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Entities.Models.ProductImage", b =>
                 {
                     b.HasOne("Entities.Models.Product", "Product")
-                        .WithMany("Images")
+                        .WithMany("ProductImages")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_product_ımages_products_product_ıd");
+                        .HasConstraintName("fk_product_images_products_product_ıd");
 
                     b.Navigation("Product");
                 });
@@ -1488,7 +1462,7 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Entities.Models.ProductQuestion", b =>
                 {
                     b.HasOne("Entities.Models.Product", "Product")
-                        .WithMany("Questions")
+                        .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
@@ -1500,7 +1474,7 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Entities.Models.ProductReview", b =>
                 {
                     b.HasOne("Entities.Models.Product", "Product")
-                        .WithMany("Reviews")
+                        .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
@@ -1509,10 +1483,27 @@ namespace Infrastructure.Migrations
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("Entities.Models.Seller", b =>
+                {
+                    b.HasOne("Entities.Models.User", "User")
+                        .WithOne()
+                        .HasForeignKey("Entities.Models.Seller", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_sellers_users_user_ıd");
+
+                    b.HasOne("Entities.Models.User", null)
+                        .WithOne("Seller")
+                        .HasForeignKey("Entities.Models.Seller", "UserId1")
+                        .HasConstraintName("fk_sellers_users_user_ıd1");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Entities.Models.SellerAddress", b =>
                 {
                     b.HasOne("Entities.Models.Seller", "Seller")
-                        .WithMany("Addresses")
+                        .WithMany()
                         .HasForeignKey("SellerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
@@ -1524,21 +1515,11 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Entities.Models.SellerFinance", b =>
                 {
                     b.HasOne("Entities.Models.Seller", "Seller")
-                        .WithOne("FinanceInfo")
-                        .HasForeignKey("Entities.Models.SellerFinance", "SellerId")
+                        .WithMany()
+                        .HasForeignKey("SellerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_seller_finances_sellers_seller_ıd");
-
-                    b.Navigation("Seller");
-                });
-
-            modelBuilder.Entity("Entities.Models.User", b =>
-                {
-                    b.HasOne("Entities.Models.Seller", "Seller")
-                        .WithMany()
-                        .HasForeignKey("SellerId")
-                        .HasConstraintName("fk_users_sellers_seller_ıd");
 
                     b.Navigation("Seller");
                 });
@@ -1563,8 +1544,6 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Entities.Models.Category", b =>
                 {
                     b.Navigation("Products");
-
-                    b.Navigation("SubCategories");
                 });
 
             modelBuilder.Entity("Entities.Models.Order", b =>
@@ -1574,19 +1553,12 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Entities.Models.Product", b =>
                 {
-                    b.Navigation("Images");
-
-                    b.Navigation("Questions");
-
-                    b.Navigation("Reviews");
+                    b.Navigation("ProductImages");
                 });
 
             modelBuilder.Entity("Entities.Models.Seller", b =>
                 {
-                    b.Navigation("Addresses");
-
-                    b.Navigation("FinanceInfo")
-                        .IsRequired();
+                    b.Navigation("Products");
                 });
 
             modelBuilder.Entity("Entities.Models.User", b =>
@@ -1594,6 +1566,8 @@ namespace Infrastructure.Migrations
                     b.Navigation("Addresses");
 
                     b.Navigation("LoginHistories");
+
+                    b.Navigation("Seller");
                 });
 #pragma warning restore 612, 618
         }

@@ -1,12 +1,15 @@
-using SirenStore.Application.DTOs; // Birazdan oluşturacağınız DTO'lar için
+using SirenStore.Application.DTOs;
 
 namespace SirenStore.Application.Interfaces
 {
     public interface ISellerService
     {
-        Task<IEnumerable<SellerDto>> GetAllSellersAsync();
-        Task<SellerDto> GetSellerByIdAsync(long id);
-        Task CreateSellerAsync(CreateSellerDto dto);
-        Task ToggleAccountStatusAsync(long sellerId);
+        // 1. Müşterinin satıcı olmak için başvurması
+        Task BecomeSellerAsync(long userId, BecomeSellerRequestDto dto);
+
+        // 2. Admin'in başvuruyu onaylaması (veya reddetmesi)
+        Task ApproveSellerAsync(long sellerId);
+        Task RejectSellerAsync(long sellerId);
+        Task<SellerPublicProfileDto> GetSellerProfileAsync(long sellerId);
     }
 }

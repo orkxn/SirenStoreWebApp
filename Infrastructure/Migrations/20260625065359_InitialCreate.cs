@@ -151,24 +151,28 @@ namespace Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "sellers",
+                name: "users",
                 columns: table => new
                 {
                     ıd = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    store_name = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
-                    contact_email = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    contact_phone = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    support_line = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
-                    ıs_approved = table.Column<bool>(type: "boolean", nullable: false),
+                    first_name = table.Column<string>(type: "text", nullable: false),
+                    last_name = table.Column<string>(type: "text", nullable: false),
+                    email = table.Column<string>(type: "text", nullable: false),
+                    password_hash = table.Column<string>(type: "text", nullable: false),
+                    phone_number = table.Column<string>(type: "text", nullable: true),
+                    user_type = table.Column<int>(type: "integer", nullable: false),
                     ıs_active = table.Column<bool>(type: "boolean", nullable: false),
+                    ıs_email_confirmed = table.Column<bool>(type: "boolean", nullable: false),
+                    refresh_token = table.Column<string>(type: "text", nullable: true),
+                    refresh_token_expiry_time = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     creation_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     updated_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     ıs_deleted = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("pk_sellers", x => x.ıd);
+                    table.PrimaryKey("pk_users", x => x.ıd);
                 });
 
             migrationBuilder.CreateTable(
@@ -197,201 +201,6 @@ namespace Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_vendor_applications", x => x.ıd);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "products",
-                columns: table => new
-                {
-                    ıd = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    name = table.Column<string>(type: "character varying(60)", maxLength: 60, nullable: false),
-                    brand = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
-                    description = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
-                    ıs_active = table.Column<bool>(type: "boolean", nullable: false),
-                    price = table.Column<decimal>(type: "numeric", nullable: false),
-                    stock = table.Column<int>(type: "integer", nullable: false),
-                    category_ıd = table.Column<long>(type: "bigint", nullable: false),
-                    seller_ıd = table.Column<long>(type: "bigint", nullable: false),
-                    creation_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    ıs_deleted = table.Column<bool>(type: "boolean", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_products", x => x.ıd);
-                    table.ForeignKey(
-                        name: "fk_products_categories_category_ıd",
-                        column: x => x.category_ıd,
-                        principalTable: "categories",
-                        principalColumn: "ıd",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "fk_products_sellers_seller_ıd",
-                        column: x => x.seller_ıd,
-                        principalTable: "sellers",
-                        principalColumn: "ıd",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "seller_addresses",
-                columns: table => new
-                {
-                    ıd = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    seller_ıd = table.Column<long>(type: "bigint", nullable: false),
-                    address_type = table.Column<string>(type: "text", nullable: false),
-                    city = table.Column<string>(type: "text", nullable: false),
-                    district = table.Column<string>(type: "text", nullable: false),
-                    full_address = table.Column<string>(type: "text", nullable: false),
-                    zip_code = table.Column<string>(type: "text", nullable: false),
-                    creation_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    ıs_deleted = table.Column<bool>(type: "boolean", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_seller_addresses", x => x.ıd);
-                    table.ForeignKey(
-                        name: "fk_seller_addresses_sellers_seller_ıd",
-                        column: x => x.seller_ıd,
-                        principalTable: "sellers",
-                        principalColumn: "ıd",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "seller_finances",
-                columns: table => new
-                {
-                    ıd = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    seller_ıd = table.Column<long>(type: "bigint", nullable: false),
-                    company_type = table.Column<string>(type: "text", nullable: false),
-                    tax_office = table.Column<string>(type: "text", nullable: false),
-                    tax_number = table.Column<string>(type: "text", nullable: false),
-                    ıban_number = table.Column<string>(type: "character varying(34)", maxLength: 34, nullable: false),
-                    bank_name = table.Column<string>(type: "text", nullable: false),
-                    creation_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    ıs_deleted = table.Column<bool>(type: "boolean", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_seller_finances", x => x.ıd);
-                    table.ForeignKey(
-                        name: "fk_seller_finances_sellers_seller_ıd",
-                        column: x => x.seller_ıd,
-                        principalTable: "sellers",
-                        principalColumn: "ıd",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "users",
-                columns: table => new
-                {
-                    ıd = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    first_name = table.Column<string>(type: "text", nullable: false),
-                    last_name = table.Column<string>(type: "text", nullable: false),
-                    email = table.Column<string>(type: "text", nullable: false),
-                    password_hash = table.Column<string>(type: "text", nullable: false),
-                    phone_number = table.Column<string>(type: "text", nullable: true),
-                    user_type = table.Column<int>(type: "integer", nullable: false),
-                    ıs_active = table.Column<bool>(type: "boolean", nullable: false),
-                    ıs_email_confirmed = table.Column<bool>(type: "boolean", nullable: false),
-                    refresh_token = table.Column<string>(type: "text", nullable: true),
-                    refresh_token_expiry_time = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    seller_ıd = table.Column<long>(type: "bigint", nullable: true),
-                    creation_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    ıs_deleted = table.Column<bool>(type: "boolean", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_users", x => x.ıd);
-                    table.ForeignKey(
-                        name: "fk_users_sellers_seller_ıd",
-                        column: x => x.seller_ıd,
-                        principalTable: "sellers",
-                        principalColumn: "ıd");
-                });
-
-            migrationBuilder.CreateTable(
-                name: "product_ımages",
-                columns: table => new
-                {
-                    ıd = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    product_ıd = table.Column<long>(type: "bigint", nullable: false),
-                    url = table.Column<string>(type: "text", nullable: false),
-                    ıs_main = table.Column<bool>(type: "boolean", nullable: false),
-                    creation_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    ıs_deleted = table.Column<bool>(type: "boolean", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_product_ımages", x => x.ıd);
-                    table.ForeignKey(
-                        name: "fk_product_ımages_products_product_ıd",
-                        column: x => x.product_ıd,
-                        principalTable: "products",
-                        principalColumn: "ıd",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "product_questions",
-                columns: table => new
-                {
-                    ıd = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    product_ıd = table.Column<long>(type: "bigint", nullable: false),
-                    user_email = table.Column<string>(type: "text", nullable: false),
-                    question_text = table.Column<string>(type: "text", nullable: false),
-                    answer_text = table.Column<string>(type: "text", nullable: false),
-                    answer_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    creation_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    ıs_deleted = table.Column<bool>(type: "boolean", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_product_questions", x => x.ıd);
-                    table.ForeignKey(
-                        name: "fk_product_questions_products_product_ıd",
-                        column: x => x.product_ıd,
-                        principalTable: "products",
-                        principalColumn: "ıd",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "product_reviews",
-                columns: table => new
-                {
-                    ıd = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    product_ıd = table.Column<long>(type: "bigint", nullable: false),
-                    user_email = table.Column<string>(type: "text", nullable: false),
-                    comment = table.Column<string>(type: "text", nullable: false),
-                    rating = table.Column<int>(type: "integer", nullable: false),
-                    creation_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    ıs_deleted = table.Column<bool>(type: "boolean", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_product_reviews", x => x.ıd);
-                    table.ForeignKey(
-                        name: "fk_product_reviews_products_product_ıd",
-                        column: x => x.product_ıd,
-                        principalTable: "products",
-                        principalColumn: "ıd",
-                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -525,6 +334,38 @@ namespace Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "sellers",
+                columns: table => new
+                {
+                    ıd = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    store_name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    tax_number = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: false),
+                    tax_office = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    status = table.Column<int>(type: "integer", nullable: false),
+                    user_ıd = table.Column<long>(type: "bigint", nullable: false),
+                    user_ıd1 = table.Column<long>(type: "bigint", nullable: true),
+                    creation_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    updated_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    ıs_deleted = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_sellers", x => x.ıd);
+                    table.ForeignKey(
+                        name: "fk_sellers_users_user_ıd",
+                        column: x => x.user_ıd,
+                        principalTable: "users",
+                        principalColumn: "ıd",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_sellers_users_user_ıd1",
+                        column: x => x.user_ıd1,
+                        principalTable: "users",
+                        principalColumn: "ıd");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "warning_records",
                 columns: table => new
                 {
@@ -547,6 +388,95 @@ namespace Infrastructure.Migrations
                         name: "fk_warning_records_users_user_ıd",
                         column: x => x.user_ıd,
                         principalTable: "users",
+                        principalColumn: "ıd",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "products",
+                columns: table => new
+                {
+                    ıd = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    name = table.Column<string>(type: "character varying(60)", maxLength: 60, nullable: false),
+                    brand = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    description = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
+                    ıs_active = table.Column<bool>(type: "boolean", nullable: false),
+                    price = table.Column<decimal>(type: "numeric", nullable: false),
+                    stock = table.Column<int>(type: "integer", nullable: false),
+                    category_ıd = table.Column<long>(type: "bigint", nullable: false),
+                    seller_ıd = table.Column<long>(type: "bigint", nullable: false),
+                    creation_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    updated_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    ıs_deleted = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_products", x => x.ıd);
+                    table.ForeignKey(
+                        name: "fk_products_categories_category_ıd",
+                        column: x => x.category_ıd,
+                        principalTable: "categories",
+                        principalColumn: "ıd",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_products_sellers_seller_ıd",
+                        column: x => x.seller_ıd,
+                        principalTable: "sellers",
+                        principalColumn: "ıd",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "seller_addresses",
+                columns: table => new
+                {
+                    ıd = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    seller_ıd = table.Column<long>(type: "bigint", nullable: false),
+                    address_type = table.Column<string>(type: "text", nullable: false),
+                    city = table.Column<string>(type: "text", nullable: false),
+                    district = table.Column<string>(type: "text", nullable: false),
+                    full_address = table.Column<string>(type: "text", nullable: false),
+                    zip_code = table.Column<string>(type: "text", nullable: false),
+                    creation_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    updated_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    ıs_deleted = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_seller_addresses", x => x.ıd);
+                    table.ForeignKey(
+                        name: "fk_seller_addresses_sellers_seller_ıd",
+                        column: x => x.seller_ıd,
+                        principalTable: "sellers",
+                        principalColumn: "ıd",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "seller_finances",
+                columns: table => new
+                {
+                    ıd = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    seller_ıd = table.Column<long>(type: "bigint", nullable: false),
+                    company_type = table.Column<string>(type: "text", nullable: false),
+                    tax_office = table.Column<string>(type: "text", nullable: false),
+                    tax_number = table.Column<string>(type: "text", nullable: false),
+                    ıban_number = table.Column<string>(type: "text", nullable: false),
+                    bank_name = table.Column<string>(type: "text", nullable: false),
+                    creation_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    updated_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    ıs_deleted = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_seller_finances", x => x.ıd);
+                    table.ForeignKey(
+                        name: "fk_seller_finances_sellers_seller_ıd",
+                        column: x => x.seller_ıd,
+                        principalTable: "sellers",
                         principalColumn: "ıd",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -606,6 +536,81 @@ namespace Infrastructure.Migrations
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "fk_order_ıtems_products_product_ıd",
+                        column: x => x.product_ıd,
+                        principalTable: "products",
+                        principalColumn: "ıd",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "product_ımages",
+                columns: table => new
+                {
+                    ıd = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    product_ıd = table.Column<long>(type: "bigint", nullable: false),
+                    url = table.Column<string>(type: "text", nullable: false),
+                    ıs_main = table.Column<bool>(type: "boolean", nullable: false),
+                    creation_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    updated_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    ıs_deleted = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_product_ımages", x => x.ıd);
+                    table.ForeignKey(
+                        name: "fk_product_ımages_products_product_ıd",
+                        column: x => x.product_ıd,
+                        principalTable: "products",
+                        principalColumn: "ıd",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "product_questions",
+                columns: table => new
+                {
+                    ıd = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    product_ıd = table.Column<long>(type: "bigint", nullable: false),
+                    user_email = table.Column<string>(type: "text", nullable: false),
+                    question_text = table.Column<string>(type: "text", nullable: false),
+                    answer_text = table.Column<string>(type: "text", nullable: false),
+                    answer_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    creation_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    updated_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    ıs_deleted = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_product_questions", x => x.ıd);
+                    table.ForeignKey(
+                        name: "fk_product_questions_products_product_ıd",
+                        column: x => x.product_ıd,
+                        principalTable: "products",
+                        principalColumn: "ıd",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "product_reviews",
+                columns: table => new
+                {
+                    ıd = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    product_ıd = table.Column<long>(type: "bigint", nullable: false),
+                    user_email = table.Column<string>(type: "text", nullable: false),
+                    comment = table.Column<string>(type: "text", nullable: false),
+                    rating = table.Column<int>(type: "integer", nullable: false),
+                    creation_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    updated_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    ıs_deleted = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_product_reviews", x => x.ıd);
+                    table.ForeignKey(
+                        name: "fk_product_reviews_products_product_ıd",
                         column: x => x.product_ıd,
                         principalTable: "products",
                         principalColumn: "ıd",
@@ -695,13 +700,19 @@ namespace Infrastructure.Migrations
             migrationBuilder.CreateIndex(
                 name: "ıx_seller_finances_seller_ıd",
                 table: "seller_finances",
-                column: "seller_ıd",
+                column: "seller_ıd");
+
+            migrationBuilder.CreateIndex(
+                name: "ıx_sellers_user_ıd",
+                table: "sellers",
+                column: "user_ıd",
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "ıx_users_seller_ıd",
-                table: "users",
-                column: "seller_ıd");
+                name: "ıx_sellers_user_ıd1",
+                table: "sellers",
+                column: "user_ıd1",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "ıx_warning_records_user_ıd",
@@ -773,13 +784,13 @@ namespace Infrastructure.Migrations
                 name: "products");
 
             migrationBuilder.DropTable(
-                name: "users");
-
-            migrationBuilder.DropTable(
                 name: "categories");
 
             migrationBuilder.DropTable(
                 name: "sellers");
+
+            migrationBuilder.DropTable(
+                name: "users");
         }
     }
 }

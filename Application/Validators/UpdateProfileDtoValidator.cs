@@ -16,8 +16,9 @@ namespace SirenStore.Application.Validators
                 .MaximumLength(50).WithMessage("Soyad alanı en fazla 50 karakter olabilir.");
 
             RuleFor(x => x.PhoneNumber)
-                .Matches(@"^\+?[1-9]\d{1,14}$").WithMessage("Lütfen geçerli bir telefon numarası giriniz.")
-                .When(x => !string.IsNullOrEmpty(x.PhoneNumber)); // Telefon doldurulmuşsa formatı denetler, boşsa es geçer.
+                .NotEmpty().WithMessage("Telefon alanı boş bırakılamaz.")
+                .MinimumLength(10).WithMessage("Telefon numaranız en az 10 karakter olmalıdır.")
+                .Matches(@"^\+?[1-9]\d{1,14}$").WithMessage("Lütfen geçerli bir telefon numarası giriniz.");
         }
     }
 }
