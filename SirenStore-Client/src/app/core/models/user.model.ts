@@ -4,7 +4,7 @@ export enum UserTypes {
   Admin = 2
 }
 
-// 2. Her Modelde Ortak Olan Veritabanı Alanları
+// Her Modelde Ortak Olan Veritabanı Alanları
 export interface BaseModel {
   id: number;
   createdAt?: Date;
@@ -12,7 +12,7 @@ export interface BaseModel {
   isDeleted: boolean;
 }
 
-// 3. Ana Kullanıcı Şablonu
+// Ana Kullanıcı Şablonu
 export interface User extends BaseModel {
   firstName: string;
   lastName: string;
@@ -21,26 +21,65 @@ export interface User extends BaseModel {
   userType: UserTypes;
   isActive: boolean;
   isEmailConfirmed: boolean;
-
-  // JWT Oturum Yenileme Alanları
   refreshToken?: string;
   refreshTokenExpiryTime?: Date;
-
-  // İlişkili Diğer Modeller
   addresses?: any[];      
   seller?: any;          
   loginHistories?: any[];
 }
 
-// 4. (Login Request)
+// Backend TokenDto'ya birebir uyumlu Login yanıtı
+export interface TokenResponse {
+  accessToken: string;
+  expiration: string;
+  refreshToken: string;
+}
+
+// Login isteği
 export interface LoginRequest {
   email: string;
   password: string; 
 }
 
-// 5. (Login Response)
-export interface LoginResponse {
-  token: string;
-  refreshToken: string;
-  user: User;
+// Register isteği
+export interface RegisterRequest {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  phoneNumber?: string;
+}
+
+// Profil güncelleme isteği
+export interface UpdateProfileRequest {
+  firstName: string;
+  lastName: string;
+  phoneNumber?: string;
+}
+
+// Backend'den dönen Profil detayları
+export interface UserProfile {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber?: string;
+  userType: UserTypes;
+  isEmailConfirmed: boolean;
+}
+
+// Şifre değiştirme isteği
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+  confirmNewPassword: string;
+}
+
+// JWT token'dan çıkarılan kullanıcı bilgisi
+export interface DecodedUser {
+  id: number;
+  email: string;
+  firstName: string;
+  lastName: string;
+  userType: UserTypes;
 }

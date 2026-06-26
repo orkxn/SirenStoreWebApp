@@ -1,0 +1,83 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  <!-- Header Section -->
+  <div class="text-center mb-16">
+    <h1 class="text-4xl font-extrabold text-gray-900 tracking-tight sm:text-5xl">Yeni Gelenler</h1>
+    <p class="mt-4 max-w-2xl mx-auto text-xl text-gray-500">Sezonun en trend parçalarını keşfedin. Kalite ve şıklık SirenStore güvencesiyle kapınızda.</p>
+  </div>
+
+  <!-- Filters / Sort Section -->
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 pb-4 border-b border-gray-200 gap-4">
+    
+    <!-- Category Filter -->
+    <div class="flex flex-wrap items-center gap-2">
+      <button (click)="onCategorySelect(null)" 
+              [ngClass]="selectedCategoryId === null ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+              class="px-4 py-2 rounded-full text-sm font-medium transition-colors">
+        Tümü
+      </button>
+      <button *ngFor="let category of categories" 
+              (click)="onCategorySelect(category.id)"
+              [ngClass]="selectedCategoryId === category.id ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+              class="px-4 py-2 rounded-full text-sm font-medium transition-colors">
+        {{ category.name }}
+      </button>
+    </div>
+
+    <!-- Right Side (Sort and Count) -->
+    <div class="flex items-center space-x-4 w-full md:w-auto justify-between md:justify-end">
+      <div class="flex items-center space-x-2">
+        <span class="text-gray-500 text-sm hidden sm:inline">Sırala:</span>
+        <select (change)="onSort($event)" class="block w-full pl-3 pr-8 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md bg-white border">
+          <option value="newest">En Yeniler</option>
+          <option value="priceAsc">Fiyat: Düşükten Yükseğe</option>
+          <option value="priceDesc">Fiyat: Yüksekten Düşüğe</option>
+        </select>
+      </div>
+      <span class="text-gray-500 text-sm whitespace-nowrap">Toplam {{ filteredProducts.length }} Ürün</span>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="flex justify-center items-center py-20">
+    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="errorMessage && !isLoading" class="bg-red-50 p-4 rounded-xl text-center">
+    <p class="text-red-600 font-medium">{{ errorMessage }}</p>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!isLoading && !errorMessage && products.length === 0" class="text-center py-16">
+    <p class="text-gray-500 text-lg">Şu anda listelenecek ürün bulunamadı.</p>
+  </div>
+
+  <!-- Product Grid -->
+  <div *ngIf="!isLoading && !errorMessage && products.length > 0" class="grid grid-cols-1 gap-y-10 gap-x-6 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-8">
+    <div *ngFor="let product of filteredProducts" class="group relative bg-white p-4 rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer">
+      <div class="w-full min-h-80 bg-gray-200 aspect-w-1 aspect-h-1 rounded-xl overflow-hidden group-hover:opacity-75 lg:h-80 lg:aspect-none">
+        <!-- Display image if available, else placeholder -->
+        <img *ngIf="product.mainImageUrl" 
+             [src]="product.mainImageUrl" 
+             [alt]="product.name" class="w-full h-full object-cover object-center lg:w-full lg:h-full">
+        <div *ngIf="!product.mainImageUrl" class="w-full h-full bg-gradient-to-br from-indigo-100 to-purple-50 flex items-center justify-center">
+          <svg class="w-12 h-12 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+          </svg>
+        </div>
+      </div>
+      <div class="mt-4 flex justify-between items-start">
+        <div class="pr-2">
+          <h3 class="text-sm font-semibold text-gray-900 line-clamp-1">
+            <a [routerLink]="['/products', product.id]">
+              <span aria-hidden="true" class="absolute inset-0"></span>
+              {{ product.name }}
+            </a>
+          </h3>
+          <p class="mt-1 text-xs text-gray-500 line-clamp-2">{{ product.description || 'Açıklama bulunmuyor' }}</p>
+        </div>
+        <p class="text-sm font-bold text-indigo-600 whitespace-nowrap">₺{{ product.price | number:'1.2-2' }}</p>
+      </div>
+    </div>
+  </div>
+</div>

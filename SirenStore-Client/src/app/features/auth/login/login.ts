@@ -3,11 +3,13 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth';
+import { BasketService } from '../../../core/services/basket.service';
+import { NavbarComponent } from '../../../shared/components/navbar/navbar';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, NavbarComponent],
   templateUrl: './login.html',
   styleUrl: './login.scss'
 })
@@ -19,6 +21,7 @@ export class LoginComponent {
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
+    private basketService: BasketService,
     private router: Router
   ) {
     this.loginForm = this.fb.group({
@@ -37,9 +40,10 @@ export class LoginComponent {
     this.errorMessage = null;
 
     this.authService.login(this.loginForm.value).subscribe({
-      next: (response) => {
+      next: () => {
         this.isLoading = false;
-        console.log('Giriş Başarılı:', response);
+        // Login sonrası sepeti backend'den yükle
+        this.basketService.loadBasket();
         this.router.navigate(['/']);
       },
       error: (err) => {
@@ -47,9 +51,8 @@ export class LoginComponent {
         if (err.status === 0) {
           this.errorMessage = 'Sunucuya bağlanılamadı. Lütfen backend API servisinin çalıştığından emin olun.';
         } else {
-          this.errorMessage = err.error?.message || 'E-posta veya şifre hatalı!';
+          this.errorMessage = err.error?.message || err.error?.Message || 'E-posta veya şifre hatalı!';
         }
-        console.error('Giriş Hatası:', err);
       }
     });
   }

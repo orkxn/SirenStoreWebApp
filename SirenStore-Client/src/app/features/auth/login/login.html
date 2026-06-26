@@ -1,65 +1,77 @@
-<div class="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-    <div class="max-w-md w-full bg-white rounded-2xl shadow-xl border border-gray-100 p-8 space-y-6">
+<div class="min-h-screen bg-slate-50 flex flex-col bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-blend-multiply">
+  
+  <app-navbar [hideCart]="true" [hideLogin]="true"></app-navbar>
 
-        <div class="text-center">
-            <h2 class="text-3xl font-black text-indigo-600 tracking-tight">SirenStore</h2>
-            <p class="text-sm text-gray-500 mt-1">Hesabınıza giriş yapın</p>
+  <div class="flex-1 flex flex-col justify-center relative pb-12">
+
+    <div class="sm:mx-auto sm:w-full sm:max-w-md shrink-0">
+      <!-- Logo placeholder -->
+      <div class="flex justify-center text-indigo-600">
+        <svg class="h-8 w-8 sm:h-10 sm:w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+        </svg>
+      </div>
+      <h2 class="mt-2 mb-4 text-center text-2xl font-extrabold text-gray-900 tracking-tight sm:text-3xl">Giriş Yap</h2>
+    </div>
+
+  <div class="mt-4 sm:mx-auto sm:w-full sm:max-w-md px-4 sm:px-0">
+    <div class="bg-white/80 backdrop-blur-xl py-6 px-4 shadow-2xl sm:rounded-2xl sm:px-8 border border-white/50">
+      
+      <!-- Hata Mesajı -->
+      <div *ngIf="errorMessage" class="mb-3 rounded-xl bg-red-50 p-3 border border-red-100">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <svg class="h-4 w-4 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <div class="ml-2">
+            <h3 class="text-xs font-medium text-red-800">{{ errorMessage }}</h3>
+          </div>
+        </div>
+      </div>
+
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-gray-700">E-posta adresi</label>
+          <div class="mt-1">
+            <input type="email" formControlName="email" placeholder="ornek@email.com"
+              class="appearance-none block w-full px-3 py-1.5 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm transition-shadow"
+              [ngClass]="{'border-red-500 focus:ring-red-100': loginForm.get('email')?.touched && loginForm.get('email')?.invalid}" />
+          </div>
+          <div *ngIf="loginForm.get('email')?.touched && loginForm.get('email')?.invalid" class="mt-1 text-[10px] text-red-500">
+            Geçerli bir e-posta adresi giriniz.
+          </div>
         </div>
 
-        <div *ngIf="errorMessage"
-            class="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg text-sm text-red-700 animate-pulse">
-            {{ errorMessage }}
+        <div>
+          <label class="block text-xs font-semibold text-gray-700">Şifre</label>
+          <div class="mt-1">
+            <input type="password" formControlName="password" placeholder="••••••••"
+              class="appearance-none block w-full px-3 py-1.5 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm transition-shadow"
+              [ngClass]="{'border-red-500 focus:ring-red-100': loginForm.get('password')?.touched && loginForm.get('password')?.invalid}" />
+          </div>
+          <div *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.invalid" class="mt-1 text-[10px] text-red-500">
+            Şifre en az 6 karakter olmalıdır.
+          </div>
         </div>
 
-        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-4">
-
-            <div>
-                <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">E-Posta
-                    Adresi</label>
-                <input type="email" formControlName="email" placeholder="orkun@example.com"
-                    class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition duration-200 text-sm"
-                    [ngClass]="{'border-red-500 focus:ring-red-100': loginForm.get('email')?.touched && loginForm.get('email')?.invalid}" />
-                <span *ngIf="loginForm.get('email')?.touched && loginForm.get('email')?.invalid"
-                    class="text-xs text-red-500 mt-1 block">
-                    Geçerli bir e-posta adresi giriniz.
-                </span>
-            </div>
-
-            <div>
-                <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Şifre</label>
-                <input type="password" formControlName="password" placeholder="••••••••"
-                    class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition duration-200 text-sm"
-                    [ngClass]="{'border-red-500 focus:ring-red-100': loginForm.get('password')?.touched && loginForm.get('password')?.invalid}" />
-                <span *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.invalid"
-                    class="text-xs text-red-500 mt-1 block">
-                    Şifre en az 6 karakter olmalıdır.
-                </span>
-            </div>
-
-            <button type="submit" [disabled]="isLoading"
-                class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-xl shadow-md hover:shadow-lg transition duration-200 flex items-center justify-center space-x-2 text-sm disabled:bg-indigo-400 disabled:cursor-not-allowed">
-                <span *ngIf="!isLoading">Giriş Yap</span>
-                <span *ngIf="isLoading" class="flex items-center space-x-2">
-                    <svg class="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
-                        </circle>
-                        <path class="opacity-75" fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                        </path>
-                    </svg>
-                    <span>Giriş Yapılıyor...</span>
-                </span>
-            </button>
-
-        </form>
-
-        <div class="text-center pt-2">
-            <p class="text-xs text-gray-500">
-                Henüz hesabınız yok mu?
-                <a routerLink="/auth/register"
-                    class="text-indigo-600 hover:text-indigo-700 font-bold hover:underline transition ml-1">Kayıt Ol</a>
-            </p>
+        <div class="pt-2">
+          <button type="submit" [disabled]="isLoading"
+            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed">
+            <span *ngIf="isLoading" class="mr-2">
+              <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            </span>
+            <span *ngIf="!isLoading">Giriş Yap</span>
+            <span *ngIf="isLoading">Giriş Yapılıyor...</span>
+          </button>
         </div>
+      </form>
 
     </div>
+  </div>
+</div>
 </div>
