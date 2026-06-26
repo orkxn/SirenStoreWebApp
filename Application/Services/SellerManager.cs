@@ -101,6 +101,7 @@ namespace SirenStore.Application.Services
             await _sellerRepository.SaveChangesAsync();
         }
 
+        // 4. Satıcı Profili Görüntüleme (Frontend için DTO ile)
         public async Task<SellerPublicProfileDto> GetSellerProfileAsync(long sellerId)
         {
             var sellerDto = await _sellerRepository.AsQueryable()

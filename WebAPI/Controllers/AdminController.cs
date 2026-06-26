@@ -1,42 +1,65 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SirenStore.Application.Interfaces;
 
 namespace SirenStore.WebAPI.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")] // api/admin
-    public class AdminController(IAdminService adminService) : ControllerBase
+    [Route("api/[controller]")]
+    [Authorize(Roles = "Admin")] 
+    public class AdminController : ControllerBase
     {
-        // Satıcı Onaylama
-        [HttpPatch("sellers/{id}/approve")]
-        public async Task<IActionResult> ApproveSeller(long id)
+        private readonly IAdminService _adminService;
+
+        public AdminController(IAdminService adminService)
         {
-            await adminService.ApproveSellerAsync(id);
-            return Ok(new { Message = "Mağaza başarıyla onaylandı." });
+            _adminService = adminService;
         }
 
-        // Satıcı Soft Delete
-        [HttpDelete("sellers/{id}")]
-        public async Task<IActionResult> SoftDeleteSeller(long id)
+        // Sistemdeki tüm kullanıcıları listeler
+        // GET: api/admin/users
+        [HttpGet("users")]
+        public async Task<IActionResult> GetAllUsers()
         {
-            await adminService.SoftDeleteSellerAsync(id);
-            return Ok(new { Message = "Satıcı hesabı başarıyla soft-delete edildi." });
+            var users = await _adminService.GetAllUsersAsync();
+            return Ok(users);
         }
 
-        // Ürün Soft Delete
-        [HttpDelete("products/{id}")]
-        public async Task<IActionResult> SoftDeleteProduct(long id)
+        // Sistemdeki tüm satıcıları ve mağaza durumlarını listeler
+        // GET: api/admin/sellers
+        [HttpGet("sellers")]
+        public async Task<IActionResult> GetAllSellers()
         {
-            await adminService.SoftDeleteProductAsync(id);
-            return Ok(new { Message = "Ürün başarıyla soft-delete edildi." });
+            var sellers = await _adminService.GetAllSellersAsync();
+            return Ok(sellers);
         }
 
-        // Genel Kullanıcı Soft Delete (Admin/SuperAdmin korumalı)
-        [HttpDelete("users/{id}")]
-        public async Task<IActionResult> SoftDeleteUser(long id)
+        // Kullanıcıyı banlar
+        // POST: api/admin/users/{id}/ban
+        [HttpPost("users/{id:long}/ban")]
+        public async Task<IActionResult> BanUser(long id)
         {
-            await adminService.SoftDeleteUserAsync(id);
-            return Ok(new { Message = "Kullanıcı hesabı başarıyla soft-delete edildi." });
+            // JWT token içerisinden isteği atan adminin ID'sini çekiyoruz
+            var currentUserIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+
+            if (currentUserIdClaim == null)
+                return Unauthorized(new { message = "Geçersiz oturum. Kullanıcı kimliği doğrulanamadı." });
+
+            long currentUserId = long.Parse(currentUserIdClaim.Value);
+
+            // Servise hem isteği yapanı hem de hedeflenen kişiyi gönderiyoruz
+            await _adminService.BanUserAsync(currentUserId, id);
+
+            return Ok(new { message = "Kullanıcı başarıyla banlandı. Artık sisteme giriş yapamaz." });
+        }
+
+        // Kullanıcının banını kaldırır (Sisteme girişini tekrar açar)
+        // POST: api/admin/users/{id}/unban
+        [HttpPost("users/{id:long}/unban")]
+        public async Task<IActionResult> UnbanUser(long id)
+        {
+            await _adminService.UnbanUserAsync(id);
+            return Ok(new { message = "Kullanıcının banı başarıyla kaldırıldı." });
         }
     }
 }

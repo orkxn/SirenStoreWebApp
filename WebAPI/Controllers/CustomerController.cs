@@ -9,7 +9,7 @@ namespace SirenStore.WebAPI.Controllers
     [Route("api/[controller]")]
     [ApiController]
     // Sadece sisteme giriş yapmış "Customer" rolündeki kullanıcılar bu kapıdan geçebilir!
-    [Authorize(Roles = "Customer")]
+    [Authorize]
     public class CustomerController : ControllerBase
     {
         private readonly IUserService _userService;

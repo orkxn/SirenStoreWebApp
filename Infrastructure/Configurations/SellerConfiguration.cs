@@ -25,7 +25,7 @@ namespace Infrastructure.Configurations
 
             // User ile Bire Bir (1-to-1) İlişki Tanımı
             builder.HasOne(s => s.User)
-                .WithOne() // Eğer User içinde "public Seller Seller {get;}" olsaydı .WithOne(u => u.Seller) yazardık.
+                .WithOne(u => u.Seller) // Eğer User içinde "public Seller Seller {get;}" olsaydı .WithOne(u => u.Seller) yazardık.
                 .HasForeignKey<Seller>(s => s.UserId)
                 .OnDelete(DeleteBehavior.Cascade); // Kullanıcı silinirse satıcı kaydı da silinsin
         }

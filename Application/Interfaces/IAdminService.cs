@@ -4,11 +4,9 @@ namespace SirenStore.Application.Interfaces
 {
     public interface IAdminService
     {
-        Task ApproveSellerAsync(long sellerId);
-        Task SoftDeleteSellerAsync(long sellerId);
-
-        Task SoftDeleteProductAsync(long productId);
-
-        Task SoftDeleteUserAsync(long userId);
+        Task<List<UserManagementDto>> GetAllUsersAsync();
+        Task<List<SellerManagementDto>> GetAllSellersAsync();
+        Task BanUserAsync(long currentUserId, long targetUserId);
+        Task UnbanUserAsync(long userId);
     }
 }

@@ -68,7 +68,7 @@ namespace SirenStore.Application.Services
                     AddressTitle = dto.AddressTitle,
                     ShippingAddress = dto.ShippingAddress,
                     Status = OrderStatus.Received,
-                    TotalPrice = basket.BasketItems.Sum(bi => bi.Quantity * bi.Product.Price)
+                    TotalPrice = basket.BasketItems.Sum(bi => bi.Quantity * bi.Product!.Price)
                 };
 
                 await _orderRepository.AddAsync(order);
@@ -80,7 +80,7 @@ namespace SirenStore.Application.Services
                     var product = basketItem.Product;
 
                     // Son saniye stok kontrolü (Başka biri ürünü bitirmiş mi?)
-                    if (product.Stock < basketItem.Quantity)
+                    if (product!.Stock < basketItem.Quantity)
                         throw new BusinessRuleException($"Üzgünüz, '{product.Name}' ürünü için yeterli stok kalmadı. Mevcut Stok: {product.Stock}");
 
                     // Stoktan Düşme Operasyonu
@@ -121,12 +121,13 @@ namespace SirenStore.Application.Services
             }
         }
 
-        // 2. MÜŞTERİNİN GEÇMİŞ SİPARİŞLERİ (LINQ Projeksiyon Mapping)
+        // 2. MÜŞTERİNİN GEÇMİŞ SİPARİŞLERİ (Silinmiş Ürünleri de Gösterir)
         public async Task<List<OrderDto>> GetUserOrdersAsync(long userId)
         {
             return await _orderRepository.AsQueryable()
-                .Where(o => o.UserId == userId)
-                .OrderByDescending(o => o.CreationDate) // En yeni sipariş en üstte görünsün
+                .IgnoreQueryFilters() // Ürün soft-delete olsa bile getirir
+                .Where(o => o.UserId == userId && !o.IsDeleted) // Sadece silinmemiş siparişler
+                .OrderByDescending(o => o.CreationDate)
                 .Select(o => new OrderDto
                 {
                     Id = o.Id,
@@ -135,12 +136,15 @@ namespace SirenStore.Application.Services
                     AddressTitle = o.AddressTitle,
                     ShippingAddress = o.ShippingAddress,
                     Status = o.Status.ToString(),
-                    OrderItems = o.OrderItems.Select(oi => new OrderItemDto
+                    // Sipariş kalemlerindeki silinmemiş öğeleri alıyoruz
+                    OrderItems = o.OrderItems.Where(oi => !oi.IsDeleted).Select(oi => new OrderItemDto
                     {
-                        ProductId = oi.ProductId,
-                        ProductName = oi.Product.Name,
+                        ProductId = oi.ProductId ?? 0,
+
+                        // Ürün tamamen veritabanından silindiyse (hard-delete) patlamasın diye ternary kontrolü
+                        ProductName = oi.Product != null ? oi.Product.Name : "Silinmiş Ürün",
                         Quantity = oi.Quantity,
-                        Price = oi.Price,
+                        Price = oi.Price, // Satın alındığı anki fiyat
                         Status = oi.Status.ToString()
                     }).ToList()
                 })
@@ -151,7 +155,8 @@ namespace SirenStore.Application.Services
         public async Task<OrderDto> GetOrderByIdAsync(long userId, long orderId)
         {
             var orderDto = await _orderRepository.AsQueryable()
-                .Where(o => o.Id == orderId && o.UserId == userId) // IDOR
+                .IgnoreQueryFilters() // KRİTİK NOKTA: Ürün soft-delete olsa bile getirir
+                .Where(o => o.Id == orderId && o.UserId == userId && !o.IsDeleted) // IDOR
                 .Select(o => new OrderDto
                 {
                     Id = o.Id,
@@ -160,10 +165,10 @@ namespace SirenStore.Application.Services
                     AddressTitle = o.AddressTitle,
                     ShippingAddress = o.ShippingAddress,
                     Status = o.Status.ToString(),
-                    OrderItems = o.OrderItems.Select(oi => new OrderItemDto
+                    OrderItems = o.OrderItems.Where(oi => !oi.IsDeleted).Select(oi => new OrderItemDto
                     {
-                        ProductId = oi.ProductId,
-                        ProductName = oi.Product.Name,
+                        ProductId = oi.ProductId ?? 0,
+                        ProductName = oi.Product != null ? oi.Product.Name : "Silinmiş Ürün",
                         Quantity = oi.Quantity,
                         Price = oi.Price,
                         Status = oi.Status.ToString()
@@ -204,7 +209,7 @@ namespace SirenStore.Application.Services
                     throw new SirenStore.Application.Exceptions.ForbiddenException("Bu işlem için onaylı bir satıcı hesabınız bulunmuyor.");
 
                 // Bu sipariş kalemindeki ürün gerçekten bu satıcıya mı ait
-                if (orderItem.Product.SellerId != seller.Id)
+                if (orderItem.Product!.SellerId != seller.Id)
                     throw new BusinessRuleException("Farklı bir satıcıya ait ürünün sipariş durumunu değiştiremezsiniz!");
             }
 

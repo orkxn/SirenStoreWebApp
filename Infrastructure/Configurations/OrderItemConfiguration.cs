@@ -26,8 +26,7 @@ namespace Infrastructure.Configurations
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.Property(oi => oi.Status)
-                .IsRequired()
-                .HasDefaultValue(OrderStatus.Received); 
+                .IsRequired();
         }
     }
 }

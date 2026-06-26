@@ -27,16 +27,12 @@ namespace SirenStore.Infrastructure.Context
         public DbSet<Category> Categories { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<ProductImage> ProductImages { get; set; }
-        public DbSet<ProductReview> ProductReviews { get; set; }
-        public DbSet<ProductQuestion> ProductQuestions { get; set; }
 
         // Sipariş ve Sepet
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<Basket> Baskets { get; set; }
         public DbSet<BasketItem> BasketItems { get; set; }
-        public DbSet<Cart> Carts { get; set; }
-        public DbSet<CartItem> CartItems { get; set; }
 
         // İçerik & Destek
         public DbSet<CmsContent> CmsContents { get; set; }

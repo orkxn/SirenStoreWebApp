@@ -16,7 +16,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // 1. VERİ TABANI AYARI (EF CORE & POSTGRESQL)
 var connectionString = builder.Configuration.GetConnectionString("PostgreSQLConnection");
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
+builder.Services.AddDbContext<DbContext, ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
 
 // 2. REPOSITORY & SERVICE KAYITLARI (DEPENDENCY INJECTION)
@@ -28,6 +28,7 @@ builder.Services.AddScoped<IProductService, ProductManager>();
 builder.Services.AddScoped<IBasketService, BasketManager>();
 builder.Services.AddScoped<IOrderService, OrderManager>();
 builder.Services.AddScoped<ICategoryService, CategoryManager>();
+builder.Services.AddScoped<IAdminService, AdminManager>();
 
 // 3. AUTOMAPPER & FLUENTVALIDATION ENTEGRASYONLARI
 builder.Services.AddSingleton<IMapper>(provider =>

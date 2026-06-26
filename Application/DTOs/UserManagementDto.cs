@@ -1,0 +1,15 @@
+﻿using Entities.Enums;
+using Entities.Models;
+
+namespace SirenStore.Application.DTOs
+{
+    public class UserManagementDto
+    {
+        public long Id { get; set; }
+        public string Email { get; set; } = string.Empty;
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public UserTypes UserType { get; set; } // Müşteri mi, Satıcı mı, Admin mi?
+        public bool IsDeleted { get; set; } // Banlı mı değil mi?
+    }
+}

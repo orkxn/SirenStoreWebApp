@@ -14,12 +14,14 @@ namespace SirenStore.Application.Services
         private readonly IRepository<Category> _categoryRepository;
         private readonly IValidator<CreateProductDto> _createValidator;
         private readonly IValidator<UpdateProductDto> _updateValidator;
+        private readonly IRepository<BasketItem> _basketItemRepository;
 
         public ProductManager(
             IRepository<Product> productRepository,
             IRepository<Seller> sellerRepository,
             IRepository<Category> categoryRepository,
             IValidator<CreateProductDto> createValidator,
+            IRepository<BasketItem> basketItemRepository,
             IValidator<UpdateProductDto> updateValidator)
         {
             _productRepository = productRepository;
@@ -27,6 +29,7 @@ namespace SirenStore.Application.Services
             _categoryRepository = categoryRepository;
             _createValidator = createValidator;
             _updateValidator = updateValidator;
+            _basketItemRepository = basketItemRepository;
         }
 
         // 1. TÜM ÜRÜNLERİ LİSTELE (IQueryable & Projeksiyon Avantajı)
@@ -47,8 +50,8 @@ namespace SirenStore.Application.Services
                     CategoryName = p.Category.Name,
                     StoreName = p.Seller.StoreName,
                     // Ana resmi bul, yoksa ilk resmi al, o da yoksa null dön
-                    MainImageUrl = p.ProductImages.FirstOrDefault(img => img.IsMain).ImageUrl
-                                   ?? p.ProductImages.FirstOrDefault().ImageUrl
+                    MainImageUrl = p.ProductImages.Where(img => img.IsMain).Select(img => img.ImageUrl).FirstOrDefault()
+                                   ?? p.ProductImages.Select(img => img.ImageUrl).FirstOrDefault()
                 })
                 .ToListAsync();
         }
@@ -75,8 +78,8 @@ namespace SirenStore.Application.Services
                     Stock = p.Stock,
                     CategoryName = p.Category.Name,
                     StoreName = p.Seller.StoreName,
-                    MainImageUrl = p.ProductImages.FirstOrDefault(img => img.IsMain).ImageUrl
-                                   ?? p.ProductImages.FirstOrDefault().ImageUrl
+                    MainImageUrl = p.ProductImages.Where(img => img.IsMain).Select(img => img.ImageUrl).FirstOrDefault()
+                                   ?? p.ProductImages.Select(img => img.ImageUrl).FirstOrDefault()
                 })
                 .ToListAsync();
         }
@@ -98,8 +101,8 @@ namespace SirenStore.Application.Services
                     Stock = p.Stock,
                     CategoryName = p.Category.Name,
                     StoreName = p.Seller.StoreName,
-                    MainImageUrl = p.ProductImages.FirstOrDefault(img => img.IsMain).ImageUrl
-                                   ?? p.ProductImages.FirstOrDefault().ImageUrl
+                    MainImageUrl = p.ProductImages.Where(img => img.IsMain).Select(img => img.ImageUrl).FirstOrDefault()
+                                   ?? p.ProductImages.Select(img => img.ImageUrl).FirstOrDefault()
                 })
                 .FirstOrDefaultAsync();
 
@@ -162,9 +165,12 @@ namespace SirenStore.Application.Services
                 throw new BusinessRuleException("Satıcı profili bulunamadı.");
 
             // Güncellenmek istenen ürünü getir
-            var product = await _productRepository.GetAsync(p => p.Id == dto.Id);
-            if (product == null)
-                throw new NotFoundException("Güncellenmek istenen ürün bulunamadı.");
+            var product = await _productRepository.AsQueryable()
+                .Include(p => p.ProductImages) // Resimleri mutlaka dahil etmeliyiz!
+                .FirstOrDefaultAsync(p => p.Id == dto.Id);
+
+                        if (product == null)
+                            throw new NotFoundException("Güncellenmek istenen ürün bulunamadı.");
 
             // IDOR GÜVENLİK DUVARI: Bu ürün gerçekten bu satıcıya mı ait?
             if (product.SellerId != seller.Id)
@@ -215,10 +221,16 @@ namespace SirenStore.Application.Services
             if (product.SellerId != seller.Id)
                 throw new BusinessRuleException("Bu ürünü silme yetkiniz bulunmamaktadır!");
 
-            
-            product.IsDeleted = true;
 
-            _productRepository.Update(product);
+            _productRepository.Remove(product);
+
+            // BU ÜRÜNÜN OLDUĞU TÜM SEPETLERİ TEMİZLİYORUZ 
+            var basketItems = await _basketItemRepository.GetAllAsync(bi => bi.ProductId == productId);
+            foreach (var item in basketItems)
+            {
+                _basketItemRepository.Remove(item); // Sepetten de soft/hard delete yapıyoruz
+            }
+
             await _productRepository.SaveChangesAsync();
         }
     }

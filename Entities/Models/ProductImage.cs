@@ -9,7 +9,7 @@ namespace Entities.Models
         public bool IsMain { get; set; } = false;
 
         // Ürün İlişkisi (Bu fotoğraf hangi ürüne ait?)
-        public long ProductId { get; set; }
-        public virtual Product Product { get; set; } = null!;
+        public long? ProductId { get; set; }
+        public virtual Product? Product { get; set; }
     }
 }

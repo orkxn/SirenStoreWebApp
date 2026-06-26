@@ -34,20 +34,26 @@ namespace SirenStore.Application.Services
                 .Select(b => new BasketDto
                 {
                     Id = b.Id,
-                    Items = b.BasketItems.Select(bi => new BasketItemDto
-                    {
-                        Id = bi.Id,
-                        ProductId = bi.ProductId,
-                        ProductName = bi.Product.Name,
-                        Price = bi.Product.Price,
-                        Quantity = bi.Quantity,
-                        ProductImageUrl = bi.Product.ProductImages.FirstOrDefault(img => img.IsMain).ImageUrl
-                                          ?? bi.Product.ProductImages.FirstOrDefault().ImageUrl
-                    }).ToList()
+                    // Sadece Global Query Filter'a takılmamış ürünleri sepet listesine alıyoruz
+                    Items = b.BasketItems
+                        .Where(bi => bi.Product != null)
+                        .Select(bi => new BasketItemDto
+                        {
+                            Id = bi.Id,
+                            // bi.Product null olmadığı için ProductId'nin de kesinlikle bir karşılığı vardır (.Value ile güvenle long'a çeviriyoruz)
+                            ProductId = bi.ProductId!.Value,
+                            ProductName = bi.Product!.Name,
+                            Price = bi.Product!.Price,
+                            Quantity = bi.Quantity,
+
+                            // DÜZELTME: Buradaki bi.Product'lara da ünlem eklendi
+                            ProductImageUrl = bi.Product!.ProductImages.Where(img => img.IsMain).Select(img => img.ImageUrl).FirstOrDefault()
+                                              ?? bi.Product!.ProductImages.Select(img => img.ImageUrl).FirstOrDefault()
+                        }).ToList()
                 })
                 .FirstOrDefaultAsync();
 
-            // Eğer veritabanında henüz sepet oluşmadıysa, frontend'e boş bir sepet modeli dönüyoruz
+            // Eğer veritabanında henüz bu kullanıcıya ait bir sepet kaydı oluşmadıysa, frontend patlamasın diye boş bir model dönüyoruz
             return basketDto ?? new BasketDto();
         }
 
