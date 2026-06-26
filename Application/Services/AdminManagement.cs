@@ -76,11 +76,16 @@ namespace SirenStore.Application.Services
         // Kullanıcının banını kaldırır
         public async Task UnbanUserAsync(long userId)
         {
-            var user = await _userRepository.GetAsync(u => u.Id == userId);
+            var user = await _userRepository.AsQueryable()
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
             if (user == null)
                 throw new NotFoundException("Kullanıcı bulunamadı.");
 
+            // Kullanıcının banını aç (Soft-delete'i geri al)
             user.IsDeleted = false;
+
             _userRepository.Update(user);
             await _userRepository.SaveChangesAsync();
         }
