@@ -35,7 +35,7 @@ export interface User extends BaseModel {
 // 4. (Login Request)
 export interface LoginRequest {
   email: string;
-  passwordHash: string; 
+  password: string; 
 }
 
 // 5. (Login Response)
