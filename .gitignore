@@ -483,8 +483,4 @@ $RECYCLE.BIN/
 
 # Environment-specific configuration files (development)
 # This file contains secrets and should never be committed
-WebAPI/appsettings.Development.json
-appsettings.Development.json
-WebAPI/appsettings.json
-appsettings.json
 .vscode

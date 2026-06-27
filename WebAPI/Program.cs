@@ -11,7 +11,11 @@ using SirenStore.Application.Validators;
 using SirenStore.Infrastructure.Context;
 using SirenStore.Infrastructure.Repositories;
 using SirenStore.WebAPI.Middleware;
+using dotenv.net;
 using System.Text;
+
+// Load environment variables from .env file
+DotEnv.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
