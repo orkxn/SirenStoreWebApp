@@ -117,7 +117,7 @@ export const Products: React.FC = () => {
           Tüm Ürünler
         </h1>
         <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-          Aradığınız tarzda yüzlerce monokrom tasarımı keşfedin.
+          Aradığınız tarza uygun yüzlerce ürünü keşfedin.
         </p>
       </div>
 
@@ -239,11 +239,11 @@ export const Products: React.FC = () => {
                 onChange={(e) => setSortBy(e.target.value)}
                 className="bg-transparent border-none text-zinc-900 dark:text-white font-bold cursor-pointer outline-none focus:ring-0"
               >
-                <option value="default">Önerilen</option>
-                <option value="price-low">Fiyat: Artan</option>
-                <option value="price-high">Fiyat: Azalan</option>
-                <option value="name-asc">İsim: A - Z</option>
-                <option value="name-desc">İsim: Z - A</option>
+                <option value="default" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-zinc-100">Önerilen</option>
+                <option value="price-low" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-zinc-100">Fiyat: Artan</option>
+                <option value="price-high" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-zinc-100">Fiyat: Azalan</option>
+                <option value="name-asc" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-zinc-100">İsim: A - Z</option>
+                <option value="name-desc" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-zinc-100">İsim: Z - A</option>
               </select>
             </div>
           </div>

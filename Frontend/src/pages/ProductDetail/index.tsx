@@ -172,7 +172,10 @@ export const ProductDetail: React.FC = () => {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
-                Mağaza: {product.storeName}
+                Mağaza:{' '}
+                <Link to={`/store/${product.sellerId}`} className="hover:underline text-zinc-900 dark:text-zinc-300 font-bold transition-all normal-case">
+                  {product.storeName}
+                </Link>
               </span>
               <span className="text-xs bg-zinc-950/5 dark:bg-white/5 border border-zinc-950/5 dark:border-white/10 px-3 py-1 rounded-full text-zinc-500 dark:text-zinc-400 font-medium">
                 {product.categoryName}

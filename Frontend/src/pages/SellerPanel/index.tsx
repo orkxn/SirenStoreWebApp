@@ -330,7 +330,7 @@ export const SellerPanel: React.FC = () => {
                 <textarea
                   placeholder="Ürünün detaylı teknik ve görsel açıklamaları..."
                   rows={4}
-                  className={`w-full bg-transparent border rounded-xl px-4 py-3 outline-none transition text-zinc-900 dark:text-zinc-550 ${
+                  className={`w-full bg-transparent border rounded-xl px-4 py-3 outline-none transition text-zinc-900 dark:text-zinc-50 ${
                     errors.description 
                       ? 'border-red-500' 
                       : 'border-zinc-300 dark:border-zinc-800 focus:border-zinc-950 dark:focus:border-white'

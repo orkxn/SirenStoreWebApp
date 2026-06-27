@@ -45,18 +45,18 @@ export const Home: React.FC = () => {
           className="max-w-4xl space-y-6"
         >
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass-surface bg-zinc-950/[0.03] dark:bg-white/5 border border-zinc-950/10 dark:border-white/10 text-xs font-semibold tracking-wide text-zinc-600 dark:text-zinc-300">
-            <Sparkles className="w-3.5 h-3.5" /> Yeni Nesil Monokrom Koleksiyonu
+            <Sparkles className="w-3.5 h-3.5" /> Yeni Sezon Ürünleri
           </div>
           
           <h1 className="text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight leading-none text-zinc-950 dark:text-white uppercase">
-            SADELİĞİN <br />
+            EN YENİ <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-zinc-400 via-zinc-200 to-zinc-500 dark:from-zinc-100 dark:via-zinc-500 dark:to-zinc-300">
-              GÜCÜNÜ HİSSET
+              TRENDLERİ KEŞFET
             </span>
           </h1>
           
           <p className="max-w-2xl mx-auto text-base sm:text-lg text-zinc-500 dark:text-zinc-400 font-normal leading-relaxed">
-            Karmaşadan uzak, siyah ve beyazın zarafetiyle tasarlanmış, şeffaf katmanlar barındıran premium ürünleri keşfedin.
+            Geniş ürün yelpazemiz ve kaliteli hizmet anlayışımızla en iyi alışveriş deneyimini keşfedin.
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
@@ -66,7 +66,7 @@ export const Home: React.FC = () => {
                 <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
               </Button>
             </Link>
-            <Link to="/products?category=1">
+            <Link to="/products?category=7">
               <Button variant="glass" size="lg">
                 Moda Koleksiyonu
               </Button>
@@ -82,7 +82,7 @@ export const Home: React.FC = () => {
             <Sparkles className="w-4 h-4" /> SIREN EXCLUSIVE
           </span>
           <span className="text-sm font-bold uppercase tracking-widest mx-4 flex items-center gap-3">
-            <TrendingUp className="w-4 h-4" /> MINIMAL DESIGN
+            <TrendingUp className="w-4 h-4" /> TREND ÜRÜNLER
           </span>
           <span className="text-sm font-bold uppercase tracking-widest mx-4 flex items-center gap-3">
             <ShieldCheck className="w-4 h-4" /> PREMIUM QUALITY
@@ -91,7 +91,7 @@ export const Home: React.FC = () => {
             <Truck className="w-4 h-4" /> FAST SHIPPING
           </span>
           <span className="text-sm font-bold uppercase tracking-widest mx-4 flex items-center gap-3">
-            <Sparkles className="w-4 h-4" /> GLASSMORPHIC LAYERS
+            <Sparkles className="w-4 h-4" /> GÜVENLİ ALIŞVERİŞ
           </span>
         </Marquee>
       </section>
@@ -103,7 +103,7 @@ export const Home: React.FC = () => {
             <h2 className="text-3xl font-bold tracking-tight text-zinc-950 dark:text-white uppercase">
               ÖNE ÇIKANLAR
             </h2>
-            <p className="text-sm text-zinc-500 mt-1">En çok tercih edilen monokrom stiller.</p>
+            <p className="text-sm text-zinc-500 mt-1">En çok tercih edilen modellerimiz.</p>
           </div>
           <Link to="/products" className="text-sm font-bold text-zinc-950 dark:text-white hover:underline flex items-center gap-1">
             Tümünü Gör <ArrowRight className="w-4 h-4" />
@@ -140,9 +140,9 @@ export const Home: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
-            { id: 1, name: 'Giyim & Stil', desc: 'Minimal kesimler, zamansız siyah-beyaz tasarımlar.', image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=800&auto=format&fit=crop' },
-            { id: 2, name: 'Elektronik', desc: 'Mat siyah ve gümüş tonlarında şık teknolojik ürünler.', image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=800&auto=format&fit=crop' },
-            { id: 3, name: 'Ev & Yaşam', desc: 'Brütalist ve modern mekan tasarımları için dekorasyon.', image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?q=80&w=800&auto=format&fit=crop' }
+            { id: 1, name: 'Giyim & Stil', desc: 'Her tarza ve mevsime uygun en şık giyim koleksiyonları.', image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=800&auto=format&fit=crop' },
+            { id: 2, name: 'Elektronik', desc: 'Hayatınızı kolaylaştıracak en yeni teknolojik aletler ve aksesuarlar.', image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=800&auto=format&fit=crop' },
+            { id: 3, name: 'Ev & Yaşam', desc: 'Evinize şıklık katacak en güzel mobilya ve dekorasyon ürünleri.', image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?q=80&w=800&auto=format&fit=crop' }
           ].map((cat) => (
             <Link 
               key={cat.id} 
@@ -200,9 +200,9 @@ export const Home: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
-            { user: 'Buse T.', comment: 'Siparişim ertesi gün kargoya verildi. Mat siyah kulaklıkların ses kalitesi ve tasarımı muazzam!', rating: '★★★★★' },
-            { user: 'Can K.', comment: 'Sitenin karanlık teması ve gezinme kolaylığı harika. Aldığım brutalis vazo salonuma çok yakıştı.', rating: '★★★★★' },
-            { user: 'Selin A.', comment: 'Sepete ekleme ve ödeme adımları çok akıcıydı. Paketleme o kadar minimalist ve premium ki hayran kaldım.', rating: '★★★★★' }
+            { user: 'Buse T.', comment: 'Siparişim ertesi gün kargoya verildi. Mat siyah kulaklıkların ses kalitesi ve performansı muazzam!', rating: '★★★★★' },
+            { user: 'Can K.', comment: 'Sitenin karanlık teması ve gezinme kolaylığı harika. Aldığım vazo salonuma çok yakıştı.', rating: '★★★★★' },
+            { user: 'Selin A.', comment: 'Sepete ekleme ve ödeme adımları çok akıcıydı. Paketleme o kadar özenli ve premium ki hayran kaldım.', rating: '★★★★★' }
           ].map((t, idx) => (
             <div 
               key={idx} 
