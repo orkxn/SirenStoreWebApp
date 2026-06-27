@@ -51,7 +51,7 @@ export const Register: React.FC = () => {
             Yeni Hesap Oluştur
           </h2>
           <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2">
-            Monokrom kulübünün bir parçası olun.
+            Hemen kaydolun ve ayrıcalıklardan yararlanın.
           </p>
         </div>
 

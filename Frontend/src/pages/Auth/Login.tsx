@@ -48,7 +48,7 @@ export const Login: React.FC = () => {
             Tekrar Hoş Geldiniz
           </h2>
           <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2">
-            Monokrom stilin kapılarını aralayın.
+            Hesabınıza giriş yapın ve alışverişe başlayın.
           </p>
         </div>
 

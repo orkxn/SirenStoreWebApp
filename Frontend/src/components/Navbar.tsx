@@ -29,8 +29,8 @@ export const Navbar: React.FC = () => {
           <span className="text-2xl font-bold tracking-tighter text-zinc-950 dark:text-white">
             SIREN
           </span>
-          <span className="text-[10px] uppercase font-mono px-2 py-0.5 bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 rounded-full">
-            Store
+          <span className="text-2xl font-bold tracking-tighter uppercase px-3 py-0.5 bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 rounded-full">
+            STORE
           </span>
         </Link>
 

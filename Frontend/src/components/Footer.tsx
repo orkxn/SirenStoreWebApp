@@ -14,12 +14,12 @@ export const Footer: React.FC = () => {
             <span className="text-xl font-bold tracking-tighter text-zinc-950 dark:text-white">
               SIREN
             </span>
-            <span className="text-[9px] uppercase font-mono px-2 py-0.5 bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 rounded-full">
-              Store
+            <span className="text-xl font-bold tracking-tighter uppercase px-2.5 py-0.5 bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 rounded-full">
+              STORE
             </span>
           </Link>
           <p className="text-xs text-zinc-400 dark:text-zinc-500 leading-relaxed">
-            Monokrom estetik ve yüksek performansa sahip modern alışveriş deneyimi. Yeni nesil e-ticaret platformu.
+            Güvenli ve yüksek performansa sahip modern alışveriş deneyimi. Yeni nesil e-ticaret platformu.
           </p>
         </div>
 

@@ -7,6 +7,7 @@ import { CartProvider } from './context/CartContext';
 import { ToastProvider } from './context/ToastContext';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
+import { ScrollToTop } from './components/ScrollToTop';
 
 // Lazy loading pages for performance optimization
 const Home = lazy(() => import('./pages/Home').then(module => ({ default: module.Home })));
@@ -20,6 +21,7 @@ const SellerPanel = lazy(() => import('./pages/SellerPanel').then(module => ({ d
 const AdminPanel = lazy(() => import('./pages/AdminPanel').then(module => ({ default: module.AdminPanel })));
 const Login = lazy(() => import('./pages/Auth/Login').then(module => ({ default: module.Login })));
 const Register = lazy(() => import('./pages/Auth/Register').then(module => ({ default: module.Register })));
+const StoreDetail = lazy(() => import('./pages/StoreDetail').then(module => ({ default: module.StoreDetail })));
 
 // Loading spinner fallback
 const LoadingFallback = () => (
@@ -54,6 +56,7 @@ const AppContent: React.FC = () => {
             <Route path="/" element={<Home />} />
             <Route path="/products" element={<Products />} />
             <Route path="/product/:id" element={<ProductDetail />} />
+            <Route path="/store/:id" element={<StoreDetail />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/cart" element={<Cart />} />
@@ -82,6 +85,7 @@ const AppContent: React.FC = () => {
 export default function App() {
   return (
     <Router>
+      <ScrollToTop />
       <ThemeProvider>
         <AuthProvider>
           <CartProvider>
