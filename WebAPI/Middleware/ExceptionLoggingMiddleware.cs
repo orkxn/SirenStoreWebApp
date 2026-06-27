@@ -35,7 +35,7 @@ namespace SirenStore.WebAPI.Middleware
 
                     var exceptionLog = new ExceptionLog
                     {
-                        ExceptionType = ex.GetType().FullName,
+                        ExceptionType = ex.GetType().FullName!,
                         Message = ex.Message,
                         StackTrace = ex.StackTrace,
                         RequestPath = context.Request.Path,

@@ -191,7 +191,7 @@ namespace SirenStore.Application.Services
                     {
                         Id = oi.Id, // Frontend'de Status güncellemek için ID lazım! OrderItemDto'da Id var mı? Kontrol edelim.
                         ProductId = oi.ProductId ?? 0,
-                        ProductName = oi.Product.Name,
+                        ProductName = oi.Product!.Name,
                         Quantity = oi.Quantity,
                         Price = oi.Price,
                         Status = oi.Status.ToString()
