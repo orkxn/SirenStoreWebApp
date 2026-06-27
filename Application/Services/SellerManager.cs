@@ -148,7 +148,8 @@ namespace SirenStore.Application.Services
                         StoreName = s.StoreName,        // Satıcının kendi mağaza adı
 
                         MainImageUrl = p.ProductImages.Where(img => img.IsMain).Select(img => img.ImageUrl).FirstOrDefault()
-                                       ?? p.ProductImages.Select(img => img.ImageUrl).FirstOrDefault()
+                                       ?? p.ProductImages.Select(img => img.ImageUrl).FirstOrDefault(),
+                        ImageUrls = p.ProductImages.Select(img => img.ImageUrl).ToList()
                     }).ToList()
                 })
                 .FirstOrDefaultAsync();

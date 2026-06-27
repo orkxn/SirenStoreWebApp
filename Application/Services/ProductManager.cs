@@ -55,7 +55,8 @@ namespace SirenStore.Application.Services
                     StoreName = p.Seller.StoreName,
                     // Ana resmi bul, yoksa ilk resmi al, o da yoksa null dön
                     MainImageUrl = p.ProductImages.Where(img => img.IsMain).Select(img => img.ImageUrl).FirstOrDefault()
-                                   ?? p.ProductImages.Select(img => img.ImageUrl).FirstOrDefault()
+                                   ?? p.ProductImages.Select(img => img.ImageUrl).FirstOrDefault(),
+                    ImageUrls = p.ProductImages.Select(img => img.ImageUrl).ToList()
                 });
         }
 
