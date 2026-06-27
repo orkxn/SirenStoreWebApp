@@ -133,8 +133,8 @@ namespace SirenStore.Application.Services
                     //  2. Yöntem: User tablosundan isim ve soyisim birleştirme
                     OwnerFullName = s.User.FirstName + " " + s.User.LastName,
 
-                    //  3. Yöntem: User tablosundaki telefon numarasını ContactLine alanına eşleme
-                    ContactLine = s.User.PhoneNumber ?? "İletişim numarası belirtilmedi",
+                    //  3. Yöntem: Satıcının müşteri destek hattını eşleme
+                    ContactLine = !string.IsNullOrEmpty(s.SupportLine) ? s.SupportLine : "Müşteri destek hattı belirtilmedi",
 
                     //  4. Yöntem: Satıcıya ait aktif ürünlerin listelenmesi (ProductListDto kalıbında)
                     Products = s.Products.Select(p => new ProductListDto
