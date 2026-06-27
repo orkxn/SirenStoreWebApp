@@ -12,8 +12,8 @@ using SirenStore.Infrastructure.Context;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260626112643_CheckEverything")]
-    partial class CheckEverything
+    [Migration("20260627091839_InitialStart")]
+    partial class InitialStart
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -847,6 +847,18 @@ namespace Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
+                    b.Property<string>("ContactEmail")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("contact_email");
+
+                    b.Property<string>("ContactPhone")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("contact_phone");
+
                     b.Property<DateTime>("CreationDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("creation_date");
@@ -865,8 +877,13 @@ namespace Infrastructure.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("store_name");
 
-                    b.Property<string>("TaxNumber")
+                    b.Property<string>("SupportLine")
                         .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("support_line");
+
+                    b.Property<string>("TaxNumber")
                         .HasMaxLength(10)
                         .HasColumnType("character varying(10)")
                         .HasColumnName("tax_number");

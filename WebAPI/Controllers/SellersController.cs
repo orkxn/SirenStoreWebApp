@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SirenStore.Application.DTOs;
 using SirenStore.Application.Interfaces;
@@ -30,7 +30,7 @@ namespace SirenStore.WebAPI.Controllers
         // Sadece giriş yapmış müşteriler veya genel kullanıcılar başvurabilir.
         [Authorize]
         [HttpPost("apply")]
-        public async Task<IActionResult> BecomeSeller([FromBody] BecomeSellerRequestDto dto)
+        public async Task<IActionResult> BecomeSeller([FromBody] CreateSellerDto dto)
         {
             // Token içerisinden güvenli bir şekilde userId sökülüyor (IDOR Koruması)
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -41,6 +41,30 @@ namespace SirenStore.WebAPI.Controllers
             await _sellerService.BecomeSellerAsync(userId, dto);
 
             return Ok(new { message = "Satıcı başvurunuz başarıyla alındı. Admin onayı bekleniyor." });
+        }
+
+        [Authorize]
+        [HttpGet("my-status")]
+        public async Task<IActionResult> GetMySellerStatus()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out long userId))
+                return Unauthorized("Geçersiz kullanıcı oturumu.");
+
+            var seller = await _sellerService.GetSellerByUserIdAsync(userId);
+            if (seller == null)
+                return Ok(new { hasApplied = false, status = "" });
+
+            return Ok(new { 
+                hasApplied = true, 
+                status = seller.Status.ToString(),
+                storeName = seller.StoreName,
+                contactEmail = seller.ContactEmail,
+                contactPhone = seller.ContactPhone,
+                supportLine = seller.SupportLine,
+                taxNumber = seller.TaxNumber,
+                taxOffice = seller.TaxOffice
+            });
         }
 
         // 2. ADMIN: BAŞVURUYU ONAYLAMA

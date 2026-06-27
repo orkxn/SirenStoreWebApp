@@ -12,5 +12,6 @@ export interface Product {
   mainImageUrl?: string;
   
   categoryId?: number;
+  sellerId?: number;
   isActive?: boolean;
 }

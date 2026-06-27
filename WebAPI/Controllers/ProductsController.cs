@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SirenStore.Application.DTOs;
 using SirenStore.Application.Interfaces;
@@ -12,10 +12,16 @@ namespace WebAPI.Controllers
     {
         private readonly IProductService _productService;
 
-        public ProductsController(IProductService productService)
+        private readonly IRepository<Entities.Models.Seller> _sellerRepository;
+        private readonly IRepository<Entities.Models.User> _userRepository;
+
+        public ProductsController(IProductService productService, IRepository<Entities.Models.Seller> sellerRepository, IRepository<Entities.Models.User> userRepository)
         {
             _productService = productService;
+            _sellerRepository = sellerRepository;
+            _userRepository = userRepository;
         }
+
 
         // 1. HERKESE AÇIK: Tüm Ürünleri Listele
         // GET: api/products
@@ -41,6 +47,17 @@ namespace WebAPI.Controllers
         public async Task<IActionResult> GetByCategoryId(long categoryId)
         {
             var products = await _productService.GetByCategoryIdAsync(categoryId);
+            return Ok(products);
+        }
+
+        // 3.5 SATICIYA ÖZEL: Kendi Ürünlerini Getir
+        // GET: api/products/my-products
+        [Authorize(Roles = "Seller")]
+        [HttpGet("my-products")]
+        public async Task<IActionResult> GetMyProducts()
+        {
+            var userId = GetUserIdFromToken();
+            var products = await _productService.GetMyProductsAsync(userId);
             return Ok(products);
         }
 

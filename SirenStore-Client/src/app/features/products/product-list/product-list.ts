@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { ProductService } from '../../../core/services/product.service';
 import { CategoryService } from '../../../core/services/category.service';
 import { Product } from '../../../core/models/product.model';
@@ -26,12 +26,18 @@ export class ProductListComponent implements OnInit {
 
   constructor(
     private productService: ProductService,
-    private categoryService: CategoryService
+    private categoryService: CategoryService,
+    private route: ActivatedRoute,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
     this.loadCategories();
-    this.loadProducts();
+    this.route.queryParams.subscribe(params => {
+      const catId = params['categoryId'];
+      this.selectedCategoryId = catId ? parseInt(catId, 10) : null;
+      this.loadProducts();
+    });
   }
 
   loadCategories(): void {
@@ -57,9 +63,13 @@ export class ProductListComponent implements OnInit {
     });
   }
 
-  onCategorySelect(categoryId: number | null): void {
-    this.selectedCategoryId = categoryId;
-    this.applyFilters();
+  getSelectedCategoryName(): string {
+    const cat = this.categories.find(c => c.id === this.selectedCategoryId);
+    return cat ? cat.name : '';
+  }
+
+  clearCategoryFilter(): void {
+    this.router.navigate(['/products'], { queryParams: {} });
   }
 
   onSort(event: Event): void {

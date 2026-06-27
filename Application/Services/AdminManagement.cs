@@ -1,4 +1,4 @@
-﻿using Entities.Enums;
+using Entities.Enums;
 using Entities.Models;
 using Microsoft.EntityFrameworkCore;
 using SirenStore.Application.DTOs;
@@ -11,11 +11,16 @@ namespace SirenStore.Application.Services
     {
         private readonly IRepository<User> _userRepository;
         private readonly IRepository<Seller> _sellerRepository;
+        private readonly IAuditLogService _auditLogService;
 
-        public AdminManager(IRepository<User> userRepository, IRepository<Seller> sellerRepository)
+        public AdminManager(
+            IRepository<User> userRepository, 
+            IRepository<Seller> sellerRepository,
+            IAuditLogService auditLogService)
         {
             _userRepository = userRepository;
             _sellerRepository = sellerRepository;
+            _auditLogService = auditLogService;
         }
 
         // Sistemdeki tüm kullanıcıları (Müşteri, Satıcı, Admin) güvenli DTO ile listeler
@@ -46,6 +51,10 @@ namespace SirenStore.Application.Services
                     UserEmail = s.User.Email,
                     StoreName = s.StoreName,
                     TaxNumber = s.TaxNumber,
+                    TaxOffice = s.TaxOffice,
+                    ContactEmail = s.ContactEmail,
+                    ContactPhone = s.ContactPhone,
+                    SupportLine = s.SupportLine,
                     Status = s.Status,
                     IsDeleted = s.IsDeleted
                 })
@@ -71,14 +80,22 @@ namespace SirenStore.Application.Services
             targetUser.IsDeleted = true;
             _userRepository.Update(targetUser);
             await _userRepository.SaveChangesAsync();
+
+            // Audit: Log user ban
+            await _auditLogService.LogAuditAsync(currentUserId, "USER_BANNED", "User", targetUserId, 
+                $"Banned by Admin {currentUserId}. User email: {targetUser.Email}");
         }
 
         // Kullanıcının banını kaldırır
-        public async Task UnbanUserAsync(long userId)
+        public async Task UnbanUserAsync(long currentUserId, long targetUserId)
         {
+            // 1. Kendi kendini unbanlama koruması
+            if (currentUserId == targetUserId)
+                throw new BusinessRuleException("Kendi kendinizi unbanlayamazsınız!");
+
             var user = await _userRepository.AsQueryable()
                 .IgnoreQueryFilters()
-                .FirstOrDefaultAsync(u => u.Id == userId);
+                .FirstOrDefaultAsync(u => u.Id == targetUserId);
 
             if (user == null)
                 throw new NotFoundException("Kullanıcı bulunamadı.");
@@ -88,6 +105,10 @@ namespace SirenStore.Application.Services
 
             _userRepository.Update(user);
             await _userRepository.SaveChangesAsync();
+
+            // Audit: Log user unban
+            await _auditLogService.LogAuditAsync(currentUserId, "USER_UNBANNED", "User", targetUserId, 
+                $"Unbanned by Admin {currentUserId}. User email: {user.Email}");
         }
     }
 }

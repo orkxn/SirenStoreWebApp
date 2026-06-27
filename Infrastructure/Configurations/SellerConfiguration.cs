@@ -15,13 +15,24 @@ namespace Infrastructure.Configurations
                 .IsRequired()
                 .HasMaxLength(100);
 
-            // Vergi numarası zorunlu ve tam 10 karakter (Türkiye standartları)
+            // Vergi numarası opsiyonel ve en fazla 10 karakter
             builder.Property(s => s.TaxNumber)
-                .IsRequired()
                 .HasMaxLength(10);
 
             builder.Property(s => s.TaxOffice)
                 .HasMaxLength(50);
+
+            builder.Property(s => s.ContactEmail)
+                .IsRequired()
+                .HasMaxLength(100);
+
+            builder.Property(s => s.ContactPhone)
+                .IsRequired()
+                .HasMaxLength(20);
+
+            builder.Property(s => s.SupportLine)
+                .IsRequired()
+                .HasMaxLength(20);
 
             // User ile Bire Bir (1-to-1) İlişki Tanımı
             builder.HasOne(s => s.User)

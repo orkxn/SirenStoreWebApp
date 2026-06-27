@@ -58,7 +58,17 @@ namespace SirenStore.WebAPI.Controllers
         [HttpPost("users/{id:long}/unban")]
         public async Task<IActionResult> UnbanUser(long id)
         {
-            await _adminService.UnbanUserAsync(id);
+            // JWT token içerisinden isteği atan adminin ID'sini çekiyoruz
+            var currentUserIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+
+            if (currentUserIdClaim == null)
+                return Unauthorized(new { message = "Geçersiz oturum. Kullanıcı kimliği doğrulanamadı." });
+
+            long currentUserId = long.Parse(currentUserIdClaim.Value);
+
+            // Servise hem isteği yapanı hem de hedeflenen kişiyi gönderiyoruz
+            await _adminService.UnbanUserAsync(currentUserId, id);
+
             return Ok(new { message = "Kullanıcının banı başarıyla kaldırıldı." });
         }
     }

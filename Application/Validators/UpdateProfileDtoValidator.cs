@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using SirenStore.Application.DTOs;
 
 namespace SirenStore.Application.Validators
@@ -17,8 +17,8 @@ namespace SirenStore.Application.Validators
 
             RuleFor(x => x.PhoneNumber)
                 .NotEmpty().WithMessage("Telefon alanı boş bırakılamaz.")
-                .MinimumLength(10).WithMessage("Telefon numaranız en az 10 karakter olmalıdır.")
-                .Matches(@"^\+?[1-9]\d{1,14}$").WithMessage("Lütfen geçerli bir telefon numarası giriniz.");
+                .Length(10).WithMessage("Telefon numaranız tam olarak 10 haneli olmalıdır.")
+                .Matches(@"^5\d{9}$").WithMessage("Telefon numaranız 5 ile başlayan 10 haneli bir numara olmalıdır (Örn: 5XXXXXXXXX).");
         }
     }
 }

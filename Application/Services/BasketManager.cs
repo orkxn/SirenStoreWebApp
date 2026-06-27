@@ -1,4 +1,4 @@
-﻿using Entities.Models;
+using Entities.Models;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using SirenStore.Application.DTOs;
@@ -34,9 +34,9 @@ namespace SirenStore.Application.Services
                 .Select(b => new BasketDto
                 {
                     Id = b.Id,
-                    // Sadece Global Query Filter'a takılmamış ürünleri sepet listesine alıyoruz
+                    // Sadece silinmemiş ve Product'ı olan ürünleri sepet listesine alıyoruz
                     Items = b.BasketItems
-                        .Where(bi => bi.Product != null)
+                        .Where(bi => !bi.IsDeleted && bi.Product != null)
                         .Select(bi => new BasketItemDto
                         {
                             Id = bi.Id,
@@ -87,11 +87,21 @@ namespace SirenStore.Application.Services
 
             if (existingItem != null)
             {
-                // Toplam adet stok sınırını aşıyor mu?
-                if (product.Stock < (existingItem.Quantity + dto.Quantity))
-                    throw new BusinessRuleException($"Sepetinizdeki toplam adet ({existingItem.Quantity + dto.Quantity}) mağaza stokunu ({product.Stock}) aşamaz.");
+                if (existingItem.IsDeleted)
+                {
+                    // Eğer önceden silinmişse (soft-delete), tekrar aktifleştir
+                    existingItem.IsDeleted = false;
+                    existingItem.Quantity = dto.Quantity;
+                }
+                else 
+                {
+                    // Toplam adet stok sınırını aşıyor mu?
+                    if (product.Stock < (existingItem.Quantity + dto.Quantity))
+                        throw new BusinessRuleException($"Sepetinizdeki toplam adet ({existingItem.Quantity + dto.Quantity}) mağaza stokunu ({product.Stock}) aşamaz.");
 
-                existingItem.Quantity += dto.Quantity;
+                    existingItem.Quantity += dto.Quantity;
+                }
+                
                 _basketItemRepository.Update(existingItem);
             }
             else
@@ -120,7 +130,7 @@ namespace SirenStore.Application.Services
             if (basket == null)
                 throw new NotFoundException("Sepetiniz bulunamadı.");
 
-            var basketItem = basket.BasketItems.FirstOrDefault(bi => bi.ProductId == dto.ProductId);
+            var basketItem = basket.BasketItems.FirstOrDefault(bi => bi.ProductId == dto.ProductId && !bi.IsDeleted);
             if (basketItem == null)
                 throw new NotFoundException("Ürün sepetinizde bulunmuyor.");
 
@@ -142,7 +152,7 @@ namespace SirenStore.Application.Services
 
             if (basket == null) return;
 
-            var itemToRemove = basket.BasketItems.FirstOrDefault(bi => bi.ProductId == productId);
+            var itemToRemove = basket.BasketItems.FirstOrDefault(bi => bi.ProductId == productId && !bi.IsDeleted);
             if (itemToRemove != null)
             {
                 _basketItemRepository.Remove(itemToRemove);
@@ -157,9 +167,9 @@ namespace SirenStore.Application.Services
                 .Include(b => b.BasketItems)
                 .FirstOrDefaultAsync(b => b.UserId == userId);
 
-            if (basket != null && basket.BasketItems.Any())
+            if (basket != null && basket.BasketItems.Any(bi => !bi.IsDeleted))
             {
-                foreach (var item in basket.BasketItems.ToList())
+                foreach (var item in basket.BasketItems.Where(bi => !bi.IsDeleted).ToList())
                 {
                     _basketItemRepository.Remove(item);
                 }

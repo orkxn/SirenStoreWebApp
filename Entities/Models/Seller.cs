@@ -1,4 +1,4 @@
-﻿using Entities.Enums;
+using Entities.Enums;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Entities.Models
@@ -7,8 +7,12 @@ namespace Entities.Models
     {
         // Mağaza Bilgileri
         public string StoreName { get; set; } = string.Empty;
-        public string TaxNumber { get; set; } = string.Empty;
+        public string? TaxNumber { get; set; }
         public string? TaxOffice { get; set; }
+
+        public string ContactEmail { get; set; } = string.Empty;
+        public string ContactPhone { get; set; } = string.Empty;
+        public string SupportLine { get; set; } = string.Empty;
 
         // Başvuru Durumu
         public SellerStatus Status { get; set; } = SellerStatus.Pending;

@@ -1,4 +1,4 @@
-﻿namespace SirenStore.Application.DTOs
+namespace SirenStore.Application.DTOs
 {
     public class ProductListDto
     {
@@ -8,7 +8,10 @@
         public decimal Price { get; set; }
         public int Stock { get; set; }
 
+        public long CategoryId { get; set; }
         public string CategoryName { get; set; } = string.Empty;
+        
+        public long SellerId { get; set; }
         public string StoreName { get; set; } = string.Empty;
 
         public string? MainImageUrl { get; set; }

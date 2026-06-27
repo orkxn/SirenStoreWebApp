@@ -1,4 +1,4 @@
-﻿using SirenStore.Application.DTOs;
+using SirenStore.Application.DTOs;
 using Entities.Models;
 using Entities.Enums;
 
@@ -11,6 +11,9 @@ namespace SirenStore.Application.Interfaces
 
         // Müşterinin kendi geçmiş sipariş listesini getirir
         Task<List<OrderDto>> GetUserOrdersAsync(long userId);
+
+        // Satıcının, kendi ürünlerine gelen siparişleri listeleyebilmesi için
+        Task<List<OrderDto>> GetSellerOrdersAsync(long userId);
 
         // Belirli bir siparişin detayını getirir
         Task<OrderDto> GetOrderByIdAsync(long userId, long orderId);

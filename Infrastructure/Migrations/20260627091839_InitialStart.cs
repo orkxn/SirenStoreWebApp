@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitialStart : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -41,9 +41,8 @@ namespace Infrastructure.Migrations
                 {
                     ıd = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    name = table.Column<string>(type: "text", nullable: false),
-                    description = table.Column<string>(type: "text", nullable: false),
-                    parent_category_ıd = table.Column<long>(type: "bigint", nullable: true),
+                    name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    description = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     creation_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     updated_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     ıs_deleted = table.Column<bool>(type: "boolean", nullable: false)
@@ -51,11 +50,6 @@ namespace Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_categories", x => x.ıd);
-                    table.ForeignKey(
-                        name: "fk_categories_categories_parent_category_ıd",
-                        column: x => x.parent_category_ıd,
-                        principalTable: "categories",
-                        principalColumn: "ıd");
                 });
 
             migrationBuilder.CreateTable(
@@ -259,22 +253,21 @@ namespace Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "carts",
+                name: "baskets",
                 columns: table => new
                 {
                     ıd = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     user_ıd = table.Column<long>(type: "bigint", nullable: false),
-                    total_amount = table.Column<decimal>(type: "numeric", nullable: false),
                     creation_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     updated_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     ıs_deleted = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("pk_carts", x => x.ıd);
+                    table.PrimaryKey("pk_baskets", x => x.ıd);
                     table.ForeignKey(
-                        name: "fk_carts_users_user_ıd",
+                        name: "fk_baskets_users_user_ıd",
                         column: x => x.user_ıd,
                         principalTable: "users",
                         principalColumn: "ıd",
@@ -314,10 +307,10 @@ namespace Infrastructure.Migrations
                     ıd = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     user_ıd = table.Column<long>(type: "bigint", nullable: false),
-                    order_number = table.Column<string>(type: "text", nullable: false),
-                    total_amount = table.Column<decimal>(type: "numeric", nullable: false),
+                    total_price = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
+                    address_title = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    shipping_address = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
                     status = table.Column<int>(type: "integer", nullable: false),
-                    shipping_address_ıd = table.Column<long>(type: "bigint", nullable: false),
                     creation_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     updated_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     ıs_deleted = table.Column<bool>(type: "boolean", nullable: false)
@@ -330,7 +323,7 @@ namespace Infrastructure.Migrations
                         column: x => x.user_ıd,
                         principalTable: "users",
                         principalColumn: "ıd",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -340,11 +333,13 @@ namespace Infrastructure.Migrations
                     ıd = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     store_name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    tax_number = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: false),
+                    tax_number = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: true),
                     tax_office = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    contact_email = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    contact_phone = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    support_line = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     status = table.Column<int>(type: "integer", nullable: false),
                     user_ıd = table.Column<long>(type: "bigint", nullable: false),
-                    user_ıd1 = table.Column<long>(type: "bigint", nullable: true),
                     creation_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     updated_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     ıs_deleted = table.Column<bool>(type: "boolean", nullable: false)
@@ -358,11 +353,6 @@ namespace Infrastructure.Migrations
                         principalTable: "users",
                         principalColumn: "ıd",
                         onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "fk_sellers_users_user_ıd1",
-                        column: x => x.user_ıd1,
-                        principalTable: "users",
-                        principalColumn: "ıd");
                 });
 
             migrationBuilder.CreateTable(
@@ -398,14 +388,12 @@ namespace Infrastructure.Migrations
                 {
                     ıd = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    name = table.Column<string>(type: "character varying(60)", maxLength: 60, nullable: false),
-                    brand = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
-                    description = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
-                    ıs_active = table.Column<bool>(type: "boolean", nullable: false),
-                    price = table.Column<decimal>(type: "numeric", nullable: false),
+                    name = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
+                    description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: false),
+                    price = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
                     stock = table.Column<int>(type: "integer", nullable: false),
-                    category_ıd = table.Column<long>(type: "bigint", nullable: false),
                     seller_ıd = table.Column<long>(type: "bigint", nullable: false),
+                    category_ıd = table.Column<long>(type: "bigint", nullable: false),
                     creation_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     updated_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     ıs_deleted = table.Column<bool>(type: "boolean", nullable: false)
@@ -418,7 +406,7 @@ namespace Infrastructure.Migrations
                         column: x => x.category_ıd,
                         principalTable: "categories",
                         principalColumn: "ıd",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "fk_products_sellers_seller_ıd",
                         column: x => x.seller_ıd,
@@ -482,135 +470,85 @@ namespace Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "cart_ıtems",
+                name: "basket_items",
                 columns: table => new
                 {
                     ıd = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    cart_ıd = table.Column<long>(type: "bigint", nullable: false),
-                    product_ıd = table.Column<long>(type: "bigint", nullable: false),
-                    quantity = table.Column<int>(type: "integer", nullable: false),
+                    basket_ıd = table.Column<long>(type: "bigint", nullable: false),
+                    product_ıd = table.Column<long>(type: "bigint", nullable: true),
+                    quantity = table.Column<int>(type: "integer", nullable: false, defaultValue: 1),
                     creation_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     updated_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     ıs_deleted = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("pk_cart_ıtems", x => x.ıd);
+                    table.PrimaryKey("pk_basket_items", x => x.ıd);
                     table.ForeignKey(
-                        name: "fk_cart_ıtems_carts_cart_ıd",
-                        column: x => x.cart_ıd,
-                        principalTable: "carts",
+                        name: "fk_basket_items_baskets_basket_ıd",
+                        column: x => x.basket_ıd,
+                        principalTable: "baskets",
                         principalColumn: "ıd",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "fk_cart_ıtems_products_product_ıd",
+                        name: "fk_basket_items_products_product_ıd",
                         column: x => x.product_ıd,
                         principalTable: "products",
                         principalColumn: "ıd",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "order_ıtems",
+                name: "order_items",
                 columns: table => new
                 {
                     ıd = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     order_ıd = table.Column<long>(type: "bigint", nullable: false),
-                    product_ıd = table.Column<long>(type: "bigint", nullable: false),
+                    product_ıd = table.Column<long>(type: "bigint", nullable: true),
                     quantity = table.Column<int>(type: "integer", nullable: false),
-                    unit_price = table.Column<decimal>(type: "numeric", nullable: false),
+                    price = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
+                    status = table.Column<int>(type: "integer", nullable: false),
                     creation_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     updated_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     ıs_deleted = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("pk_order_ıtems", x => x.ıd);
+                    table.PrimaryKey("pk_order_items", x => x.ıd);
                     table.ForeignKey(
-                        name: "fk_order_ıtems_orders_order_ıd",
+                        name: "fk_order_items_orders_order_ıd",
                         column: x => x.order_ıd,
                         principalTable: "orders",
                         principalColumn: "ıd",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "fk_order_ıtems_products_product_ıd",
+                        name: "fk_order_items_products_product_ıd",
                         column: x => x.product_ıd,
                         principalTable: "products",
                         principalColumn: "ıd",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "product_ımages",
+                name: "product_images",
                 columns: table => new
                 {
                     ıd = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    product_ıd = table.Column<long>(type: "bigint", nullable: false),
-                    url = table.Column<string>(type: "text", nullable: false),
-                    ıs_main = table.Column<bool>(type: "boolean", nullable: false),
+                    ımage_url = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    ıs_main = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
+                    product_ıd = table.Column<long>(type: "bigint", nullable: true),
                     creation_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     updated_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     ıs_deleted = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("pk_product_ımages", x => x.ıd);
+                    table.PrimaryKey("pk_product_images", x => x.ıd);
                     table.ForeignKey(
-                        name: "fk_product_ımages_products_product_ıd",
-                        column: x => x.product_ıd,
-                        principalTable: "products",
-                        principalColumn: "ıd",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "product_questions",
-                columns: table => new
-                {
-                    ıd = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    product_ıd = table.Column<long>(type: "bigint", nullable: false),
-                    user_email = table.Column<string>(type: "text", nullable: false),
-                    question_text = table.Column<string>(type: "text", nullable: false),
-                    answer_text = table.Column<string>(type: "text", nullable: false),
-                    answer_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    creation_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    ıs_deleted = table.Column<bool>(type: "boolean", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_product_questions", x => x.ıd);
-                    table.ForeignKey(
-                        name: "fk_product_questions_products_product_ıd",
-                        column: x => x.product_ıd,
-                        principalTable: "products",
-                        principalColumn: "ıd",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "product_reviews",
-                columns: table => new
-                {
-                    ıd = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    product_ıd = table.Column<long>(type: "bigint", nullable: false),
-                    user_email = table.Column<string>(type: "text", nullable: false),
-                    comment = table.Column<string>(type: "text", nullable: false),
-                    rating = table.Column<int>(type: "integer", nullable: false),
-                    creation_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    ıs_deleted = table.Column<bool>(type: "boolean", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_product_reviews", x => x.ıd);
-                    table.ForeignKey(
-                        name: "fk_product_reviews_products_product_ıd",
+                        name: "fk_product_images_products_product_ıd",
                         column: x => x.product_ıd,
                         principalTable: "products",
                         principalColumn: "ıd",
@@ -628,24 +566,20 @@ namespace Infrastructure.Migrations
                 column: "user_ıd");
 
             migrationBuilder.CreateIndex(
-                name: "ıx_cart_ıtems_cart_ıd",
-                table: "cart_ıtems",
-                column: "cart_ıd");
+                name: "ıx_basket_items_basket_ıd",
+                table: "basket_items",
+                column: "basket_ıd");
 
             migrationBuilder.CreateIndex(
-                name: "ıx_cart_ıtems_product_ıd",
-                table: "cart_ıtems",
+                name: "ıx_basket_items_product_ıd",
+                table: "basket_items",
                 column: "product_ıd");
 
             migrationBuilder.CreateIndex(
-                name: "ıx_carts_user_ıd",
-                table: "carts",
-                column: "user_ıd");
-
-            migrationBuilder.CreateIndex(
-                name: "ıx_categories_parent_category_ıd",
-                table: "categories",
-                column: "parent_category_ıd");
+                name: "ıx_baskets_user_ıd",
+                table: "baskets",
+                column: "user_ıd",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "ıx_login_histories_user_ıd",
@@ -653,13 +587,13 @@ namespace Infrastructure.Migrations
                 column: "user_ıd");
 
             migrationBuilder.CreateIndex(
-                name: "ıx_order_ıtems_order_ıd",
-                table: "order_ıtems",
+                name: "ıx_order_items_order_ıd",
+                table: "order_items",
                 column: "order_ıd");
 
             migrationBuilder.CreateIndex(
-                name: "ıx_order_ıtems_product_ıd",
-                table: "order_ıtems",
+                name: "ıx_order_items_product_ıd",
+                table: "order_items",
                 column: "product_ıd");
 
             migrationBuilder.CreateIndex(
@@ -668,18 +602,8 @@ namespace Infrastructure.Migrations
                 column: "user_ıd");
 
             migrationBuilder.CreateIndex(
-                name: "ıx_product_ımages_product_ıd",
-                table: "product_ımages",
-                column: "product_ıd");
-
-            migrationBuilder.CreateIndex(
-                name: "ıx_product_questions_product_ıd",
-                table: "product_questions",
-                column: "product_ıd");
-
-            migrationBuilder.CreateIndex(
-                name: "ıx_product_reviews_product_ıd",
-                table: "product_reviews",
+                name: "ıx_product_images_product_ıd",
+                table: "product_images",
                 column: "product_ıd");
 
             migrationBuilder.CreateIndex(
@@ -709,12 +633,6 @@ namespace Infrastructure.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "ıx_sellers_user_ıd1",
-                table: "sellers",
-                column: "user_ıd1",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
                 name: "ıx_warning_records_user_ıd",
                 table: "warning_records",
                 column: "user_ıd");
@@ -733,7 +651,7 @@ namespace Infrastructure.Migrations
                 name: "ban_records");
 
             migrationBuilder.DropTable(
-                name: "cart_ıtems");
+                name: "basket_items");
 
             migrationBuilder.DropTable(
                 name: "cms_contents");
@@ -751,16 +669,10 @@ namespace Infrastructure.Migrations
                 name: "login_histories");
 
             migrationBuilder.DropTable(
-                name: "order_ıtems");
+                name: "order_items");
 
             migrationBuilder.DropTable(
-                name: "product_ımages");
-
-            migrationBuilder.DropTable(
-                name: "product_questions");
-
-            migrationBuilder.DropTable(
-                name: "product_reviews");
+                name: "product_images");
 
             migrationBuilder.DropTable(
                 name: "seller_addresses");
@@ -775,7 +687,7 @@ namespace Infrastructure.Migrations
                 name: "warning_records");
 
             migrationBuilder.DropTable(
-                name: "carts");
+                name: "baskets");
 
             migrationBuilder.DropTable(
                 name: "orders");

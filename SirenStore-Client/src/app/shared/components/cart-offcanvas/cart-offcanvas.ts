@@ -4,6 +4,9 @@ import { RouterModule } from '@angular/router';
 import { BasketService } from '../../../core/services/basket.service';
 import { OffcanvasService } from '../../../core/services/offcanvas.service';
 
+import { OrderService } from '../../../core/services/order.service';
+import { Router } from '@angular/router';
+
 @Component({
   selector: 'app-cart-offcanvas',
   standalone: true,
@@ -13,12 +16,15 @@ import { OffcanvasService } from '../../../core/services/offcanvas.service';
 export class CartOffcanvasComponent {
   basketService = inject(BasketService);
   offcanvasService = inject(OffcanvasService);
+  orderService = inject(OrderService);
+  router = inject(Router);
 
   basketCount = this.basketService.basketCount;
   basketTotal = this.basketService.basketTotal;
   basket = this.basketService.basket;
 
   isOpen = this.offcanvasService.isCartOpen;
+  isCheckingOut = false;
 
   closeCart() {
     this.offcanvasService.closeCart();
@@ -37,7 +43,27 @@ export class CartOffcanvasComponent {
   }
 
   checkout() {
-    this.closeCart();
-    // Router navigation to checkout page (to be implemented later)
+    this.isCheckingOut = true;
+    this.orderService.createOrder({
+      addressTitle: 'Ev Adresi',
+      shippingAddress: 'İstanbul, Türkiye (Otomatik Adres)'
+    }).subscribe({
+      next: () => {
+        this.isCheckingOut = false;
+        this.basketService.loadBasket(); // Sepeti sıfırla (backend temizlediği için)
+        this.closeCart();
+        this.router.navigate(['/profile'], { queryParams: { tab: 'orders' } }); // Siparişlerim kısmına yönlendir
+      },
+      error: (err) => {
+        this.isCheckingOut = false;
+        alert('Sipariş oluşturulurken bir hata oluştu: ' + (err.error?.message || 'Bilinmeyen hata'));
+      }
+    });
+  }
+
+  clearCart() {
+    if (confirm('Sepetinizdeki tüm ürünleri silmek istediğinize emin misiniz?')) {
+      this.basketService.clearBasket().subscribe();
+    }
   }
 }

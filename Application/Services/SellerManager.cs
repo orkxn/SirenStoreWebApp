@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Entities.Enums;
 using Entities.Models;
 using FluentValidation;
@@ -12,12 +12,12 @@ namespace SirenStore.Application.Services
     {
         private readonly IRepository<Seller> _sellerRepository;
         private readonly IRepository<User> _userRepository;
-        private readonly IValidator<BecomeSellerRequestDto> _validator;
+        private readonly IValidator<CreateSellerDto> _validator;
 
         public SellerManager(
             IRepository<Seller> sellerRepository,
             IRepository<User> userRepository,
-            IValidator<BecomeSellerRequestDto> validator)
+            IValidator<CreateSellerDto> validator)
         {
             _sellerRepository = sellerRepository;
             _userRepository = userRepository;
@@ -25,7 +25,7 @@ namespace SirenStore.Application.Services
         }
 
         // 1. SATICI BAŞVURUSU YAPMA
-        public async Task BecomeSellerAsync(long userId, BecomeSellerRequestDto dto)
+        public async Task BecomeSellerAsync(long userId, CreateSellerDto dto)
         {
             // Boş mu, formatı hatalı mı?
             await _validator.ValidateAndThrowAsync(dto);
@@ -40,9 +40,22 @@ namespace SirenStore.Application.Services
             if (existingSeller != null)
             {
                 if (existingSeller.Status == SellerStatus.Pending)
-                    throw new BusinessRuleException("Zaten bekleyen bir satıcı başvurunuz bulunuyor.");
+                    throw new BusinessRuleException("Zaten bekleyen bir satıcı başvurunuz var. Lütfen yöneticinin onaylamasını bekleyin.");
+                
                 if (existingSeller.Status == SellerStatus.Approved)
                     throw new BusinessRuleException("Zaten onaylı bir mağazanız var.");
+
+                // Reddedildiyse bilgileri güncelleyip tekrar Pending yapalım
+                existingSeller.StoreName = dto.StoreName;
+                existingSeller.ContactEmail = dto.ContactEmail;
+                existingSeller.ContactPhone = dto.ContactPhone;
+                existingSeller.SupportLine = dto.SupportLine;
+                existingSeller.TaxNumber = dto.TaxNumber;
+                existingSeller.TaxOffice = dto.TaxOffice;
+                existingSeller.Status = SellerStatus.Pending;
+                _sellerRepository.Update(existingSeller);
+                await _sellerRepository.SaveChangesAsync();
+                return;
             }
 
             // Yeni satıcı başvuru kaydı oluştur
@@ -50,9 +63,12 @@ namespace SirenStore.Application.Services
             {
                 UserId = userId,
                 StoreName = dto.StoreName,
+                ContactEmail = dto.ContactEmail,
+                ContactPhone = dto.ContactPhone,
+                SupportLine = dto.SupportLine,
                 TaxNumber = dto.TaxNumber,
                 TaxOffice = dto.TaxOffice,
-                Status = SellerStatus.Pending // Varsayılan olarak onay bekliyor
+                Status = SellerStatus.Pending // Onay bekliyor
             };
 
             await _sellerRepository.AddAsync(newSeller);
@@ -142,6 +158,11 @@ namespace SirenStore.Application.Services
                 throw new NotFoundException("Aradığınız mağaza sistemde bulunamadı.");
 
             return sellerDto;
+        }
+
+        public async Task<Seller?> GetSellerByUserIdAsync(long userId)
+        {
+            return await _sellerRepository.GetAsync(s => s.UserId == userId);
         }
     }
 }

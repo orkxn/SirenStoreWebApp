@@ -7,6 +7,6 @@ namespace SirenStore.Application.Interfaces
         Task<List<UserManagementDto>> GetAllUsersAsync();
         Task<List<SellerManagementDto>> GetAllSellersAsync();
         Task BanUserAsync(long currentUserId, long targetUserId);
-        Task UnbanUserAsync(long userId);
+        Task UnbanUserAsync(long currentUserId, long targetUserId);
     }
 }

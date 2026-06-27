@@ -22,4 +22,21 @@ export class OrderService {
   createOrder(request: CreateOrderRequest): Observable<Order> {
     return this.http.post<Order>(this.apiUrl, request);
   }
+
+  getSellerOrders(): Observable<Order[]> {
+    const token = localStorage.getItem('token');
+    return this.http.get<Order[]>(`${this.apiUrl}/seller`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+  }
+
+  updateOrderItemStatus(orderItemId: number, status: number): Observable<any> {
+    const token = localStorage.getItem('token');
+    return this.http.put(`${this.apiUrl}/items/${orderItemId}/status`, status, {
+      headers: { 
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+  }
 }

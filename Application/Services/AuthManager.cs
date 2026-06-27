@@ -17,6 +17,7 @@ namespace SirenStore.Application.Services
     {
         private readonly IRepository<User> _userRepository;
         private readonly IConfiguration _configuration;
+        private readonly IAuditLogService _auditLogService;
 
         // Validator'larımızı tanımlıyoruz
         private readonly IValidator<RegisterDto> _registerValidator;
@@ -26,12 +27,14 @@ namespace SirenStore.Application.Services
             IRepository<User> userRepository,
             IConfiguration configuration,
             IValidator<RegisterDto> registerValidator,   
-            IValidator<LoginDto> loginValidator)         
+            IValidator<LoginDto> loginValidator,
+            IAuditLogService auditLogService)         
         {
             _userRepository = userRepository;
             _configuration = configuration;
             _registerValidator = registerValidator;
             _loginValidator = loginValidator;
+            _auditLogService = auditLogService;
         }
 
         // 1. YENİ KULLANICI KAYDI
@@ -61,6 +64,9 @@ namespace SirenStore.Application.Services
 
             await _userRepository.AddAsync(user);
             await _userRepository.SaveChangesAsync();
+
+            // Audit: Log successful registration
+            await _auditLogService.LogAuditAsync(user.Id, "USER_REGISTERED", "User", user.Id, $"Email: {user.Email}");
         }
 
         // 2. SİSTEME GİRİŞ YAPMA
@@ -88,6 +94,9 @@ namespace SirenStore.Application.Services
 
             _userRepository.Update(user);
             await _userRepository.SaveChangesAsync();
+
+            // Audit: Log successful login
+            await _auditLogService.LogAuditAsync(user.Id, "USER_LOGIN", "User", user.Id, $"Email: {user.Email}");
 
             return tokenDto;
         }
@@ -133,7 +142,11 @@ namespace SirenStore.Application.Services
                 new("LastName", user.LastName)
             };
 
-            var expires = DateTime.UtcNow.AddMinutes(double.Parse(_configuration["JwtSettings:DurationInMinutes"] ?? "60"));
+            // Güvenli bir şekilde configuration'dan duration'ı oku, yoksa 60 kullan
+            if (!double.TryParse(_configuration["JwtSettings:DurationInMinutes"], out double durationInMinutes))
+                durationInMinutes = 60;
+
+            var expires = DateTime.UtcNow.AddMinutes(durationInMinutes);
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {

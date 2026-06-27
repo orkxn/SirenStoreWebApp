@@ -1,6 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ProductService } from '../../../core/services/product.service';
 import { Product } from '../../../core/models/product.model';
 import { BasketService } from '../../../core/services/basket.service';
@@ -10,7 +10,7 @@ import { AuthService } from '../../../core/services/auth';
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './product-detail.component.html',
 })
 export class ProductDetailComponent implements OnInit {
@@ -19,6 +19,7 @@ export class ProductDetailComponent implements OnInit {
   errorMessage = '';
   quantity = 1;
   isAddingToCart = false;
+  showToast = false;
 
   route = inject(ActivatedRoute);
   router = inject(Router);
@@ -81,8 +82,10 @@ export class ProductDetailComponent implements OnInit {
     }).subscribe({
       next: () => {
         this.isAddingToCart = false;
-        // Sepet menüsünü aç
-        this.offcanvasService.openCart();
+        this.showToast = true;
+        setTimeout(() => {
+          this.showToast = false;
+        }, 3000);
       },
       error: (err) => {
         console.error('Sepete eklenemedi', err);

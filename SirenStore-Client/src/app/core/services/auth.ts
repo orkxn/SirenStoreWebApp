@@ -29,7 +29,6 @@ export class AuthService {
         // JWT token'ın içinden kullanıcı bilgisini çöz
         const decoded = this.decodeToken(response.accessToken);
         if (decoded) {
-          localStorage.setItem('user', JSON.stringify(decoded));
           this.currentUser.set(decoded);
         }
       })
@@ -39,7 +38,6 @@ export class AuthService {
   logout(): void {
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');
-    localStorage.removeItem('user');
     this.currentUser.set(null);
   }
 
@@ -55,7 +53,12 @@ export class AuthService {
   private decodeToken(token: string): DecodedUser | null {
     try {
       const payload = token.split('.')[1];
-      const decoded = JSON.parse(atob(payload));
+      // UTF-8 karakterleri (ö, ç, ş vb.) düzgün çözebilmek için:
+      const decoded = JSON.parse(decodeURIComponent(atob(payload).split('').map(function(c) {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join('')));
+
+      console.log('DECODED JWT PAYLOAD:', JSON.stringify(decoded));
 
       // Backend claim isimleri:
       // ClaimTypes.NameIdentifier -> "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
@@ -63,18 +66,24 @@ export class AuthService {
       // ClaimTypes.Role -> "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
       // "FirstName" -> "FirstName"
       // "LastName" -> "LastName"
-      const nameIdKey = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier';
-      const emailKey = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress';
-      const roleKey = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role';
+      const nameidVal = decoded['nameid'] || decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'];
+      const emailVal = decoded['email'] || decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'];
+      const roleVal = decoded['role'] || decoded['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
 
-      const roleStr = decoded[roleKey] || '';
+      let roleStr = '';
+      if (Array.isArray(roleVal)) {
+        roleStr = roleVal[0] || '';
+      } else if (typeof roleVal === 'string') {
+        roleStr = roleVal;
+      }
+
       let userType = UserTypes.Customer;
       if (roleStr === 'Seller') userType = UserTypes.Seller;
       else if (roleStr === 'Admin') userType = UserTypes.Admin;
 
       return {
-        id: parseInt(decoded[nameIdKey], 10),
-        email: decoded[emailKey] || '',
+        id: nameidVal ? parseInt(nameidVal, 10) : 0,
+        email: emailVal || '',
         firstName: decoded['FirstName'] || '',
         lastName: decoded['LastName'] || '',
         userType
@@ -85,12 +94,6 @@ export class AuthService {
   }
 
   private loadUserFromToken(): DecodedUser | null {
-    // Önce cached user'ı dene
-    const userJson = localStorage.getItem('user');
-    if (userJson) {
-      try { return JSON.parse(userJson); } catch { /* ignore */ }
-    }
-    // Yoksa token'dan decode et
     const token = localStorage.getItem('token');
     if (token) {
       return this.decodeToken(token);

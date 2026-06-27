@@ -1,4 +1,4 @@
-﻿using Entities.Enums;
+using Entities.Enums;
 using Entities.Models;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
@@ -79,8 +79,12 @@ namespace SirenStore.Application.Services
                 {
                     var product = basketItem.Product;
 
+                    // Null kontrolü: Ürün silinmiş mi?
+                    if (product == null)
+                        throw new BusinessRuleException("Sepetiniz güncel değil. Lütfen sayfayı yenileyip tekrar deneyin.");
+
                     // Son saniye stok kontrolü (Başka biri ürünü bitirmiş mi?)
-                    if (product!.Stock < basketItem.Quantity)
+                    if (product.Stock < basketItem.Quantity)
                         throw new BusinessRuleException($"Üzgünüz, '{product.Name}' ürünü için yeterli stok kalmadı. Mevcut Stok: {product.Stock}");
 
                     // Stoktan Düşme Operasyonu
@@ -139,6 +143,7 @@ namespace SirenStore.Application.Services
                     // Sipariş kalemlerindeki silinmemiş öğeleri alıyoruz
                     OrderItems = o.OrderItems.Where(oi => !oi.IsDeleted).Select(oi => new OrderItemDto
                     {
+                        Id = oi.Id,
                         ProductId = oi.ProductId ?? 0,
 
                         // Ürün tamamen veritabanından silindiyse (hard-delete) patlamasın diye ternary kontrolü
@@ -149,6 +154,49 @@ namespace SirenStore.Application.Services
                     }).ToList()
                 })
                 .ToListAsync();
+        }
+
+        // SATICIYA ÖZEL: Kendi ürünlerine ait gelen siparişler
+        public async Task<List<OrderDto>> GetSellerOrdersAsync(long userId)
+        {
+            // Kullanıcının onaylanmış bir satıcı profili var mı?
+            var seller = await _sellerRepository.GetAsync(s => s.UserId == userId);
+            if (seller == null || seller.Status != SellerStatus.Approved)
+                throw new ForbiddenException("Bu işlem için onaylı bir satıcı hesabınız bulunmuyor.");
+
+            // Siparişleri (Order), içindeki OrderItem'larla birlikte tarayacağız. 
+            // Sadece bu satıcıya ait (seller.Id) OrderItem içeren siparişleri getir.
+            var orders = await _orderRepository.AsQueryable()
+                .IgnoreQueryFilters() 
+                .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.Product)
+                .Where(o => !o.IsDeleted && o.OrderItems.Any(oi => !oi.IsDeleted && oi.Product != null && oi.Product.SellerId == seller.Id))
+                .OrderByDescending(o => o.CreationDate)
+                .ToListAsync(); // Veritabanından çekip belleğe alıyoruz (Entity Framework'te karmaşık Select hatalarını önlemek için)
+
+            // Bellekte Mapleme (Projeksiyon)
+            return orders.Select(o => new OrderDto
+            {
+                Id = o.Id,
+                CreatedDate = o.CreationDate,
+                TotalPrice = o.OrderItems
+                    .Where(oi => !oi.IsDeleted && oi.Product != null && oi.Product.SellerId == seller.Id)
+                    .Sum(oi => oi.Quantity * oi.Price), // Satıcının sadece KENDİ ürünlerinden elde ettiği toplam ciro
+                AddressTitle = o.AddressTitle,
+                ShippingAddress = o.ShippingAddress,
+                Status = o.Status.ToString(),
+                OrderItems = o.OrderItems
+                    .Where(oi => !oi.IsDeleted && oi.Product != null && oi.Product.SellerId == seller.Id)
+                    .Select(oi => new OrderItemDto
+                    {
+                        Id = oi.Id, // Frontend'de Status güncellemek için ID lazım! OrderItemDto'da Id var mı? Kontrol edelim.
+                        ProductId = oi.ProductId ?? 0,
+                        ProductName = oi.Product.Name,
+                        Quantity = oi.Quantity,
+                        Price = oi.Price,
+                        Status = oi.Status.ToString()
+                    }).ToList()
+            }).ToList();
         }
 
         // 3. TEK BİR SİPARİŞİN DETAYI (Güvenlikli / Sadece Kendi Siparişi)
@@ -167,6 +215,7 @@ namespace SirenStore.Application.Services
                     Status = o.Status.ToString(),
                     OrderItems = o.OrderItems.Where(oi => !oi.IsDeleted).Select(oi => new OrderItemDto
                     {
+                        Id = oi.Id,
                         ProductId = oi.ProductId ?? 0,
                         ProductName = oi.Product != null ? oi.Product.Name : "Silinmiş Ürün",
                         Quantity = oi.Quantity,

@@ -10,6 +10,7 @@ using SirenStore.Application.Services;
 using SirenStore.Application.Validators;
 using SirenStore.Infrastructure.Context;
 using SirenStore.Infrastructure.Repositories;
+using SirenStore.WebAPI.Middleware;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -29,6 +30,7 @@ builder.Services.AddScoped<IBasketService, BasketManager>();
 builder.Services.AddScoped<IOrderService, OrderManager>();
 builder.Services.AddScoped<ICategoryService, CategoryManager>();
 builder.Services.AddScoped<IAdminService, AdminManager>();
+builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 
 // 3. AUTOMAPPER & FLUENTVALIDATION ENTEGRASYONLARI
 builder.Services.AddSingleton<IMapper>(provider =>
@@ -43,7 +45,27 @@ builder.Services.AddSingleton<IMapper>(provider =>
 
 builder.Services.AddValidatorsFromAssemblyContaining<CreateProductDtoValidator>();
 
-// 4. JWT KIMLIK DOGRULAMA (AUTHENTICATION) AYARLARI
+// 4. CORS POLİCESİ KAYDI (Configuration tabanlı)
+builder.Services.AddCors(options =>
+{
+    var corsSettings = builder.Configuration.GetSection("CorsSettings");
+    var allowedOrigins = corsSettings.GetSection("AllowedOrigins").Get<string[]>() ?? new[] { "http://localhost:4200" };
+    var allowedMethods = corsSettings.GetSection("AllowedMethods").Get<string[]>() ?? new[] { "GET", "POST", "PUT", "DELETE" };
+    var allowedHeaders = corsSettings.GetSection("AllowedHeaders").Get<string[]>() ?? new[] { "Content-Type", "Authorization" };
+    var allowCredentials = corsSettings.GetValue<bool>("AllowCredentials");
+
+    options.AddPolicy("SirenStorePolicy", policy =>
+    {
+        policy.WithOrigins(allowedOrigins)
+              .WithMethods(allowedMethods)
+              .WithHeaders(allowedHeaders);
+
+        if (allowCredentials)
+            policy.AllowCredentials();
+    });
+});
+
+// 5. JWT KIMLIK DOGRULAMA (AUTHENTICATION) AYARLARI
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -63,7 +85,7 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// 5. KONTROLLER VE SWAGGER AYARLARI
+// 6. KONTROLLER VE SWAGGER AYARLARI
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -74,6 +96,9 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+
+// EXCEPTION LOGGING MIDDLEWARE (Logs all exceptions to database)
+app.UseMiddleware<ExceptionLoggingMiddleware>();
 
 // GLOBAL EXCEPTION HANDLING MIDDLEWARE
 app.UseExceptionHandler(errorApp =>
@@ -129,7 +154,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseCors(opt => opt.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
+// CORS POLİCESİ UYGULAMASI (Configuration'dan okunmuş)
+app.UseCors("SirenStorePolicy");
 
 app.UseAuthentication();
 app.UseAuthorization();

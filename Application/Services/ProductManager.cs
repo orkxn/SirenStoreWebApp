@@ -1,4 +1,4 @@
-﻿using Entities.Models;
+using Entities.Models;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using SirenStore.Application.DTOs;
@@ -32,14 +32,16 @@ namespace SirenStore.Application.Services
             _basketItemRepository = basketItemRepository;
         }
 
-        // 1. TÜM ÜRÜNLERİ LİSTELE (IQueryable & Projeksiyon Avantajı)
-        public async Task<IEnumerable<ProductListDto>> GetAllAsync()
+        /// <summary>
+        /// Ürünleri ProjectDto'ya dönüştüren ortak SELECT mantığı
+        /// Include ve Select işlemlerini bu helper'da topladık (DRY prensibi)
+        /// </summary>
+        private IQueryable<ProductListDto> GetProductDtoQueryable(IQueryable<Product> query)
         {
-            return await _productRepository.AsQueryable()
+            return query
                 .Include(p => p.Category)
                 .Include(p => p.Seller)
                 .Include(p => p.ProductImages)
-                // Select ile sadece DTO'ya lazım olan kolonları SQL seviyesinde çekiyoruz
                 .Select(p => new ProductListDto
                 {
                     Id = p.Id,
@@ -47,13 +49,30 @@ namespace SirenStore.Application.Services
                     Description = p.Description,
                     Price = p.Price,
                     Stock = p.Stock,
+                    CategoryId = p.CategoryId,
                     CategoryName = p.Category.Name,
+                    SellerId = p.SellerId,
                     StoreName = p.Seller.StoreName,
                     // Ana resmi bul, yoksa ilk resmi al, o da yoksa null dön
                     MainImageUrl = p.ProductImages.Where(img => img.IsMain).Select(img => img.ImageUrl).FirstOrDefault()
                                    ?? p.ProductImages.Select(img => img.ImageUrl).FirstOrDefault()
-                })
-                .ToListAsync();
+                });
+        }
+
+        // 1. TÜM ÜRÜNLERİ LİSTELE (IQueryable & Projeksiyon Avantajı)
+        public async Task<IEnumerable<ProductListDto>> GetAllAsync()
+        {
+            return await GetProductDtoQueryable(_productRepository.AsQueryable()).ToListAsync();
+        }
+
+        // 1.5 SATICININ KENDİ ÜRÜNLERİ (Panel İçin)
+        public async Task<IEnumerable<ProductListDto>> GetMyProductsAsync(long userId)
+        {
+            var seller = await _sellerRepository.GetAsync(s => s.UserId == userId);
+            if (seller == null)
+                throw new BusinessRuleException("Satıcı profili bulunamadı.");
+
+            return await GetProductDtoQueryable(_productRepository.AsQueryable().Where(p => p.SellerId == seller.Id)).ToListAsync();
         }
 
         // 2. KATEGORİYE GÖRE LİSTELE
@@ -64,47 +83,13 @@ namespace SirenStore.Application.Services
             if (!categoryExists)
                 throw new NotFoundException("Belirtilen kategori bulunamadı.");
 
-            return await _productRepository.AsQueryable()
-                .Where(p => p.CategoryId == categoryId)
-                .Include(p => p.Category)
-                .Include(p => p.Seller)
-                .Include(p => p.ProductImages)
-                .Select(p => new ProductListDto
-                {
-                    Id = p.Id,
-                    Name = p.Name,
-                    Description = p.Description,
-                    Price = p.Price,
-                    Stock = p.Stock,
-                    CategoryName = p.Category.Name,
-                    StoreName = p.Seller.StoreName,
-                    MainImageUrl = p.ProductImages.Where(img => img.IsMain).Select(img => img.ImageUrl).FirstOrDefault()
-                                   ?? p.ProductImages.Select(img => img.ImageUrl).FirstOrDefault()
-                })
-                .ToListAsync();
+            return await GetProductDtoQueryable(_productRepository.AsQueryable().Where(p => p.CategoryId == categoryId)).ToListAsync();
         }
 
         // 3. ÜRÜN DETAYI GETİR
         public async Task<ProductListDto> GetByIdAsync(long id)
         {
-            var productDto = await _productRepository.AsQueryable()
-                .Where(p => p.Id == id)
-                .Include(p => p.Category)
-                .Include(p => p.Seller)
-                .Include(p => p.ProductImages)
-                .Select(p => new ProductListDto
-                {
-                    Id = p.Id,
-                    Name = p.Name,
-                    Description = p.Description,
-                    Price = p.Price,
-                    Stock = p.Stock,
-                    CategoryName = p.Category.Name,
-                    StoreName = p.Seller.StoreName,
-                    MainImageUrl = p.ProductImages.Where(img => img.IsMain).Select(img => img.ImageUrl).FirstOrDefault()
-                                   ?? p.ProductImages.Select(img => img.ImageUrl).FirstOrDefault()
-                })
-                .FirstOrDefaultAsync();
+            var productDto = await GetProductDtoQueryable(_productRepository.AsQueryable().Where(p => p.Id == id)).FirstOrDefaultAsync();
 
             if (productDto == null)
                 throw new NotFoundException("Ürün bulunamadı.");

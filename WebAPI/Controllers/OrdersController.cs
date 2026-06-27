@@ -1,4 +1,4 @@
-﻿using Entities.Enums;
+using Entities.Enums;
 using Entities.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -37,6 +37,17 @@ namespace WebAPI.Controllers
         {
             var userId = GetUserIdFromToken();
             var orders = await _orderService.GetUserOrdersAsync(userId);
+            return Ok(orders);
+        }
+
+        // SATICIYA ÖZEL: Satıcının Kendi Ürünlerine Gelen Siparişleri Listeleme
+        // GET: api/orders/seller
+        [HttpGet("seller")]
+        [Authorize(Roles = "Seller")]
+        public async Task<IActionResult> GetSellerOrders()
+        {
+            var userId = GetUserIdFromToken();
+            var orders = await _orderService.GetSellerOrdersAsync(userId);
             return Ok(orders);
         }
 
