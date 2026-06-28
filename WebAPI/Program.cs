@@ -14,17 +14,17 @@ using SirenStore.WebAPI.Middleware;
 using dotenv.net;
 using System.Text;
 
-// Load environment variables from .env file
+// .env dosyasını program.cs içine yükler
 DotEnv.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. VERİ TABANI AYARI (EF CORE & POSTGRESQL)
+// veri tabanı connection string bağlantısı
 var connectionString = builder.Configuration.GetConnectionString("PostgreSQLConnection");
 builder.Services.AddDbContext<DbContext, ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
 
-// 2. REPOSITORY & SERVICE KAYITLARI (DEPENDENCY INJECTION)
+// repository ve service kayıtları, dependecy injection
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IAuthService, AuthManager>();
 builder.Services.AddScoped<IUserService, UserManager>();
@@ -36,7 +36,7 @@ builder.Services.AddScoped<ICategoryService, CategoryManager>();
 builder.Services.AddScoped<IAdminService, AdminManager>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 
-// 3. AUTOMAPPER & FLUENTVALIDATION ENTEGRASYONLARI
+// automapper ve fluentvalidation kayıtları
 builder.Services.AddSingleton<IMapper>(provider =>
 {
     var loggerFactory = provider.GetRequiredService<ILoggerFactory>();
@@ -49,7 +49,7 @@ builder.Services.AddSingleton<IMapper>(provider =>
 
 builder.Services.AddValidatorsFromAssemblyContaining<CreateProductDtoValidator>();
 
-// 4. CORS POLİCESİ KAYDI (Configuration tabanlı)
+// cors policy
 builder.Services.AddCors(options =>
 {
     var corsSettings = builder.Configuration.GetSection("CorsSettings");
@@ -69,7 +69,7 @@ builder.Services.AddCors(options =>
     });
 });
 
-// 5. JWT KIMLIK DOGRULAMA (AUTHENTICATION) AYARLARI
+// jwt bearer configuration ayarları
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -89,7 +89,7 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// 6. KONTROLLER VE SWAGGER AYARLARI
+// controller ekleme ayarları
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -101,10 +101,10 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-// EXCEPTION LOGGING MIDDLEWARE (Logs all exceptions to database)
+// exception loglama
 app.UseMiddleware<ExceptionLoggingMiddleware>();
 
-// GLOBAL EXCEPTION HANDLING MIDDLEWARE
+// exception handling mekanizması (global)
 app.UseExceptionHandler(errorApp =>
 {
     errorApp.Run(async context =>
@@ -158,7 +158,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// CORS POLİCESİ UYGULAMASI (Configuration'dan okunmuş)
+// cors policy uygulamaya geçirme
 app.UseCors("SirenStorePolicy");
 
 app.UseAuthentication();
