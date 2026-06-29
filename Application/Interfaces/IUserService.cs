@@ -4,13 +4,13 @@ namespace SirenStore.Application.Interfaces
 {
     public interface IUserService
     {
-        // 1. Giriş yapmış kullanıcının profil bilgilerini getiren metot
+        // giriş yapan kullanıcının profil bilgilerini döndüren metot
         Task<UserProfileDto> GetProfileAsync(long userId);
 
-        // 2. Kullanıcının ad, soyad, telefon gibi bilgilerini güncelleyen metot
+        // kullanıcının ad, soyad, telefon gibi bilgilerini güncelleyen metot
         Task UpdateProfileAsync(long userId, UpdateProfileDto dto);
 
-        // 3. Kullanıcının şifresini güvenli bir şekilde değiştiren metot
+        // kullanıcının şifresini güvenli bir şekilde değiştiren metot
         Task ChangePasswordAsync(long userId, ChangePasswordDto dto);
     }
 }

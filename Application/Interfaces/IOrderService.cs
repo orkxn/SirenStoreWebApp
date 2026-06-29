@@ -6,19 +6,19 @@ namespace SirenStore.Application.Interfaces
 {
     public interface IOrderService
     {
-        // Müşterinin sepetindeki ürünleri resmi bir siparişe dönüştürür (Stok düşürür ve sepeti temizler)
+        // müşterinin sepetindeki ürünleri siparişe dönüştürür
         Task<OrderDto> CreateOrderAsync(long userId, CreateOrderDto dto);
 
-        // Müşterinin kendi geçmiş sipariş listesini getirir
+        // müşterinin kendi geçmiş sipariş listesini getirir
         Task<List<OrderDto>> GetUserOrdersAsync(long userId);
 
-        // Satıcının, kendi ürünlerine gelen siparişleri listeleyebilmesi için
+        // satıcının, kendi ürünlerine gelen siparişleri listeleyebilmesi için
         Task<List<OrderDto>> GetSellerOrdersAsync(long userId);
 
-        // Belirli bir siparişin detayını getirir
+        // belirli bir siparişin detayını getirir
         Task<OrderDto> GetOrderByIdAsync(long userId, long orderId);
 
-        // Satıcının veya Adminin sipariş durumunu güncellemesini sağlar
+        // satıcının veya adminin sipariş durumunu güncellemesini sağlar
         Task UpdateOrderItemStatusAsync(long userId, long orderItemId, OrderStatus newStatus);
     }
 }
