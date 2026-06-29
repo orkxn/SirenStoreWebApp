@@ -14,7 +14,7 @@ namespace Infrastructure.Configurations
             builder.Property(o => o.AddressTitle).HasMaxLength(100).IsRequired();
             builder.Property(o => o.ShippingAddress).HasMaxLength(500).IsRequired();
 
-            // User - Order (Bire-Çok)
+            // bire çok ilişki
             builder.HasOne(o => o.User)
                 .WithMany()
                 .HasForeignKey(o => o.UserId)

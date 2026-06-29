@@ -13,13 +13,13 @@ namespace Infrastructure.Configurations
 
             builder.Property(oi => oi.Price).HasColumnType("numeric(18,2)").IsRequired();
 
-            // Order - OrderItem (Bire-Çok)
+            // bire çok ilişki
             builder.HasOne(oi => oi.Order)
                 .WithMany(o => o.OrderItems)
                 .HasForeignKey(oi => oi.OrderId)
-                .OnDelete(DeleteBehavior.Cascade); 
+                .OnDelete(DeleteBehavior.Cascade);
 
-            // Product - OrderItem
+            // bire çok, bir ürün birden fazla sipariş öğesi ile ilişkilendirilebilir
             builder.HasOne(oi => oi.Product)
                 .WithMany()
                 .HasForeignKey(oi => oi.ProductId)

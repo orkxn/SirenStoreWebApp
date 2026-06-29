@@ -8,21 +8,19 @@ namespace Infrastructure.Configurations
     {
         public void Configure(EntityTypeBuilder<Category> builder)
         {
-            // Tablo adı eşleştirmesi (DbContext'teki snake_case metodun bunu otomatik category_entities yapmasın diye garantiye alıyoruz)
+            // dbcontext bunu snake case yapmasın diye elle yazdım
             builder.ToTable("categories");
 
             builder.HasKey(c => c.Id);
 
-            // Kategori adı zorunlu ve maksimum 50 karakter
             builder.Property(c => c.Name)
                 .IsRequired()
                 .HasMaxLength(50);
 
-            // Açıklama opsiyonel ama sınırlandırılmış
             builder.Property(c => c.Description)
                 .HasMaxLength(200);
 
-            // Global Query Filter: Silinmiş (IsDeleted = true) kategoriler listelemelerde otomatik olarak gizlenir
+            // Global Query Filter silinmiş kayıtları filtrelemek için
             builder.HasQueryFilter(c => !c.IsDeleted);
         }
     }

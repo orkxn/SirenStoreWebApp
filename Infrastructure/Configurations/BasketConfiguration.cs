@@ -10,11 +10,11 @@ namespace Infrastructure.Configurations
         {
             builder.ToTable("baskets");
 
-            // Bir kullanıcının yalnızca BİR sepeti olabilir (One-to-One)
+            // bir kullanıcının bir sepeti olabilir
             builder.HasOne(b => b.User)
-                .WithOne() // User entity'sinde ICollection<Basket> veya Basket mülkü açmadıysak boş bırakıyoruz
+                .WithOne() 
                 .HasForeignKey<Basket>(b => b.UserId)
-                .OnDelete(DeleteBehavior.Cascade); // Kullanıcı silinirse sepeti de silinsin
+                .OnDelete(DeleteBehavior.Cascade); // kullanıcı silindiğinde sepet de silinsin
         }
     }
 }

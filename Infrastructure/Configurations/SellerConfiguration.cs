@@ -10,12 +10,10 @@ namespace Infrastructure.Configurations
         {
             builder.ToTable("sellers");
 
-            // Mağaza adı zorunlu ve en fazla 100 karakter
             builder.Property(s => s.StoreName)
                 .IsRequired()
                 .HasMaxLength(100);
 
-            // Vergi numarası opsiyonel ve en fazla 10 karakter
             builder.Property(s => s.TaxNumber)
                 .HasMaxLength(10);
 
@@ -34,11 +32,11 @@ namespace Infrastructure.Configurations
                 .IsRequired()
                 .HasMaxLength(20);
 
-            // User ile Bire Bir (1-to-1) İlişki Tanımı
+            // bire bir ilişki, bir userın bir satıcısı olur sadece
             builder.HasOne(s => s.User)
-                .WithOne(u => u.Seller) // Eğer User içinde "public Seller Seller {get;}" olsaydı .WithOne(u => u.Seller) yazardık.
+                .WithOne(u => u.Seller)
                 .HasForeignKey<Seller>(s => s.UserId)
-                .OnDelete(DeleteBehavior.Cascade); // Kullanıcı silinirse satıcı kaydı da silinsin
+                .OnDelete(DeleteBehavior.Cascade); // kullanıcı silinirse satıcı kaydı da silinsin
         }
     }
 }
