@@ -9,6 +9,9 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
   providers: [
     { provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => InputComponent), multi: true }
   ],
+  host: {
+    'class': 'block w-full'
+  },
   template: `
     <div class="w-full flex flex-col gap-1.5 text-left">
       <label *ngIf="label" class="text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ label }}</label>
