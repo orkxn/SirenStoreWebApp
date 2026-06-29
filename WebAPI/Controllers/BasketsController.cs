@@ -18,7 +18,7 @@ namespace WebAPI.Controllers
             _basketService = basketService;
         }
 
-        // 1. Müşterinin Kendi Sepetini Getirir
+        // müşterinin sepetini getirir
         // GET: api/baskets
         [HttpGet]
         public async Task<IActionResult> GetBasket()
@@ -28,7 +28,7 @@ namespace WebAPI.Controllers
             return Ok(basket);
         }
 
-        // 2. Sepete Ürün Ekler (Ürün varsa adedini artırır)
+        // sepete ürün ekler
         // POST: api/baskets/items
         [HttpPost("items")]
         public async Task<IActionResult> AddToBasket([FromBody] AddToBasketDto dto)
@@ -38,7 +38,7 @@ namespace WebAPI.Controllers
             return Ok(new { message = "Ürün başarıyla sepetinize eklendi." });
         }
 
-        // 3. Sepetteki Bir Ürünün Adedini Doğrudan Günceller
+        // sepetteki ürünün adedini günceller
         // PUT: api/baskets/items
         [HttpPut("items")]
         public async Task<IActionResult> UpdateItemQuantity([FromBody] AddToBasketDto dto)
@@ -48,7 +48,7 @@ namespace WebAPI.Controllers
             return Ok(new { message = "Sepetinizdeki ürün adedi güncellendi." });
         }
 
-        // 4. Sepetten Belirli Bir Ürünü Tamamen Kaldırır
+        // ürünü sepetten kaldırır
         // DELETE: api/baskets/items/{productId}
         [HttpDelete("items/{productId:long}")]
         public async Task<IActionResult> RemoveFromBasket(long productId)
@@ -58,7 +58,7 @@ namespace WebAPI.Controllers
             return Ok(new { message = "Ürün sepetinizden kaldırıldı." });
         }
 
-        // 5. Sepeti Tamamen Boşaltır
+        // sepetteki tüm ürünleri temizler
         // DELETE: api/baskets/clear
         [HttpDelete("clear")]
         public async Task<IActionResult> ClearBasket()
@@ -68,7 +68,7 @@ namespace WebAPI.Controllers
             return Ok(new { message = "Sepetiniz tamamen boşaltıldı." });
         }
 
-        // JWT Token'dan NameIdentifier (UserId) Çeken Yardımcı Metot
+        // jwt token'dan kullanıcı id'sini alır
         private long GetUserIdFromToken()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
