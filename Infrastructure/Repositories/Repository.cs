@@ -8,7 +8,7 @@ namespace SirenStore.Infrastructure.Repositories
 {
     /// <summary>
     /// BaseModel'den türeyen tüm entity'ler için generic repository implementasyonu.
-    /// CRUD işlemleri, soft delete ve otomatik tarih atamaları bu sınıf üzerinden yapılır.
+    /// crud operasyonlarını içerir ve soft delete mantığını uygular.
     /// </summary>
     public class Repository<T>(ApplicationDbContext context) : IRepository<T> where T : BaseModel
     {
@@ -42,7 +42,6 @@ namespace SirenStore.Infrastructure.Repositories
 
         public void Remove(T entity)
         {
-            // Soft delete: Kayıt silinmez, sadece IsDeleted flag'i true yapılır
             entity.IsDeleted = true;
             entity.UpdatedDate = DateTime.UtcNow;
             _dbSet.Update(entity);
