@@ -5,6 +5,11 @@ import { CommonModule } from '@angular/common';
   selector: 'app-button',
   standalone: true,
   imports: [CommonModule],
+  host: {
+    '[class.w-full]': 'fullWidth',
+    '[class.block]': 'fullWidth',
+    '[class.inline-block]': '!fullWidth'
+  },
   template: `
     <button
       [type]="type"
