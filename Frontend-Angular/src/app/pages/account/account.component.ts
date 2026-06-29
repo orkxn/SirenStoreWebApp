@@ -93,26 +93,30 @@ import { ButtonComponent } from '../../components/button/button.component';
                 ></app-input>
               </div>
 
-              <app-input
-                label="E-posta Adresi (Değiştirilemez)"
-                type="email"
-                [disabled]="true"
-                [(ngModel)]="profileEmail"
-                name="email"
-                className="opacity-60 cursor-not-allowed bg-zinc-950/5 dark:bg-white/5"
-              ></app-input>
+              <div class="flex flex-col gap-3">
+                <app-input
+                  label="E-posta Adresi (Değiştirilemez)"
+                  type="email"
+                  [disabled]="true"
+                  [(ngModel)]="profileEmail"
+                  name="email"
+                  className="opacity-60 cursor-not-allowed bg-zinc-950/5 dark:bg-white/5"
+                ></app-input>
 
-              <app-input
-                label="Telefon Numarası"
-                placeholder="5xxxxxxxxx"
-                [(ngModel)]="profileData.phoneNumber"
-                name="phoneNumber"
-                [error]="profileErrors.phoneNumber"
-              ></app-input>
+                <app-input
+                  label="Telefon Numarası"
+                  placeholder="5xxxxxxxxx"
+                  [(ngModel)]="profileData.phoneNumber"
+                  name="phoneNumber"
+                  [error]="profileErrors.phoneNumber"
+                ></app-input>
+              </div>
 
-              <app-button type="submit" variant="primary" [disabled]="isLoading">
-                {{ isLoading ? 'Güncelleniyor...' : 'Profilimi Güncelle' }}
-              </app-button>
+              <div class="pt-4">
+                <app-button type="submit" variant="primary" [disabled]="isLoading">
+                  {{ isLoading ? 'Güncelleniyor...' : 'Profilimi Güncelle' }}
+                </app-button>
+              </div>
             </form>
           </div>
 
@@ -150,9 +154,11 @@ import { ButtonComponent } from '../../components/button/button.component';
                 [error]="passwordErrors.confirmNewPassword"
               ></app-input>
 
-              <app-button type="submit" variant="primary" [disabled]="isLoading">
-                {{ isLoading ? 'Değiştiriliyor...' : 'Şifreyi Değiştir' }}
-              </app-button>
+              <div class="pt-4">
+                <app-button type="submit" variant="primary" [disabled]="isLoading">
+                  {{ isLoading ? 'Değiştiriliyor...' : 'Şifreyi Değiştir' }}
+                </app-button>
+              </div>
             </form>
           </div>
 
@@ -280,9 +286,11 @@ import { ButtonComponent } from '../../components/button/button.component';
                   ></app-input>
                 </div>
 
-                <app-button type="submit" variant="primary" [disabled]="isLoading" className="mt-2">
-                  {{ isLoading ? 'Gönderiliyor...' : 'Satıcı Başvurusunu Gönder' }}
-                </app-button>
+                <div class="pt-4">
+                  <app-button type="submit" variant="primary" [disabled]="isLoading">
+                    {{ isLoading ? 'Gönderiliyor...' : 'Satıcı Başvurusunu Gönder' }}
+                  </app-button>
+                </div>
               </form>
             </ng-template>
 
