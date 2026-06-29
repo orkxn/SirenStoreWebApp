@@ -2,10 +2,10 @@
 {
     public enum OrderStatus
     {
-        Received = 1,    // Sipariş Alındı
-        Preparing = 2,   // Hazırlanıyor
-        Shipped = 3,     // Kargoda
-        Delivered = 4,   // Teslim Edildi
-        Cancelled = 5    // İptal Edildi
+        Received = 1,  
+        Preparing = 2,   
+        Shipped = 3,    
+        Delivered = 4,   
+        Cancelled = 5    
     }
 }
