@@ -2,7 +2,7 @@
 {
     public class SellerAddress : BaseModel
     {
-        // Foreign Key
+        // foreign key 
         public long SellerId { get; set; }
 
         public string AddressType { get; set; }
@@ -11,7 +11,7 @@
         public string FullAddress { get; set; }
         public string ZipCode { get; set; }
 
-        // Navigation Property
+        // navigation property
         public Seller Seller { get; set; }
     }
 }

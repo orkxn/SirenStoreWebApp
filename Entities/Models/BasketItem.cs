@@ -8,7 +8,7 @@
         public long? ProductId { get; set; }
         public Product? Product { get; set; }
 
-        // Sepete eklenen ürünün adedi
+        // sepete eklenen ürünün adedi
         public int Quantity { get; set; }
     }
 }

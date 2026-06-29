@@ -2,13 +2,13 @@ namespace Entities.Models
 {
     public class ProductImage : BaseModel
     {
-        // Fotoğrafın sunucudaki veya AWS S3 / Cloudinary gibi bir yerdeki dosya yolu
+        // fotonun urlsi
         public string ImageUrl { get; set; } = string.Empty;
 
-        // Bu fotoğrafın ana vitrin fotoğrafı olup olmadığını belirler (Örn: Listeleme ekranında görünecek ilk resim)
+        // ana foto mu değil mi belirtir
         public bool IsMain { get; set; } = false;
 
-        // Ürün İlişkisi (Bu fotoğraf hangi ürüne ait?)
+        // fotonun ait olduğu ürün
         public long? ProductId { get; set; }
         public virtual Product? Product { get; set; }
     }

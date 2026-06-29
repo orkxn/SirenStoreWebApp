@@ -2,7 +2,7 @@
 {
     public class SellerFinance : BaseModel
     {
-        // Foreign Key
+        // foreign key
         public long SellerId { get; set; }
 
         public string CompanyType { get; set; }
@@ -12,7 +12,7 @@
         public string IbanNumber { get; set; }
         public string BankName { get; set; }
 
-        // Navigation Property
+        // navigation property
         public Seller Seller { get; set; }
     }
 }

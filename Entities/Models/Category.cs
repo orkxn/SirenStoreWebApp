@@ -6,7 +6,7 @@ namespace Entities.Models
         public string Description { get; set; } = string.Empty;
 
 
-        // Bir kategorinin birden fazla ürünü olabilir 1-to-Many
+        // bir kategorinin birden fazla ürünü olabilir bire çok
         public virtual ICollection<Product> Products { get; set; } = new List<Product>();
     }
 }

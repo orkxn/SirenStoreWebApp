@@ -4,21 +4,21 @@ namespace Entities.Models
 {
     public class Order : BaseModel
     {
-        // Siparişi veren müşteri
+        // siparişi veren müşteri
         public long UserId { get; set; }
         public User User { get; set; } = null!;
 
-        // Siparişin toplam tutarı Veritabanında cache olarak tutulması sorgu performansını artırır
+        // siparişin toplam tutarı veritabanında cache olarak tutulması sorgu performansını artırır
         public decimal TotalPrice { get; set; }
 
-        // Teslimat adresi bilgileri Şimdilik basit tutuyoruz
+        // teslimat adresi bilgileri
         public string AddressTitle { get; set; } = string.Empty;
         public string ShippingAddress { get; set; } = string.Empty;
 
-        // Sipariş Durumu Örn: Alındı, Hazırlanıyor, Kargoda, Teslim Edildi
+        // sipariş durumu (enum)
         public OrderStatus Status { get; set; } = OrderStatus.Received;
 
-        // Siparişe ait alt kalemler
+        // siparişe ait alt kalemler
         public ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
     }
 }

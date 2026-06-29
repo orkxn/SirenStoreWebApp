@@ -5,7 +5,7 @@ namespace Entities.Models
 {
     public class Seller : BaseModel
     {
-        // Mağaza Bilgileri
+        // mağaza bilgileri
         public string StoreName { get; set; } = string.Empty;
         public string? TaxNumber { get; set; }
         public string? TaxOffice { get; set; }
@@ -14,10 +14,10 @@ namespace Entities.Models
         public string ContactPhone { get; set; } = string.Empty;
         public string SupportLine { get; set; } = string.Empty;
 
-        // Başvuru Durumu
+        // başvuru durumu
         public SellerStatus Status { get; set; } = SellerStatus.Pending;
 
-        // Kullanıcı İlişkisi (1-to-1 Relationship)
+        // kullanıcı ilişkisi bire çok 
         public long UserId { get; set; }
         public virtual User User { get; set; } = null!;
         public virtual ICollection<Product> Products { get; set; } = new List<Product>();

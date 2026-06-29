@@ -11,20 +11,18 @@ namespace Entities.Models
         public string? PhoneNumber { get; set; }
 
         public UserTypes UserType { get; set; }
-        public bool IsActive { get; set; } = true; // Varsayılan olarak aktif başlar
+        public bool IsActive { get; set; } = true; // varsayılan olarak aktif başlar
         public bool IsEmailConfirmed { get; set; } = false;
 
-        // JWT Güvenliği: Oturumu sürekli açık tutmak için gereken alanlar
+        // jwt token ve refresh token için alanlar
         public string? RefreshToken { get; set; }
         public DateTime? RefreshTokenExpiryTime { get; set; }
 
-        // Müşteri "Adres Yönetimi" gereksinimi için
+        // müşteri adres için
         public ICollection<Address> Addresses { get; set; }
 
-        // Navigation Properties
+        // navigation property
         public Seller? Seller { get; set; }
         public ICollection<LoginHistory> LoginHistories { get; set; }
-
-        // Not: İleride Faz 2'ye geçtiğimizde buraya Basket, Orders ve Favorites de gelecek.
     }
 }
