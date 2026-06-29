@@ -10,7 +10,7 @@ namespace WebAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize] // Sipariş süreçleri giriş yapmış kullanıcı gerektirir
+    [Authorize]
     public class OrdersController : ControllerBase
     {
         private readonly IOrderService _orderService;
@@ -20,17 +20,17 @@ namespace WebAPI.Controllers
             _orderService = orderService;
         }
 
-        // 1. Sipariş Oluşturma (Checkout)
+        // sipariş oluşturma
         // POST: api/orders
         [HttpPost]
         public async Task<IActionResult> CreateOrder([FromBody] CreateOrderDto dto)
         {
             var userId = GetUserIdFromToken();
             var order = await _orderService.CreateOrderAsync(userId, dto);
-            return Ok(order); // Oluşan siparişin detaylarını (OrderDto) döner
+            return Ok(order);
         }
 
-        // 2. Müşterinin Kendi Geçmiş Siparişlerini Listeleme
+        // müşterinin vermiş olduğu tüm siparişleri listeleme
         // GET: api/orders
         [HttpGet]
         public async Task<IActionResult> GetMyOrders()
@@ -40,7 +40,7 @@ namespace WebAPI.Controllers
             return Ok(orders);
         }
 
-        // SATICIYA ÖZEL: Satıcının Kendi Ürünlerine Gelen Siparişleri Listeleme
+        // satıcıya gelen tüm siparişleri listeleme
         // GET: api/orders/seller
         [HttpGet("seller")]
         [Authorize(Roles = "Seller")]
@@ -51,7 +51,7 @@ namespace WebAPI.Controllers
             return Ok(orders);
         }
 
-        // 3. Belirli Bir Siparişin Detayını Getirme
+        // belirli bir siparişin detaylarını getirme
         // GET: api/orders/{id}
         [HttpGet("{id:long}")]
         public async Task<IActionResult> GetOrderById(long id)
@@ -61,22 +61,20 @@ namespace WebAPI.Controllers
             return Ok(order);
         }
 
-        // SATICI VEYA ADMIN: Sipariş Kaleminin Durumunu Güncelleme IDOR Korumalı
+        // sipariş kaleminin durumunu güncelleme
         // PUT: api/orders/items/{orderItemId}/status
         [HttpPut("items/{orderItemId:long}/status")]
         [Authorize(Roles = "Admin,Seller")]
         public async Task<IActionResult> UpdateItemStatus(long orderItemId, [FromBody] OrderStatus newStatus)
         {
-            // Temiz ve Güvenli: ID'yi aşağıdaki yardımcı metottan çekiyoruz
             var userId = GetUserIdFromToken();
 
-            // İş mantığı katmanına güvenli parametreleri paslıyoruz
             await _orderService.UpdateOrderItemStatusAsync(userId, orderItemId, newStatus);
 
             return Ok(new { message = $"Sipariş kaleminin durumu başarıyla '{newStatus.ToString()}' olarak güncellendi." });
         }
 
-        // JWT Token'dan UserId Çeken Yardımcı Metot
+        // jwt'den kullanıcı kimliğini alma
         private long GetUserIdFromToken()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
