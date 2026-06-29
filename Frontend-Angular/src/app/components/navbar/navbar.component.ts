@@ -9,8 +9,11 @@ import { ThemeToggleComponent } from '../theme-toggle/theme-toggle.component';
   selector: 'app-navbar',
   standalone: true,
   imports: [CommonModule, RouterLink, ThemeToggleComponent],
+  host: {
+    'class': 'sticky top-0 z-50 w-full block'
+  },
   template: `
-    <nav class="sticky top-0 z-50 w-full glass-surface bg-white/70 dark:bg-zinc-950/70 border-b border-zinc-950/5 dark:border-white/10 transition-all duration-300">
+    <nav class="w-full glass-surface bg-white/70 dark:bg-zinc-950/70 border-b border-zinc-950/5 dark:border-white/10 transition-all duration-300">
       <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         <!-- Logo -->
         <a routerLink="/" class="flex items-center gap-2 select-none">
