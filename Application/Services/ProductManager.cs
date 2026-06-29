@@ -53,20 +53,19 @@ namespace SirenStore.Application.Services
                     CategoryName = p.Category.Name,
                     SellerId = p.SellerId,
                     StoreName = p.Seller.StoreName,
-                    // Ana resmi bul, yoksa ilk resmi al, o da yoksa null dön
                     MainImageUrl = p.ProductImages.Where(img => img.IsMain).Select(img => img.ImageUrl).FirstOrDefault()
                                    ?? p.ProductImages.Select(img => img.ImageUrl).FirstOrDefault(),
                     ImageUrls = p.ProductImages.Select(img => img.ImageUrl).ToList()
                 });
         }
 
-        // 1. TÜM ÜRÜNLERİ LİSTELE (IQueryable & Projeksiyon Avantajı)
+        // tüm ürünleri listele
         public async Task<IEnumerable<ProductListDto>> GetAllAsync()
         {
             return await GetProductDtoQueryable(_productRepository.AsQueryable()).ToListAsync();
         }
 
-        // 1.5 SATICININ KENDİ ÜRÜNLERİ (Panel İçin)
+        // satıcının ürünlerini listele
         public async Task<IEnumerable<ProductListDto>> GetMyProductsAsync(long userId)
         {
             var seller = await _sellerRepository.GetAsync(s => s.UserId == userId);
@@ -76,10 +75,10 @@ namespace SirenStore.Application.Services
             return await GetProductDtoQueryable(_productRepository.AsQueryable().Where(p => p.SellerId == seller.Id)).ToListAsync();
         }
 
-        // 2. KATEGORİYE GÖRE LİSTELE
+        // kategoriye göre ürünleri listele
         public async Task<IEnumerable<ProductListDto>> GetByCategoryIdAsync(long categoryId)
         {
-            // Önce kategori var mı kontrolü
+            // önce kategori var mı kontrolü
             var categoryExists = await _categoryRepository.AsQueryable().AnyAsync(c => c.Id == categoryId);
             if (!categoryExists)
                 throw new NotFoundException("Belirtilen kategori bulunamadı.");
@@ -87,7 +86,7 @@ namespace SirenStore.Application.Services
             return await GetProductDtoQueryable(_productRepository.AsQueryable().Where(p => p.CategoryId == categoryId)).ToListAsync();
         }
 
-        // 3. ÜRÜN DETAYI GETİR
+        // ürün detaylarını getir
         public async Task<ProductListDto> GetByIdAsync(long id)
         {
             var productDto = await GetProductDtoQueryable(_productRepository.AsQueryable().Where(p => p.Id == id)).FirstOrDefaultAsync();
@@ -98,18 +97,18 @@ namespace SirenStore.Application.Services
             return productDto;
         }
 
-        // 4. ÜRÜN EKLE
+        // ürün ekle
         public async Task CreateAsync(long userId, CreateProductDto dto)
         {
-            // Kapıda doğrula
+            // kapıda doğrula
             await _createValidator.ValidateAndThrowAsync(dto);
 
-            // Bu işlemi yapmaya çalışan kullanıcının aktif bir satıcı kaydı var mı?
+            // bu işlemi yapan kişinin mağazasını bul
             var seller = await _sellerRepository.GetAsync(s => s.UserId == userId);
             if (seller == null || seller.Status != Entities.Enums.SellerStatus.Approved)
                 throw new BusinessRuleException("Sadece onaylanmış mağazalar ürün ekleyebilir.");
 
-            // Kategori kontrolü
+            // kategori geçerli mi kontrol et
             var categoryExists = await _categoryRepository.AsQueryable().AnyAsync(c => c.Id == dto.CategoryId);
             if (!categoryExists)
                 throw new NotFoundException("Seçilen kategori geçerli değil.");
@@ -121,7 +120,7 @@ namespace SirenStore.Application.Services
                 Price = dto.Price,
                 Stock = dto.Stock,
                 CategoryId = dto.CategoryId,
-                SellerId = seller.Id // Token'dan bulduğumuz güvenli mağaza ID'si
+                SellerId = seller.Id
             };
 
             if (dto.ImageUrls != null && dto.ImageUrls.Any())
@@ -140,34 +139,34 @@ namespace SirenStore.Application.Services
             await _productRepository.SaveChangesAsync();
         }
 
-        // 5. ÜRÜN GÜNCELLE (IDOR Korumalı)
+        // ürün güncelleme
         public async Task UpdateAsync(long userId, UpdateProductDto dto)
         {
             await _updateValidator.ValidateAndThrowAsync(dto);
 
-            // İşlemi yapan kişinin mağazasını bul
+            // işlemi yapan kişinin satıcı profilini bul
             var seller = await _sellerRepository.GetAsync(s => s.UserId == userId);
             if (seller == null)
                 throw new BusinessRuleException("Satıcı profili bulunamadı.");
 
-            // Güncellenmek istenen ürünü getir
+            // güncellenecek ürünü bul
             var product = await _productRepository.AsQueryable()
-                .Include(p => p.ProductImages) // Resimleri mutlaka dahil etmeliyiz!
+                .Include(p => p.ProductImages)
                 .FirstOrDefaultAsync(p => p.Id == dto.Id);
 
                         if (product == null)
                             throw new NotFoundException("Güncellenmek istenen ürün bulunamadı.");
 
-            // IDOR GÜVENLİK DUVARI: Bu ürün gerçekten bu satıcıya mı ait?
+            // idor koruması
             if (product.SellerId != seller.Id)
                 throw new BusinessRuleException("Bu ürünü güncelleme yetkiniz bulunmamaktadır!");
 
-            // Kategori kontrolü
+            // kategori kontrolü
             var categoryExists = await _categoryRepository.AsQueryable().AnyAsync(c => c.Id == dto.CategoryId);
             if (!categoryExists)
                 throw new NotFoundException("Seçilen kategori geçerli değil.");
 
-            // Güncelleme lojiği
+            // güncelleme lojiği
             product.Name = dto.Name;
             product.Description = dto.Description;
             product.Price = dto.Price;
@@ -192,7 +191,7 @@ namespace SirenStore.Application.Services
             await _productRepository.SaveChangesAsync();
         }
 
-        // 6. ÜRÜN SİL (Soft Delete & IDOR Korumalı)
+        // ürünü silme
         public async Task DeleteAsync(long userId, long productId)
         {
             var seller = await _sellerRepository.GetAsync(s => s.UserId == userId);
@@ -203,18 +202,17 @@ namespace SirenStore.Application.Services
             if (product == null)
                 throw new NotFoundException("Silinmek istenen ürün bulunamadı.");
 
-            // IDOR GÜVENLİK DUVARI
             if (product.SellerId != seller.Id)
                 throw new BusinessRuleException("Bu ürünü silme yetkiniz bulunmamaktadır!");
 
 
             _productRepository.Remove(product);
 
-            // BU ÜRÜNÜN OLDUĞU TÜM SEPETLERİ TEMİZLİYORUZ 
+            // bu ürünün olduğu tüm sepetlerden ürünü sil 
             var basketItems = await _basketItemRepository.GetAllAsync(bi => bi.ProductId == productId);
             foreach (var item in basketItems)
             {
-                _basketItemRepository.Remove(item); // Sepetten de soft/hard delete yapıyoruz
+                _basketItemRepository.Remove(item);
             }
 
             await _productRepository.SaveChangesAsync();

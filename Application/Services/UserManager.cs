@@ -23,10 +23,9 @@ namespace SirenStore.Application.Services
             _changePasswordValidator = changePasswordValidator;
         }
 
-        // 1. PROFİL BİLGİLERİNİ GETİRME (long userId olarak güncellendi)
+        // profil bilgilerini getirme
         public async Task<UserProfileDto> GetProfileAsync(long userId)
         {
-            // long tipinde karşılaştırma yapıyoruz (u.Id == userId)
             var user = await _userRepository.GetAsync(u => u.Id == userId && !u.IsDeleted);
 
             if (user == null)
@@ -35,7 +34,7 @@ namespace SirenStore.Application.Services
             return _mapper.Map<UserProfileDto>(user);
         }
 
-        // 2. PROFİL BİLGİLERİNİ GÜNCELLEME (long userId olarak güncellendi)
+        // profil bilgilerini güncelleme
         public async Task UpdateProfileAsync(long userId, UpdateProfileDto dto)
         {
 
@@ -54,7 +53,7 @@ namespace SirenStore.Application.Services
             await _userRepository.SaveChangesAsync();
         }
 
-        // 3. GÜVENLİ ŞİFRE DEĞİŞTİRME (long userId olarak güncellendi)
+        // güvenli şifre değiştirme
         public async Task ChangePasswordAsync(long userId, ChangePasswordDto dto)
         {
             await _changePasswordValidator.ValidateAndThrowAsync(dto);

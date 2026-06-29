@@ -23,7 +23,7 @@ namespace SirenStore.Application.Services
             _auditLogService = auditLogService;
         }
 
-        // Sistemdeki tüm kullanıcıları (Müşteri, Satıcı, Admin) güvenli DTO ile listeler
+        // sistemdeki tüm kullanıcıları DTO ile listeler
         public async Task<List<UserManagementDto>> GetAllUsersAsync()
         {
             return await _userRepository.AsQueryable()
@@ -39,11 +39,11 @@ namespace SirenStore.Application.Services
                 .ToListAsync();
         }
 
-        // Sistemdeki tüm satıcıları ve mağaza başvuru detaylarını listeler
+        // sistemdeki tüm satıcıları ve mağaza başvuru detaylarını listeler
         public async Task<List<SellerManagementDto>> GetAllSellersAsync()
         {
             return await _sellerRepository.AsQueryable()
-                .Include(s => s.User) // Satıcının kullanıcı bilgilerine (Email) erişmek için Join yapıyoruz
+                .Include(s => s.User) // satıcı ile ilişkili kullanıcıyı dahil et
                 .Select(s => new SellerManagementDto
                 {
                     Id = s.Id,
@@ -61,10 +61,10 @@ namespace SirenStore.Application.Services
                 .ToListAsync();
         }
 
-        // Kullanıcıyı banlar (Soft Delete)
+        // kullanıcıyı banlar (soft delete)
         public async Task BanUserAsync(long currentUserId, long targetUserId)
         {
-            // 1. Kendi kendini banlama koruması
+            // kendini banlama koruması
             if (currentUserId == targetUserId)
                 throw new BusinessRuleException("Kendi kendinizi banlayamazsınız!");
 
@@ -72,24 +72,24 @@ namespace SirenStore.Application.Services
             if (targetUser == null)
                 throw new NotFoundException("Kullanıcı bulunamadı.");
 
-            // 2. Başka bir admini banlama koruması
+            // başka bir admini banlamaya çalışıyorsa hata fırlat
             if (targetUser.UserType == UserTypes.Admin)
                 throw new BusinessRuleException("Bir admin başka bir admini banlayamaz!");
 
-            // Soft-delete işlemi
+            // soft delete ile kullanıcıyı banla
             targetUser.IsDeleted = true;
             _userRepository.Update(targetUser);
             await _userRepository.SaveChangesAsync();
 
-            // Audit: Log user ban
+            // audit log: kullanıcı banlandı
             await _auditLogService.LogAuditAsync(currentUserId, "USER_BANNED", "User", targetUserId, 
                 $"Banned by Admin {currentUserId}. User email: {targetUser.Email}");
         }
 
-        // Kullanıcının banını kaldırır
+        // kullanıcının banını kaldırır
         public async Task UnbanUserAsync(long currentUserId, long targetUserId)
         {
-            // 1. Kendi kendini unbanlama koruması
+            // kendi kendini unbanlama koruması
             if (currentUserId == targetUserId)
                 throw new BusinessRuleException("Kendi kendinizi unbanlayamazsınız!");
 
@@ -100,13 +100,13 @@ namespace SirenStore.Application.Services
             if (user == null)
                 throw new NotFoundException("Kullanıcı bulunamadı.");
 
-            // Kullanıcının banını aç (Soft-delete'i geri al)
+            // kullanıcının banını aç
             user.IsDeleted = false;
 
             _userRepository.Update(user);
             await _userRepository.SaveChangesAsync();
 
-            // Audit: Log user unban
+            // audit: Log user unban
             await _auditLogService.LogAuditAsync(currentUserId, "USER_UNBANNED", "User", targetUserId, 
                 $"Unbanned by Admin {currentUserId}. User email: {user.Email}");
         }

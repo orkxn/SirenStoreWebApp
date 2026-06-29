@@ -26,7 +26,7 @@ namespace SirenStore.Application.Services
             _validator = validator;
         }
 
-        // 1. SEPETİ GETİR
+        // sepeti getir
         public async Task<BasketDto> GetBasketAsync(long userId)
         {
             var basketDto = await _basketRepository.AsQueryable()
@@ -34,35 +34,33 @@ namespace SirenStore.Application.Services
                 .Select(b => new BasketDto
                 {
                     Id = b.Id,
-                    // Sadece silinmemiş ve Product'ı olan ürünleri sepet listesine alıyoruz
+                    // delete olmamış ve product null olmayan ürünleri getiriyoruz
                     Items = b.BasketItems
                         .Where(bi => !bi.IsDeleted && bi.Product != null)
                         .Select(bi => new BasketItemDto
                         {
                             Id = bi.Id,
-                            // bi.Product null olmadığı için ProductId'nin de kesinlikle bir karşılığı vardır (.Value ile güvenle long'a çeviriyoruz)
                             ProductId = bi.ProductId!.Value,
                             ProductName = bi.Product!.Name,
                             Price = bi.Product!.Price,
                             Quantity = bi.Quantity,
 
-                            // DÜZELTME: Buradaki bi.Product'lara da ünlem eklendi
                             ProductImageUrl = bi.Product!.ProductImages.Where(img => img.IsMain).Select(img => img.ImageUrl).FirstOrDefault()
                                               ?? bi.Product!.ProductImages.Select(img => img.ImageUrl).FirstOrDefault()
                         }).ToList()
                 })
                 .FirstOrDefaultAsync();
 
-            // Eğer veritabanında henüz bu kullanıcıya ait bir sepet kaydı oluşmadıysa, frontend patlamasın diye boş bir model dönüyoruz
+            // veritabanında sepet yoksa boş bir sepet döndür, yenisini oluşturmak istemiyoruz, sadece boş bir DTO döndürüyoruz
             return basketDto ?? new BasketDto();
         }
 
-        // 2. SEPETE ÜRÜN EKLE (Veya Adet Artır)
+        // sepete ürün ekle
         public async Task AddToBasketAsync(long userId, AddToBasketDto dto)
         {
             await _validator.ValidateAndThrowAsync(dto);
 
-            // Ürün gerçekten var mı ve aktif mi kontrolü
+            // ürün var mı ve aktif mi
             var product = await _productRepository.GetAsync(p => p.Id == dto.ProductId);
             if (product == null)
                 throw new NotFoundException("Eklemek istediğiniz ürün bulunamadı.");
@@ -70,7 +68,7 @@ namespace SirenStore.Application.Services
             if (product.Stock < dto.Quantity)
                 throw new BusinessRuleException($"Yetersiz stok! Mağazada sadece {product.Stock} adet ürün var.");
 
-            // Kullanıcının sepetini bul, yoksa yeni sepet oluştur
+            // sepeti bul, yoksa oluştur
             var basket = await _basketRepository.AsQueryable()
                 .Include(b => b.BasketItems)
                 .FirstOrDefaultAsync(b => b.UserId == userId);
@@ -82,20 +80,20 @@ namespace SirenStore.Application.Services
                 await _basketRepository.SaveChangesAsync(); 
             }
 
-            // Ürün sepette zaten var mı?
+            // ürün sepette zaten var mı
             var existingItem = basket.BasketItems.FirstOrDefault(bi => bi.ProductId == dto.ProductId);
 
             if (existingItem != null)
             {
                 if (existingItem.IsDeleted)
                 {
-                    // Eğer önceden silinmişse (soft-delete), tekrar aktifleştir
+                    // Eğer önceden silinmişse geri aktifleştir
                     existingItem.IsDeleted = false;
                     existingItem.Quantity = dto.Quantity;
                 }
                 else 
                 {
-                    // Toplam adet stok sınırını aşıyor mu?
+                    // toplamı stoğu aşmaması için kontrol et
                     if (product.Stock < (existingItem.Quantity + dto.Quantity))
                         throw new BusinessRuleException($"Sepetinizdeki toplam adet ({existingItem.Quantity + dto.Quantity}) mağaza stokunu ({product.Stock}) aşamaz.");
 
@@ -118,7 +116,7 @@ namespace SirenStore.Application.Services
             await _basketItemRepository.SaveChangesAsync();
         }
 
-        // 3. SEPETTEKİ ADEDİ DOĞRUDAN GÜNCELLE
+        // sepetteki ürünün miktarını güncelle
         public async Task UpdateBasketItemQuantityAsync(long userId, AddToBasketDto dto)
         {
             await _validator.ValidateAndThrowAsync(dto);
@@ -143,7 +141,7 @@ namespace SirenStore.Application.Services
             await _basketItemRepository.SaveChangesAsync();
         }
 
-        // 4. SEPETTEN ÜRÜN SİL
+        // sepetten ürün kaldır
         public async Task RemoveFromBasketAsync(long userId, long productId)
         {
             var basket = await _basketRepository.AsQueryable()
@@ -160,7 +158,7 @@ namespace SirenStore.Application.Services
             }
         }
 
-        // 5. SEPETİ TAMAMEN BOŞALT
+        // sepeti tamamen temizle
         public async Task ClearBasketAsync(long userId)
         {
             var basket = await _basketRepository.AsQueryable()

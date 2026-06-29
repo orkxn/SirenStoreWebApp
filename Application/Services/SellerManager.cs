@@ -24,18 +24,15 @@ namespace SirenStore.Application.Services
             _validator = validator;
         }
 
-        // 1. SATICI BAŞVURUSU YAPMA
+        // satıcı başvuru mekanizması
         public async Task BecomeSellerAsync(long userId, CreateSellerDto dto)
         {
-            // Boş mu, formatı hatalı mı?
             await _validator.ValidateAndThrowAsync(dto);
 
-            // Kullanıcı gerçekten var mı ve aktif mi?
             var user = await _userRepository.GetAsync(u => u.Id == userId && !u.IsDeleted);
             if (user == null)
                 throw new NotFoundException("Kullanıcı bulunamadı.");
 
-            // Zaten bir başvurusu veya dükkanı var mı? (Çift başvuru engelleme)
             var existingSeller = await _sellerRepository.GetAsync(s => s.UserId == userId);
             if (existingSeller != null)
             {
@@ -45,7 +42,6 @@ namespace SirenStore.Application.Services
                 if (existingSeller.Status == SellerStatus.Approved)
                     throw new BusinessRuleException("Zaten onaylı bir mağazanız var.");
 
-                // Reddedildiyse bilgileri güncelleyip tekrar Pending yapalım
                 existingSeller.StoreName = dto.StoreName;
                 existingSeller.ContactEmail = dto.ContactEmail;
                 existingSeller.ContactPhone = dto.ContactPhone;
@@ -58,7 +54,6 @@ namespace SirenStore.Application.Services
                 return;
             }
 
-            // Yeni satıcı başvuru kaydı oluştur
             var newSeller = new Seller
             {
                 UserId = userId,
@@ -68,17 +63,16 @@ namespace SirenStore.Application.Services
                 SupportLine = dto.SupportLine,
                 TaxNumber = dto.TaxNumber,
                 TaxOffice = dto.TaxOffice,
-                Status = SellerStatus.Pending // Onay bekliyor
+                Status = SellerStatus.Pending
             };
 
             await _sellerRepository.AddAsync(newSeller);
             await _sellerRepository.SaveChangesAsync();
         }
 
-        // 2. ADMIN ONAY MEKANİZMASI
+        // admin onay mekanizması
         public async Task ApproveSellerAsync(long sellerId)
         {
-            // Başvuru kaydını bul
             var seller = await _sellerRepository.GetAsync(s => s.Id == sellerId);
             if (seller == null)
                 throw new NotFoundException("Satıcı başvurusu bulunamadı.");
@@ -86,22 +80,20 @@ namespace SirenStore.Application.Services
             if (seller.Status == SellerStatus.Approved)
                 throw new BusinessRuleException("Bu başvuru zaten onaylanmış.");
 
-            // Durumu onaylandıya çek
             seller.Status = SellerStatus.Approved;
             _sellerRepository.Update(seller);
 
-            // Kullanıcının rolünü (UserType) "Seller" olarak güncelle
             var user = await _userRepository.GetAsync(u => u.Id == seller.UserId);
             if (user != null)
             {
-                user.UserType = UserTypes.Seller; // Kullanıcı artık bir satıcı
+                user.UserType = UserTypes.Seller; 
                 _userRepository.Update(user);
             }
 
             await _sellerRepository.SaveChangesAsync();
         }
 
-        // 3. ADMIN RED MEKANİZMASI
+        // admin red mekanizması
         public async Task RejectSellerAsync(long sellerId)
         {
             var seller = await _sellerRepository.GetAsync(s => s.Id == sellerId);
@@ -117,7 +109,7 @@ namespace SirenStore.Application.Services
             await _sellerRepository.SaveChangesAsync();
         }
 
-        // 4. Satıcı Profili Görüntüleme (Frontend için DTO ile)
+        // satıcının public profilini çekmek için
         public async Task<SellerPublicProfileDto> GetSellerProfileAsync(long sellerId)
         {
             var sellerDto = await _sellerRepository.AsQueryable()
@@ -127,25 +119,25 @@ namespace SirenStore.Application.Services
                     Id = s.Id,
                     StoreName = s.StoreName,
 
-                    //  1. Yöntem: Veritabanında kolon yok, Dicebear API ile dinamik SVG logo üretiyoruz
+                    //  satıcı logosu
                     StoreLogoUrl = $"https://api.dicebear.com/7.x/initials/svg?seed={Uri.EscapeDataString(s.StoreName)}",
 
-                    //  2. Yöntem: User tablosundan isim ve soyisim birleştirme
+                    //  user tablosundan satıcının adını ve soyadı
                     OwnerFullName = s.User.FirstName + " " + s.User.LastName,
 
-                    //  3. Yöntem: Satıcının müşteri destek hattını eşleme
+                    //  müşteri destek hattı
                     ContactLine = !string.IsNullOrEmpty(s.SupportLine) ? s.SupportLine : "Müşteri destek hattı belirtilmedi",
 
-                    //  4. Yöntem: Satıcıya ait aktif ürünlerin listelenmesi (ProductListDto kalıbında)
+                    //  satıcının aktif ürünlerini listeleme
                     Products = s.Products.Select(p => new ProductListDto
                     {
                         Id = p.Id,
                         Name = p.Name,
-                        Description = p.Description, // DTO'nda var, bunu da besleyelim pürüzsüz olsun
+                        Description = p.Description,
                         Price = p.Price,
                         Stock = p.Stock,
-                        CategoryName = p.Category.Name, // Kategori adını ilişkiden çekiyoruz
-                        StoreName = s.StoreName,        // Satıcının kendi mağaza adı
+                        CategoryName = p.Category.Name, 
+                        StoreName = s.StoreName,        
 
                         MainImageUrl = p.ProductImages.Where(img => img.IsMain).Select(img => img.ImageUrl).FirstOrDefault()
                                        ?? p.ProductImages.Select(img => img.ImageUrl).FirstOrDefault(),
@@ -154,7 +146,7 @@ namespace SirenStore.Application.Services
                 })
                 .FirstOrDefaultAsync();
 
-            // Güvenlik duvarı: Eğer böyle bir satıcı yoksa null dönüp frontend'i patlatmıyoruz, kontrollü hata fırlatıyoruz
+            // eğer satıcı bulunamazsa NotFoundException fırlat
             if (sellerDto == null)
                 throw new NotFoundException("Aradığınız mağaza sistemde bulunamadı.");
 

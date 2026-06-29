@@ -42,13 +42,12 @@ namespace SirenStore.Application.Services
             _context = context;
         }
 
-        // 1. SİPARİŞ OLUŞTURMA (Transaction & Stok Yönetimi)
+        // sipariş oluşturma işlemi + transaction yönetimi
         public async Task<OrderDto> CreateOrderAsync(long userId, CreateOrderDto dto)
         {
-            // FluentValidation kontrolü
+            // fluent validation ile DTO doğrulaması
             await _validator.ValidateAndThrowAsync(dto);
 
-            // Kullanıcının sepetini ve içindeki ürünleri çekiyoruz
             var basket = await _basketRepository.AsQueryable()
                 .Include(b => b.BasketItems)
                 .ThenInclude(bi => bi.Product)
@@ -57,11 +56,11 @@ namespace SirenStore.Application.Services
             if (basket == null || !basket.BasketItems.Any())
                 throw new BusinessRuleException("Sepetiniz boş olduğu için sipariş oluşturulamaz.");
 
-            // TRANSACTION BAŞLANGICI: Veri bütünlüğünü koruma kalkanı
+            // TRANSACTION BAŞLANGICI
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                // Üst sipariş kaydını oluşturuyoruz
+                // üst sipariş kaydını oluşturuyoruz
                 var order = new Order
                 {
                     UserId = userId,
@@ -72,65 +71,64 @@ namespace SirenStore.Application.Services
                 };
 
                 await _orderRepository.AddAsync(order);
-                await _orderRepository.SaveChangesAsync(); // Order ID'sinin oluşması için db'ye hafifçe vuruyoruz
+                await _orderRepository.SaveChangesAsync(); // Order.Id'yi almak için kaydetmek zorundayız
 
-                // Sepetteki ürünleri tek tek sipariş kalemine dönüştürme ve stok düşme döngüsü
+                // sepetteki her bir ürün için stok kontrolü ve sipariş kalemi oluşturma
                 foreach (var basketItem in basket.BasketItems)
                 {
                     var product = basketItem.Product;
 
-                    // Null kontrolü: Ürün silinmiş mi?
                     if (product == null)
                         throw new BusinessRuleException("Sepetiniz güncel değil. Lütfen sayfayı yenileyip tekrar deneyin.");
 
-                    // Son saniye stok kontrolü (Başka biri ürünü bitirmiş mi?)
+                    // Son saniye stok kontrolü
                     if (product.Stock < basketItem.Quantity)
                         throw new BusinessRuleException($"Üzgünüz, '{product.Name}' ürünü için yeterli stok kalmadı. Mevcut Stok: {product.Stock}");
 
-                    // Stoktan Düşme Operasyonu
+                    // stoktan düşme işlemi
                     product.Stock -= basketItem.Quantity;
                     _productRepository.Update(product);
 
-                    // Sipariş Kalemi Oluşturma (Fiyatı o an donduruyoruz!)
+                    // fiyatı sipariş anında kaydetmek için OrderItem oluşturuyoruz
                     var orderItem = new OrderItem
                     {
                         OrderId = order.Id,
                         ProductId = basketItem.ProductId,
                         Quantity = basketItem.Quantity,
-                        Price = product.Price // İleride ürün fiyatı değişse bile geçmiş fatura etkilenmez
+                        Price = product.Price // ileride ürün fiyatı değişse bile geçmiş fatura etkilenmez
                     };
                     await _orderItemRepository.AddAsync(orderItem);
                 }
 
                 await _orderItemRepository.SaveChangesAsync();
 
-                // Müşteri satın alımı tamamladı, sepet kalemlerini temizliyoruz
+                // müşteri satın alımı tamamladı, sepet kalemlerini temizliyoruz
                 foreach (var bi in basket.BasketItems.ToList())
                 {
                     _basketItemRepository.Remove(bi);
                 }
                 await _basketItemRepository.SaveChangesAsync();
 
-                // Her şey kusursuz bittiyse veritabanına kalıcı olarak mühürle!
+                // her şey kusursuz bittiyse veritabanına commit
                 await transaction.CommitAsync();
 
-                // Yeni oluşan siparişin detayını DTO olarak geri dönüyoruz
+                // Yeni siparişin detaylarını geri döndürüyoruz DTO olarak
                 return await GetOrderByIdAsync(userId, order.Id);
             }
             catch (Exception)
             {
-                // Döngünün herhangi bir yerinde hata çıkarsa yapılan tüm işlemleri (stok düşmelerini dahil) geri al!
+                // döngüde hata olursa transaction'ı geri alıyoruz 
                 await transaction.RollbackAsync();
                 throw;
             }
         }
 
-        // 2. MÜŞTERİNİN GEÇMİŞ SİPARİŞLERİ (Silinmiş Ürünleri de Gösterir)
+        // müşterinin kendi siparişlerini listeleme
         public async Task<List<OrderDto>> GetUserOrdersAsync(long userId)
         {
             return await _orderRepository.AsQueryable()
-                .IgnoreQueryFilters() // Ürün soft-delete olsa bile getirir
-                .Where(o => o.UserId == userId && !o.IsDeleted) // Sadece silinmemiş siparişler
+                .IgnoreQueryFilters() // !!! ÜRÜN SOFT-DELETE OLSA BİLE SİPARİŞLERİ GETİRİR !!!
+                .Where(o => o.UserId == userId && !o.IsDeleted) // sadece kendi siparişlerini ve silinmemiş olanları alır
                 .OrderByDescending(o => o.CreationDate)
                 .Select(o => new OrderDto
                 {
@@ -140,26 +138,25 @@ namespace SirenStore.Application.Services
                     AddressTitle = o.AddressTitle,
                     ShippingAddress = o.ShippingAddress,
                     Status = o.Status.ToString(),
-                    // Sipariş kalemlerindeki silinmemiş öğeleri alıyoruz
+                    // sipariş kalemlerini de DTO'ya mapliyoruz    
                     OrderItems = o.OrderItems.Where(oi => !oi.IsDeleted).Select(oi => new OrderItemDto
                     {
                         Id = oi.Id,
                         ProductId = oi.ProductId ?? 0,
 
-                        // Ürün tamamen veritabanından silindiyse (hard-delete) patlamasın diye ternary kontrolü
+                        // ürün tamamen veritabanından silindiyse silindiğini belirtmek için özel mesaj
                         ProductName = oi.Product != null ? oi.Product.Name : "Silinmiş Ürün",
                         Quantity = oi.Quantity,
-                        Price = oi.Price, // Satın alındığı anki fiyat
+                        Price = oi.Price, // satın alındığı anki fiyat 
                         Status = oi.Status.ToString()
                     }).ToList()
                 })
                 .ToListAsync();
         }
 
-        // SATICIYA ÖZEL: Kendi ürünlerine ait gelen siparişler
+        // satıcının kendi ürünlerine ait siparişleri listeleme
         public async Task<List<OrderDto>> GetSellerOrdersAsync(long userId)
         {
-            // Kullanıcının onaylanmış bir satıcı profili var mı?
             var seller = await _sellerRepository.GetAsync(s => s.UserId == userId);
             if (seller == null || seller.Status != SellerStatus.Approved)
                 throw new ForbiddenException("Bu işlem için onaylı bir satıcı hesabınız bulunmuyor.");
@@ -172,16 +169,16 @@ namespace SirenStore.Application.Services
                 .ThenInclude(oi => oi.Product)
                 .Where(o => !o.IsDeleted && o.OrderItems.Any(oi => !oi.IsDeleted && oi.Product != null && oi.Product.SellerId == seller.Id))
                 .OrderByDescending(o => o.CreationDate)
-                .ToListAsync(); // Veritabanından çekip belleğe alıyoruz (Entity Framework'te karmaşık Select hatalarını önlemek için)
+                .ToListAsync(); // sadece siparişleri çekiyoruz, OrderItem'ları bellekte filtreleyeceğiz
 
-            // Bellekte Mapleme (Projeksiyon)
+            // bellekte filtreleme ve DTO'ya mapleme
             return orders.Select(o => new OrderDto
             {
                 Id = o.Id,
                 CreatedDate = o.CreationDate,
                 TotalPrice = o.OrderItems
                     .Where(oi => !oi.IsDeleted && oi.Product != null && oi.Product.SellerId == seller.Id)
-                    .Sum(oi => oi.Quantity * oi.Price), // Satıcının sadece KENDİ ürünlerinden elde ettiği toplam ciro
+                    .Sum(oi => oi.Quantity * oi.Price), // sadece bu satıcıya ait ürünlerin toplam fiyatını hesaplıyoruz
                 AddressTitle = o.AddressTitle,
                 ShippingAddress = o.ShippingAddress,
                 Status = o.Status.ToString(),
@@ -189,7 +186,7 @@ namespace SirenStore.Application.Services
                     .Where(oi => !oi.IsDeleted && oi.Product != null && oi.Product.SellerId == seller.Id)
                     .Select(oi => new OrderItemDto
                     {
-                        Id = oi.Id, // Frontend'de Status güncellemek için ID lazım! OrderItemDto'da Id var mı? Kontrol edelim.
+                        Id = oi.Id, // frontendde status güncellemek için ID lazım
                         ProductId = oi.ProductId ?? 0,
                         ProductName = oi.Product!.Name,
                         Quantity = oi.Quantity,
@@ -199,12 +196,12 @@ namespace SirenStore.Application.Services
             }).ToList();
         }
 
-        // 3. TEK BİR SİPARİŞİN DETAYI (Güvenlikli / Sadece Kendi Siparişi)
+        // tek bir siparişin detaylarını getirme
         public async Task<OrderDto> GetOrderByIdAsync(long userId, long orderId)
         {
             var orderDto = await _orderRepository.AsQueryable()
-                .IgnoreQueryFilters() // KRİTİK NOKTA: Ürün soft-delete olsa bile getirir
-                .Where(o => o.Id == orderId && o.UserId == userId && !o.IsDeleted) // IDOR
+                .IgnoreQueryFilters()
+                .Where(o => o.Id == orderId && o.UserId == userId && !o.IsDeleted)
                 .Select(o => new OrderDto
                 {
                     Id = o.Id,
@@ -231,10 +228,9 @@ namespace SirenStore.Application.Services
             return orderDto;
         }
 
-        // 4. SİPARİŞ DURUMU GÜNCELLEME (Satıcı/Admin Paneli İçin)
+        // sipariş durumunu güncelleme
         public async Task UpdateOrderItemStatusAsync(long userId, long orderItemId, OrderStatus newStatus)
         {
-            // 1. Sipariş kalemini, bağlı olduğu Ürün (Product) bilgisiyle birlikte çekiyoruz
             var orderItem = await _orderItemRepository.AsQueryable()
                 .Include(oi => oi.Product)
                 .FirstOrDefaultAsync(oi => oi.Id == orderItemId);
@@ -242,27 +238,21 @@ namespace SirenStore.Application.Services
             if (orderItem == null)
                 throw new NotFoundException("Sipariş kalemi bulunamadı.");
 
-            // 2. İşlemi yapan kullanıcının genel bilgilerini çekiyoruz
             var user = await _userRepository.GetAsync(u => u.Id == userId);
 
-            // Eğer kullanıcı veritabanında yoksa 401 Unauthorized dönelim
             if (user == null)
                 throw new UnauthorizedAccessException("Kullanıcı bulunamadı veya oturumunuz geçersiz.");
 
-            // IDOR KORUMASI
             if (user.UserType != UserTypes.Admin)
             {
-                // Kullanıcının onaylanmış bir satıcı profili var mı?
                 var seller = await _sellerRepository.GetAsync(s => s.UserId == userId);
                 if (seller == null || seller.Status != SellerStatus.Approved)
                     throw new SirenStore.Application.Exceptions.ForbiddenException("Bu işlem için onaylı bir satıcı hesabınız bulunmuyor.");
 
-                // Bu sipariş kalemindeki ürün gerçekten bu satıcıya mı ait
                 if (orderItem.Product!.SellerId != seller.Id)
                     throw new BusinessRuleException("Farklı bir satıcıya ait ürünün sipariş durumunu değiştiremezsiniz!");
             }
 
-            // 3. Güvenlik duvarından başarıyla geçildiyse SADECE o kalemin durumunu güncelliyoruz
             orderItem.Status = newStatus;
             _orderItemRepository.Update(orderItem);
 

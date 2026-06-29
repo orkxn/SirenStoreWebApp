@@ -15,6 +15,7 @@ namespace SirenStore.Application.Services
             _categoryRepository = categoryRepository;
         }
 
+        // tüm kategorileri getir
         public async Task<List<CategoryDto>> GetAllCategoriesAsync()
         {
             return await _categoryRepository.AsQueryable()
@@ -27,6 +28,7 @@ namespace SirenStore.Application.Services
                 .ToListAsync();
         }
 
+        // id ile kategori getir
         public async Task<CategoryDto> GetCategoryByIdAsync(long id)
         {
             var categoryDto = await _categoryRepository.AsQueryable()
@@ -44,6 +46,7 @@ namespace SirenStore.Application.Services
             return categoryDto;
         }
 
+        // kategori oluştur
         public async Task<CategoryDto> CreateCategoryAsync(CreateCategoryDto dto)
         {
             var exist = await _categoryRepository.GetAsync(c => c.Name.ToLower() == dto.Name.ToLower() && !c.IsDeleted);
@@ -56,6 +59,7 @@ namespace SirenStore.Application.Services
             return new CategoryDto { Id = category.Id, Name = category.Name };
         }
 
+        // kategori güncelle
         public async Task<CategoryDto> UpdateCategoryAsync(long id, UpdateCategoryDto dto)
         {
             var category = await _categoryRepository.GetAsync(c => c.Id == id && !c.IsDeleted);
@@ -68,6 +72,7 @@ namespace SirenStore.Application.Services
             return new CategoryDto { Id = category.Id, Name = category.Name };
         }
 
+        // kategori sil
         public async Task DeleteCategoryAsync(long id)
         {
             var category = await _categoryRepository.GetAsync(c => c.Id == id && !c.IsDeleted);

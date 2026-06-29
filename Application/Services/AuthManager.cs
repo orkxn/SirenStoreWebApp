@@ -18,8 +18,6 @@ namespace SirenStore.Application.Services
         private readonly IRepository<User> _userRepository;
         private readonly IConfiguration _configuration;
         private readonly IAuditLogService _auditLogService;
-
-        // Validator'larımızı tanımlıyoruz
         private readonly IValidator<RegisterDto> _registerValidator;
         private readonly IValidator<LoginDto> _loginValidator;
 
@@ -37,19 +35,18 @@ namespace SirenStore.Application.Services
             _auditLogService = auditLogService;
         }
 
-        // 1. YENİ KULLANICI KAYDI
+        // yeni kullanıcı kaydı
         public async Task RegisterAsync(RegisterDto dto)
         {
-            // 1. ADIM: VERİ DOĞRULAMA (VALIDATION)
-            // Eğer veri kurallara uymazsa, kod buradan aşağıya inmez ve ValidationException fırlatır!
+            // validator kullanarak veri doğrulama
             await _registerValidator.ValidateAndThrowAsync(dto);
 
-            // 2. ADIM: İŞ KURALI (BUSINESS RULE)
+            // business rule: email unique olmalı
             var emailExists = await _userRepository.AnyAsync(u => u.Email == dto.Email && !u.IsDeleted);
             if (emailExists)
                 throw new BusinessRuleException("Bu e-posta adresi zaten sistemde kayıtlı!");
 
-            // 3. ADIM: VERİTABANINA KAYIT
+            // database kaydı için User entity'si oluşturma ve password hashleme
             var user = new User
             {
                 FirstName = dto.FirstName,
@@ -65,29 +62,29 @@ namespace SirenStore.Application.Services
             await _userRepository.AddAsync(user);
             await _userRepository.SaveChangesAsync();
 
-            // Audit: Log successful registration
+            // audit: Log successful registration
             await _auditLogService.LogAuditAsync(user.Id, "USER_REGISTERED", "User", user.Id, $"Email: {user.Email}");
         }
 
-        // 2. SİSTEME GİRİŞ YAPMA
+        // sisteme giriş (login)
         public async Task<TokenDto> LoginAsync(LoginDto dto)
         {
-            // 1. ADIM: VERİ DOĞRULAMA (VALIDATION)
+            // validator
             await _loginValidator.ValidateAndThrowAsync(dto);
 
-            // 2. ADIM: KULLANICIYI BULMA
+            // kullanıcıyı email ile bulma ve aktiflik kontrolü
             var user = await _userRepository.GetAsync(u => u.Email == dto.Email && !u.IsDeleted);
 
             if (user == null || !user.IsActive)
                 throw new BusinessRuleException("E-posta adresi veya şifre hatalı.");
 
-            // 3. ADIM: ŞİFRE DOĞRULAMA
+            // şifre doğrulama (hash karşılaştırması)
             bool isPasswordValid = BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash);
 
             if (!isPasswordValid)
                 throw new BusinessRuleException("E-posta adresi veya şifre hatalı.");
 
-            // 4. ADIM: TOKEN ÜRETİMİ VE KAYDI
+            // token üretimi ve refresh token ayarlaması
             var tokenDto = GenerateJwtToken(user);
             user.RefreshToken = tokenDto.RefreshToken;
             user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
@@ -95,17 +92,15 @@ namespace SirenStore.Application.Services
             _userRepository.Update(user);
             await _userRepository.SaveChangesAsync();
 
-            // Audit: Log successful login
+            // audit: Log successful login
             await _auditLogService.LogAuditAsync(user.Id, "USER_LOGIN", "User", user.Id, $"Email: {user.Email}");
 
             return tokenDto;
         }
 
-        // 3. TOKEN YENİLEME
+        // token yenileme (refresh token)
         public async Task<TokenDto> RefreshTokenAsync(string refreshToken)
         {
-            // Refresh token düz bir string olduğu için DTO bazlı validasyona gerek yok, 
-            // null kontrolü yapıp direkt iş kuralına geçebiliriz.
             if (string.IsNullOrWhiteSpace(refreshToken))
                 throw new BusinessRuleException("Refresh token boş olamaz.");
 
@@ -125,7 +120,7 @@ namespace SirenStore.Application.Services
             return tokenDto;
         }
 
-        // 4. JWT ÜRETİCİ (Yardımcı Metot)
+        // jwt üretici
         private TokenDto GenerateJwtToken(User user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -142,7 +137,6 @@ namespace SirenStore.Application.Services
                 new("LastName", user.LastName)
             };
 
-            // Güvenli bir şekilde configuration'dan duration'ı oku, yoksa 60 kullan
             if (!double.TryParse(_configuration["JwtSettings:DurationInMinutes"], out double durationInMinutes))
                 durationInMinutes = 60;
 
