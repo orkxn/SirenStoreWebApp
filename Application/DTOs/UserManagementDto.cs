@@ -9,7 +9,7 @@ namespace SirenStore.Application.DTOs
         public string Email { get; set; } = string.Empty;
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
-        public UserTypes UserType { get; set; } // Müşteri mi, Satıcı mı, Admin mi?
-        public bool IsDeleted { get; set; } // Banlı mı değil mi?
+        public UserTypes UserType { get; set; } // kullanıcı tipi
+        public bool IsDeleted { get; set; } // banlı mı değil mi
     }
 }
