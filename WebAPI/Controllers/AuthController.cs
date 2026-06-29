@@ -8,28 +8,31 @@ namespace SirenStore.WebAPI.Controllers
     [Route("api/[controller]")] // api/auth
     public class AuthController(IAuthService authService) : ControllerBase
     {
-        // 1. YENİ KULLANICI KAYDI
+        // sisteme kayıt olma endpointi
+        // POST: api/auth/register
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto dto)
         {
             await authService.RegisterAsync(dto);
 
-            // Başarılı kayıtta 201 Created dönüyoruz
+            // başarılı kayıtta 201 Created dönüyoruz
             return StatusCode(201, new { Message = "Kayıt işlemi başarıyla tamamlandı. Artık giriş yapabilirsiniz." });
         }
 
-        // 2. SİSTEME GİRİŞ YAPMA (LOGIN)
+        // sisteme giriş yapma endpointi
+        // POST: api/auth/login
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
             // Eğer giriş başarılıysa, servis bize TokenDto dönecek
             var tokenResult = await authService.LoginAsync(dto);
 
-            // Token paketini doğrudan 200 OK ile müşteriye veriyoruz
+            // Token paketini doğrudan 200 OK ile müşteriye veriyoruz { accesstoken, accestokenexpdate, refreshtoken }
             return Ok(tokenResult);
         }
 
-        // 3. JWT TOKEN YENİLEME
+        // sistemdeki refresh token ile yeni access token alma endpointi
+        // POST: api/auth/refresh
         [HttpPost("refresh")]
         public async Task<IActionResult> Refresh([FromBody] string refreshToken)
         {
