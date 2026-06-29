@@ -17,7 +17,7 @@ namespace SirenStore.WebAPI.Controllers
             _sellerService = sellerService;
         }
 
-        // Herkes Bir Mağazanın Profilini ve Ürünlerini Görebilir
+        // bir satıcının profilini almak için endpoint
         // GET: api/sellers/{id}/profile
         [HttpGet("{id:long}/profile")]
         public async Task<IActionResult> GetSellerProfile(long id)
@@ -26,13 +26,12 @@ namespace SirenStore.WebAPI.Controllers
             return Ok(profile);
         }
 
-        // 1. SATICI BAŞVURUSU YAPMA
-        // Sadece giriş yapmış müşteriler veya genel kullanıcılar başvurabilir.
+        // satıcı başvurusu yapmak için endpoint
+        // POST: api/sellers/apply
         [Authorize]
         [HttpPost("apply")]
         public async Task<IActionResult> BecomeSeller([FromBody] CreateSellerDto dto)
         {
-            // Token içerisinden güvenli bir şekilde userId sökülüyor (IDOR Koruması)
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out long userId))
@@ -43,6 +42,8 @@ namespace SirenStore.WebAPI.Controllers
             return Ok(new { message = "Satıcı başvurunuz başarıyla alındı. Admin onayı bekleniyor." });
         }
 
+        // satıcı başvurusunun durumunu almak için endpoint
+        // GET: api/sellers/my-status
         [Authorize]
         [HttpGet("my-status")]
         public async Task<IActionResult> GetMySellerStatus()
@@ -67,8 +68,8 @@ namespace SirenStore.WebAPI.Controllers
             });
         }
 
-        // 2. ADMIN: BAŞVURUYU ONAYLAMA
-        // Sadece Admin rolüne sahip kullanıcılar tetikleyebilir.
+        // satıcı başvurusunu onaylamak için endpoint
+        // POST: api/sellers/approve/{sellerId}
         [Authorize(Roles = "Admin")]
         [HttpPost("approve/{sellerId}")]
         public async Task<IActionResult> ApproveSeller(long sellerId)
@@ -77,8 +78,8 @@ namespace SirenStore.WebAPI.Controllers
             return Ok(new { message = "Satıcı başvurusu başarıyla onaylandı. Kullanıcı rolü 'Seller' olarak güncellendi." });
         }
 
-        // 3. ADMIN: BAŞVURUYU REDDETME
-        // Sadece Admin rolüne sahip kullanıcılar tetikleyebilir.
+        // satıcı başvurusunu reddetmek için endpoint
+        // POST: api/sellers/reject/{sellerId}
         [Authorize(Roles = "Admin")]
         [HttpPost("reject/{sellerId}")]
         public async Task<IActionResult> RejectSeller(long sellerId)
