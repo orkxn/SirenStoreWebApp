@@ -1,0 +1,117 @@
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
+import { CartService } from '../../services/cart.service';
+import { ThemeToggleComponent } from '../theme-toggle/theme-toggle.component';
+
+@Component({
+  selector: 'app-navbar',
+  standalone: true,
+  imports: [CommonModule, RouterLink, ThemeToggleComponent],
+  template: `
+    <nav class="sticky top-0 z-50 w-full glass-surface bg-white/70 dark:bg-zinc-950/70 border-b border-zinc-950/5 dark:border-white/10 transition-all duration-300">
+      <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+        <!-- Logo -->
+        <a routerLink="/" class="flex items-center gap-2 select-none">
+          <span class="text-2xl font-bold tracking-tighter text-zinc-950 dark:text-white">SIREN</span>
+          <span class="text-2xl font-bold tracking-tighter uppercase px-3 py-0.5 bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 rounded-full">STORE</span>
+        </a>
+
+        <!-- Center Navigation Links -->
+        <div class="hidden md:flex items-center gap-8">
+          <a routerLink="/products" class="text-sm font-medium text-zinc-600 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-white transition-colors">Ürünler</a>
+          <a *ngIf="authService.user?.role === 'Admin'" routerLink="/admin" class="text-sm font-medium flex items-center gap-1 text-zinc-600 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-white transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+            Admin Paneli
+          </a>
+          <a *ngIf="authService.user?.role === 'Seller'" routerLink="/seller" class="text-sm font-medium flex items-center gap-1 text-zinc-600 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-white transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/><path d="M22 7v3a2 2 0 0 1-2 2a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12a2 2 0 0 1-2-2V7"/></svg>
+            Satıcı Paneli
+          </a>
+        </div>
+
+        <!-- Right Actions -->
+        <div class="flex items-center gap-4">
+          <app-theme-toggle></app-theme-toggle>
+
+          <!-- Basket Icon -->
+          <a routerLink="/cart" class="relative p-2 rounded-full border border-zinc-950/10 dark:border-white/10 bg-zinc-950/[0.02] dark:bg-white/5 hover:bg-zinc-950/5 dark:hover:bg-white/10 transition-all w-10 h-10 flex items-center justify-center" aria-label="Sepetim">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-zinc-900 dark:text-zinc-100"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+            <span *ngIf="cartCount > 0" class="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-zinc-950 dark:bg-white text-[10px] font-bold text-white dark:text-zinc-950 shadow-sm">{{ cartCount }}</span>
+          </a>
+
+          <!-- User Account Controls -->
+          <ng-container *ngIf="authService.user; else loginButton">
+            <div class="relative">
+              <button
+                (click)="dropdownOpen = !dropdownOpen"
+                class="flex items-center gap-2 p-1.5 rounded-full border border-zinc-950/10 dark:border-white/10 bg-zinc-950/[0.02] dark:bg-white/5 hover:bg-zinc-950/5 dark:hover:bg-white/10 transition-all"
+              >
+                <div class="w-7 h-7 rounded-full bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 flex items-center justify-center font-bold text-xs select-none">
+                  {{ authService.user.firstName[0].toUpperCase() }}{{ authService.user.lastName[0].toUpperCase() }}
+                </div>
+              </button>
+
+              <ng-container *ngIf="dropdownOpen">
+                <div class="fixed inset-0 z-40" (click)="dropdownOpen = false"></div>
+                <div class="absolute right-0 mt-2 w-52 z-50 glass-surface bg-white/95 dark:bg-zinc-900/95 border border-zinc-950/10 dark:border-white/15 rounded-2xl shadow-xl p-2 text-left">
+                  <div class="px-3 py-2.5 border-b border-zinc-950/5 dark:border-white/5 mb-1.5">
+                    <p class="text-xs text-zinc-400 dark:text-zinc-500 font-medium">Giriş yapıldı</p>
+                    <p class="text-sm font-bold text-zinc-800 dark:text-zinc-200 truncate">{{ authService.user.firstName }} {{ authService.user.lastName }}</p>
+                  </div>
+                  <a routerLink="/account" (click)="dropdownOpen = false" class="flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg hover:bg-zinc-950/5 dark:hover:bg-white/5 text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    Profilim / Hesabım
+                  </a>
+                  <a routerLink="/orders" (click)="dropdownOpen = false" class="flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg hover:bg-zinc-950/5 dark:hover:bg-white/5 text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                    Siparişlerim
+                  </a>
+                  <a *ngIf="authService.user.role === 'Admin'" routerLink="/admin" (click)="dropdownOpen = false" class="flex md:hidden items-center gap-2 w-full px-3 py-2 text-sm rounded-lg hover:bg-zinc-950/5 dark:hover:bg-white/5 text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+                    Admin Paneli
+                  </a>
+                  <a *ngIf="authService.user.role === 'Seller'" routerLink="/seller" (click)="dropdownOpen = false" class="flex md:hidden items-center gap-2 w-full px-3 py-2 text-sm rounded-lg hover:bg-zinc-950/5 dark:hover:bg-white/5 text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/></svg>
+                    Satıcı Paneli
+                  </a>
+                  <button (click)="handleLogout()" class="flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg hover:bg-red-50 dark:hover:bg-red-950/20 text-red-600 hover:text-red-700 transition-all border-t border-zinc-950/5 dark:border-white/5 mt-1.5 pt-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+                    Çıkış Yap
+                  </button>
+                </div>
+              </ng-container>
+            </div>
+          </ng-container>
+
+          <ng-template #loginButton>
+            <a routerLink="/login" class="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-full bg-zinc-950 text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-100 transition-all duration-300 shadow-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" x2="3" y1="12" y2="12"/></svg>
+              Giriş Yap
+            </a>
+          </ng-template>
+        </div>
+      </div>
+    </nav>
+  `
+})
+export class NavbarComponent {
+  dropdownOpen = false;
+
+  constructor(
+    public authService: AuthService,
+    private cartService: CartService
+  ) {}
+
+  get cartCount(): number {
+    const cart = this.cartService.cart;
+    return cart?.items.reduce((sum, item) => sum + item.quantity, 0) || 0;
+  }
+
+  handleLogout() {
+    this.authService.logout();
+    this.dropdownOpen = false;
+    window.location.href = '/login';
+  }
+}
