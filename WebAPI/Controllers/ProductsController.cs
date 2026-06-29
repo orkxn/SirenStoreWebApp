@@ -11,7 +11,6 @@ namespace WebAPI.Controllers
     public class ProductsController : ControllerBase
     {
         private readonly IProductService _productService;
-
         private readonly IRepository<Entities.Models.Seller> _sellerRepository;
         private readonly IRepository<Entities.Models.User> _userRepository;
 
@@ -23,7 +22,7 @@ namespace WebAPI.Controllers
         }
 
 
-        // 1. HERKESE AÇIK: Tüm Ürünleri Listele
+        // tüm ürünleri listeleme
         // GET: api/products
         [HttpGet]
         public async Task<IActionResult> GetAll()
@@ -32,7 +31,7 @@ namespace WebAPI.Controllers
             return Ok(products);
         }
 
-        // 2. HERKESE AÇIK: ID'ye Göre Ürün Detayı Getir
+        // id'ye göre ürün detayını getirme
         // GET: api/products/{id}
         [HttpGet("{id:long}")]
         public async Task<IActionResult> GetById(long id)
@@ -41,7 +40,7 @@ namespace WebAPI.Controllers
             return Ok(product);
         }
 
-        // 3. HERKESE AÇIK: Kategoriye Göre Ürünleri Filtrele
+        // belli bir kategorideki ürünleri listeleme
         // GET: api/products/category/{categoryId}
         [HttpGet("category/{categoryId:long}")]
         public async Task<IActionResult> GetByCategoryId(long categoryId)
@@ -50,7 +49,7 @@ namespace WebAPI.Controllers
             return Ok(products);
         }
 
-        // 3.5 SATICIYA ÖZEL: Kendi Ürünlerini Getir
+        // satıcıya özel ürünleri listeleme, sadece satıcı kendi ürünlerini görebilir
         // GET: api/products/my-products
         [Authorize(Roles = "Seller")]
         [HttpGet("my-products")]
@@ -61,7 +60,7 @@ namespace WebAPI.Controllers
             return Ok(products);
         }
 
-        // 4. SATICIYA ÖZEL: Yeni Ürün Ekle
+        // yeni ürün oluşturma
         // POST: api/products
         [Authorize(Roles = "Seller")]
         [HttpPost]
@@ -72,7 +71,7 @@ namespace WebAPI.Controllers
             return StatusCode(201, new { message = "Ürün başarıyla oluşturuldu ve kataloğa eklendi." });
         }
 
-        // 5. SATICIYA ÖZEL: Ürün Güncelle (IDOR Korumalı)
+        // ürün güncelleme
         // PUT: api/products
         [Authorize(Roles = "Seller")]
         [HttpPut]
@@ -83,7 +82,7 @@ namespace WebAPI.Controllers
             return Ok(new { message = "Ürün ve görselleri başarıyla güncellendi." });
         }
 
-        // 6. SATICIYA ÖZEL: Ürün Sil (Soft-Delete & IDOR Korumalı)
+        // ürün silme
         // DELETE: api/products/{id}
         [Authorize(Roles = "Seller")]
         [HttpDelete("{id:long}")]
@@ -94,7 +93,7 @@ namespace WebAPI.Controllers
             return Ok(new { message = "Ürün başarıyla silindi." });
         }
 
-        // JWT Token'dan Güvenli Şekilde NameIdentifier (UserId) Çeken Yardımcı Metot
+        // jwt'den kullanıcı kimliğini alma
         private long GetUserIdFromToken()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
