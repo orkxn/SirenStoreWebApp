@@ -295,9 +295,9 @@ import { FormatPricePipe } from '../../pipes/format-price.pipe';
                         <span>Durum:</span>
                         <span [class]="getStatusBadgeClass(item.status)">{{ getStatusBadgeLabel(item.status) }}</span>
                         <select
-                          [value]="getStatusIntValue(item.status)"
+                          [ngModel]="getStatusIntValue(item.status)"
                           (change)="handleStatusChange(item.id, $any($event.target).value)"
-                          class="ml-2 text-[10px] bg-transparent border border-zinc-300 dark:border-zinc-800 rounded-lg px-2 py-1 text-zinc-700 dark:text-zinc-300 outline-none cursor-pointer focus:ring-1 focus:ring-zinc-400 focus:border-zinc-400"
+                          class="ml-2 text-[10px] bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg px-2.5 py-1.5 text-zinc-900 dark:text-zinc-50 outline-none cursor-pointer focus:ring-1 focus:ring-zinc-400 focus:border-zinc-400"
                         >
                           <option [value]="1" class="dark:bg-zinc-900">Alındı</option>
                           <option [value]="2" class="dark:bg-zinc-900">Hazırlanıyor</option>
