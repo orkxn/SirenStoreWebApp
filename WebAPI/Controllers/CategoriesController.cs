@@ -16,7 +16,7 @@ namespace SirenStore.WebAPI.Controllers
             _categoryService = categoryService;
         }
 
-        // Herkese Açık: Tüm aktif kategorileri listeler
+        // tüm (aktif) kategorileri getirir
         // GET: api/categories
         [HttpGet]
         public async Task<IActionResult> GetAll()
@@ -25,7 +25,7 @@ namespace SirenStore.WebAPI.Controllers
             return Ok(result);
         }
 
-        // Herkese Açık: ID'ye göre tek bir kategori getirir
+        // belirli bir kategoriyi ID ile getirir
         // GET: api/categories/{id}
         [HttpGet("{id:long}")]
         public async Task<IActionResult> GetById(long id)
@@ -34,18 +34,18 @@ namespace SirenStore.WebAPI.Controllers
             return Ok(result);
         }
 
-        // Yeni Kategori Ekleme
+        // yeni kategori oluşturma
         // POST: api/categories
         [HttpPost]
-        [Authorize(Roles = "Admin")] // Sadece Admin rolü olan JWT token'lar erişebilir
+        [Authorize(Roles = "Admin")] // sadece adminler kategori oluşturabilir
         public async Task<IActionResult> Create([FromBody] CreateCategoryDto dto)
         {
             var result = await _categoryService.CreateCategoryAsync(dto);
-            // HTTP 201 Created dönerek kurumsal standarda uyuyoruz
+            // sonucu 201 Created ile döndürür
             return StatusCode(201, result);
         }
 
-        // Kategori Güncelleme
+        // kategori güncelleme
         // PUT: api/categories/{id}
         [HttpPut("{id:long}")]
         [Authorize(Roles = "Admin")]
@@ -55,7 +55,7 @@ namespace SirenStore.WebAPI.Controllers
             return Ok(result);
         }
 
-        // Kategori Silme (Soft Delete)
+        // kategori silme (soft delete)
         // DELETE: api/categories/{id}
         [HttpDelete("{id:long}")]
         [Authorize(Roles = "Admin")]
