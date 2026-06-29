@@ -11,7 +11,7 @@ namespace SirenStore.Infrastructure
     {
         public ApplicationDbContext CreateDbContext(string[] args)
         {
-            // 1. Bulunduğumuz klasörden başlayarak yukarı doğru Solution klasörünü arıyoruz
+            // bulunduğumuz klasörden başlayarak yukarı doğru Solution klasörünü arıyoruz
             string basePath = AppDomain.CurrentDomain.BaseDirectory;
 
             // appsettings.json dosyasını bulana kadar üst klasörlere tırmanıyoruz
@@ -20,18 +20,18 @@ namespace SirenStore.Infrastructure
                 var parent = Directory.GetParent(basePath);
                 if (parent == null)
                 {
-                    // Eğer bulamazsak varsayılan olarak WebAPI klasörünü zorla denetelim
+                    // eğer bulamazsak varsayılan olarak WebAPI klasörünü zorla denetelim
                     basePath = Path.Combine(Directory.GetCurrentDirectory(), "SirenStore.WebAPI");
                     if (!Directory.Exists(basePath))
                     {
-                        basePath = Directory.GetCurrentDirectory(); // O da olmazsa düz akış
+                        basePath = Directory.GetCurrentDirectory();
                     }
                     break;
                 }
                 basePath = parent.FullName;
             }
 
-            // Eğer üst klasörde appsettings.json yoksa, WebAPI alt klasörüne bak
+            // eğer üst klasörde appsettings.json yoksa, WebAPI alt klasörüne bak
             if (!File.Exists(Path.Combine(basePath, "appsettings.json")))
             {
                 string webApiPath = Path.Combine(basePath, "SirenStore.WebAPI");
@@ -41,7 +41,7 @@ namespace SirenStore.Infrastructure
                 }
             }
 
-            // 2. Güvenli hale getirdiğimiz yol ile yapılandırıcıyı kuruyoruz
+            // güvenli hale getirdiğimiz yol ile yapılandırıcıyı kuruyoruz
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(basePath)
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
