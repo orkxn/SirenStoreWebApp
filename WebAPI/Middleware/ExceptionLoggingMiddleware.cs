@@ -4,8 +4,7 @@ using SirenStore.Application.Interfaces;
 namespace SirenStore.WebAPI.Middleware
 {
     /// <summary>
-    /// Middleware that automatically logs all exceptions to the ExceptionLog table
-    /// Provides automatic error tracking and debugging capabilities
+    /// otomatik olarak yakalanmamış istisnaları günlüğe kaydetmek için bir ara katman
     /// </summary>
     public class ExceptionLoggingMiddleware
     {
@@ -28,7 +27,7 @@ namespace SirenStore.WebAPI.Middleware
             {
                 _logger.LogError(ex, "Unhandled exception caught by middleware");
 
-                // Log to database if repository is available
+                // veritabanına kaydetmek için ExceptionLog nesnesi oluştur
                 try
                 {
                     var exceptionLogRepository = serviceProvider.GetRequiredService<IRepository<ExceptionLog>>();
