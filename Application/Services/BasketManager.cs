@@ -61,9 +61,15 @@ namespace SirenStore.Application.Services
             await _validator.ValidateAndThrowAsync(dto);
 
             // ürün var mı ve aktif mi
-            var product = await _productRepository.GetAsync(p => p.Id == dto.ProductId);
+            var product = await _productRepository.AsQueryable()
+                .Include(p => p.Seller)
+                .FirstOrDefaultAsync(p => p.Id == dto.ProductId);
+
             if (product == null)
                 throw new NotFoundException("Eklemek istediğiniz ürün bulunamadı.");
+
+            if (product.Seller != null && product.Seller.UserId == userId)
+                throw new BusinessRuleException("Kendi ürününüzü sepetinize ekleyemezsiniz.");
 
             if (product.Stock < dto.Quantity)
                 throw new BusinessRuleException($"Yetersiz stok! Mağazada sadece {product.Stock} adet ürün var.");
