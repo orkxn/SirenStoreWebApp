@@ -24,8 +24,14 @@ namespace SirenStore.WebAPI.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
+            // istek yapanın ip bilgisini yakalıyoruz
+            string ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Bilinmiyor";
+
+            // tarayıcı/cihaz bilgisini yakalıyoruz
+            string? userAgent = Request.Headers.UserAgent.ToString();
+            
             // Eğer giriş başarılıysa, servis bize TokenDto dönecek
-            var tokenResult = await authService.LoginAsync(dto);
+            var tokenResult = await authService.LoginAsync(dto, ipAddress, userAgent);
 
             // Token paketini doğrudan 200 OK ile müşteriye veriyoruz { accesstoken, accestokenexpdate, refreshtoken }
             return Ok(tokenResult);

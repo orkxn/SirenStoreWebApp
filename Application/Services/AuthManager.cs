@@ -23,16 +23,18 @@ namespace SirenStore.Application.Services
         private readonly IEmailService _emailService;
         private readonly IValidator<VerifyEmailDto> _verifyEmailValidator;
         private readonly IValidator<ResendVerificationEmailDto> _resendVerificationValidator;
+        private readonly ILoginHistoryService _loginHistoryService;
 
         public AuthManager(
             IRepository<User> userRepository,
             IConfiguration configuration,
-            IValidator<RegisterDto> registerValidator,   
+            IValidator<RegisterDto> registerValidator,
             IValidator<LoginDto> loginValidator,
             IAuditLogService auditLogService,
             IEmailService emailService,
             IValidator<VerifyEmailDto> verifyEmailValidator,
-            IValidator<ResendVerificationEmailDto> resendVerificationValidator)         
+            IValidator<ResendVerificationEmailDto> resendVerificationValidator,
+            ILoginHistoryService loginHistoryService)
         {
             _userRepository = userRepository;
             _configuration = configuration;
@@ -42,6 +44,7 @@ namespace SirenStore.Application.Services
             _emailService = emailService;
             _verifyEmailValidator = verifyEmailValidator;
             _resendVerificationValidator = resendVerificationValidator;
+            _loginHistoryService = loginHistoryService;
         }
 
         // yeni kullanıcı kaydı
@@ -78,7 +81,7 @@ namespace SirenStore.Application.Services
         }
 
         // sisteme giriş (login)
-        public async Task<TokenDto> LoginAsync(LoginDto dto)
+        public async Task<TokenDto> LoginAsync(LoginDto dto, string ipAddress, string? userAgent)
         {
             // validator
             await _loginValidator.ValidateAndThrowAsync(dto);
@@ -89,14 +92,20 @@ namespace SirenStore.Application.Services
             if (user == null || !user.IsActive)
                 throw new BusinessRuleException("E-posta adresi veya şifre hatalı.");
 
+            if (!user.IsEmailConfirmed)
+            {
+                await _loginHistoryService.RecordLoginAttemptAsync(user.Id, ipAddress, userAgent, false, "E-posta doğrulanmamış");
+                throw new EmailNotConfirmedException(user.Email, "Lütfen giriş yapmadan önce e-posta adresinizi doğrulayın.");
+            }
+
             // şifre doğrulama (hash karşılaştırması)
             bool isPasswordValid = BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash);
 
             if (!isPasswordValid)
+            {
+                await _loginHistoryService.RecordLoginAttemptAsync(user.Id, ipAddress, userAgent, false, "Hatalı şifre");
                 throw new BusinessRuleException("E-posta adresi veya şifre hatalı.");
-
-            if (!user.IsEmailConfirmed)
-                throw new EmailNotConfirmedException(user.Email, "Lütfen giriş yapmadan önce e-posta adresinizi doğrulayın.");
+            }
 
             // token üretimi ve refresh token ayarlaması
             var tokenDto = GenerateJwtToken(user);
@@ -106,7 +115,7 @@ namespace SirenStore.Application.Services
             _userRepository.Update(user);
             await _userRepository.SaveChangesAsync();
 
-            // audit: Log successful login
+            await _loginHistoryService.RecordLoginAttemptAsync(user.Id, ipAddress, userAgent, true);
             await _auditLogService.LogAuditAsync(user.Id, "USER_LOGIN", "User", user.Id, $"Email: {user.Email}");
 
             return tokenDto;

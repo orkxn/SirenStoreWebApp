@@ -38,6 +38,7 @@ builder.Services.AddScoped<IOrderService, OrderManager>();
 builder.Services.AddScoped<ICategoryService, CategoryManager>();
 builder.Services.AddScoped<IAdminService, AdminManager>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
+builder.Services.AddScoped<ILoginHistoryService, LoginHistoryManager>();
 builder.Services.AddScoped<ICommentService, CommentManager>();
 
 // automapper ve fluentvalidation kayıtları
