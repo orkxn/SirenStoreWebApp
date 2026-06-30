@@ -38,6 +38,7 @@ namespace SirenStore.Infrastructure.Context
         public DbSet<CmsContent> CmsContents { get; set; }
         public DbSet<Faq> Faqs { get; set; }
         public DbSet<ContactMessage> ContactMessages { get; set; }
+        public DbSet<Comment> Comments { get; set; }
 
         // moderasyon
         public DbSet<BanRecord> BanRecords { get; set; }
