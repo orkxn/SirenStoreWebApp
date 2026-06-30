@@ -1,0 +1,13 @@
+# Database Connection String
+ConnectionStrings__PostgreSQLConnection="Host=localhost;Port=5432;Database=SirenStoreDb;Username=your_postgres_username;Password=your_postgres_password"
+
+# JWT Token Security Key (At least 256-bit strong key)
+JwtSettings__SecretKey="YOUR_SUPER_SECRET_KEY_HERE_MIN_256_BITS"
+
+# SMTP (Email) Settings
+SmtpSettings__Host="smtp.gmail.com"
+SmtpSettings__Port="587"
+SmtpSettings__Username="your_email@gmail.com"
+SmtpSettings__Password="your_google_app_password_here"
+SmtpSettings__FromEmail="your_email@gmail.com"
+SmtpSettings__EnableSsl="true"
