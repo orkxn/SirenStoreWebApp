@@ -65,39 +65,13 @@ namespace SirenStore.Application.Services
                 UserType = UserTypes.Customer,
                 IsActive = true,
                 IsEmailConfirmed = false,
-                EmailVerificationToken = Guid.NewGuid().ToString("N"),
-                EmailVerificationTokenExpiry = DateTime.UtcNow.AddHours(24),
+                EmailVerificationToken = null,
+                EmailVerificationTokenExpiry = null,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password)
             };
 
             await _userRepository.AddAsync(user);
             await _userRepository.SaveChangesAsync();
-
-            // Send verification email
-            var clientUrl = _configuration["AppSettings:ClientUrl"] ?? "http://localhost:4200";
-            var verificationLink = $"{clientUrl}/verify-email?token={user.EmailVerificationToken}";
-            var subject = "SirenStore - E-posta Adresinizi Doğrulayın";
-            var body = $@"
-<div style=""font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff; color: #1a202c;"">
-    <div style=""text-align: center; margin-bottom: 25px; user-select: none;"">
-        <span style=""font-size: 26px; font-weight: 800; color: #09090b; letter-spacing: -1.5px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;"">SIREN</span><span style=""font-size: 26px; font-weight: 800; color: #ffffff; background-color: #09090b; padding: 2px 14px; border-radius: 9999px; margin-left: 5px; display: inline-block; letter-spacing: -1.5px; text-transform: uppercase; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;"">STORE</span>
-    </div>
-    <div style=""border-top: 1px solid #e2e8f0; padding-top: 25px;"">
-        <p style=""font-size: 16px; line-height: 1.5; margin-bottom: 15px;"">Merhaba <strong>{user.FirstName} {user.LastName}</strong>,</p>
-        <p style=""font-size: 15px; line-height: 1.6; color: #4a5568; margin-bottom: 25px;"">SirenStore'a hoş geldiniz! Hesabınızı aktifleştirmek ve alışverişe başlamak için lütfen aşağıdaki doğrulama kodunu uygulamaya girin:</p>
-        
-        <p style=""font-size: 14px; color: #4a5568; margin-bottom: 5px;"">Uygulama üzerinden girebileceğiniz tek kullanımlık doğrulama kodunuz:</p>
-        <div style=""background-color: #f8fafc; padding: 16px; border-radius: 10px; border: 1px dashed #cbd5e1; font-family: monospace; font-size: 20px; font-weight: bold; text-align: center; letter-spacing: 3px; color: #1e293b; margin: 20px 0;"">
-            {user.EmailVerificationToken}
-        </div>
-        
-        <p style=""font-size: 12px; color: #94a3b8; margin-top: 35px; border-top: 1px solid #f1f5f9; padding-top: 15px;"">
-            Eğer bu kaydı siz gerçekleştirmediyseniz, bu e-postayı güvenle yok sayabilirsiniz.
-        </p>
-    </div>
-</div>";
-
-            await _emailService.SendEmailAsync(user.Email, subject, body);
 
             // audit: Log successful registration
             await _auditLogService.LogAuditAsync(user.Id, "USER_REGISTERED", "User", user.Id, $"Email: {user.Email}");
