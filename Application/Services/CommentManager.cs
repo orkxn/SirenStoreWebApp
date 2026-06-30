@@ -34,9 +34,14 @@ namespace Application.Services
 
         public async Task<CommentDto> CreateCommentAsync(CommentCreateDto dto, long userId)
         {
-            var productExists = await _context.Set<Product>().AnyAsync(p => p.Id == dto.ProductId && !p.IsDeleted);
-            if (!productExists)
+            var product = await _context.Set<Product>().FirstOrDefaultAsync(p => p.Id == dto.ProductId && !p.IsDeleted);
+            if (product == null)
                 throw new NotFoundException("Ürün bulunamadı.");
+
+            // Satıcının kendi ürününe yorum yapmasını engelle
+            var seller = await _context.Set<Seller>().FirstOrDefaultAsync(s => s.Id == product.SellerId && !s.IsDeleted);
+            if (seller != null && seller.UserId == userId)
+                throw new BusinessRuleException("Kendi sattığınız ürüne yorum yapamazsınız.");
 
             // aynı ürüne çift yorum kontrolü
             var alreadyCommented = await _context.Set<Comment>()

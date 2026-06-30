@@ -57,6 +57,7 @@ namespace SirenStore.WebAPI.Controllers
                 return Ok(new { hasApplied = false, status = "" });
 
             return Ok(new { 
+                id = seller.Id,
                 hasApplied = true, 
                 status = seller.Status.ToString(),
                 storeName = seller.StoreName,
