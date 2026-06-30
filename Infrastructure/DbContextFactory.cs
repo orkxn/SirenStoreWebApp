@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 using SirenStore.Infrastructure.Context;
 using System;
+using System.Globalization;
 using System.IO;
 
 namespace SirenStore.Infrastructure
@@ -11,6 +12,8 @@ namespace SirenStore.Infrastructure
     {
         public ApplicationDbContext CreateDbContext(string[] args)
         {
+            Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+            Thread.CurrentThread.CurrentUICulture = CultureInfo.InvariantCulture;
             // bulunduğumuz klasörden başlayarak yukarı doğru Solution klasörünü arıyoruz
             string basePath = AppDomain.CurrentDomain.BaseDirectory;
 
