@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using Application.DTOs.Comment;
+using AutoMapper;
 using Entities.Models;
 using SirenStore.Application.DTOs;
 
@@ -48,6 +49,14 @@ namespace SirenStore.Application.Mapping
             CreateMap<OrderItem, OrderItemDto>()
                 // düzleştirilmiş DTO'da ProductName alanını OrderItem içindeki Product.Name alanından alıyoruz
                 .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Product.Name));
+
+            // Comment -> CommentDto Map kuralı
+            CreateMap<Comment, CommentDto>()
+                .ForMember(dest => dest.UserFullName,
+                           opt => opt.MapFrom(src => $"{src.User.FirstName} {src.User.LastName}"));
+
+            CreateMap<CommentCreateDto, Comment>();
+            CreateMap<CommentUpdateDto, Comment>();
         }
     }
 }
