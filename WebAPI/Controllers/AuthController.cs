@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using SirenStore.Application.DTOs;
 using SirenStore.Application.Interfaces;
 
@@ -38,6 +38,24 @@ namespace SirenStore.WebAPI.Controllers
         {
             var result = await authService.RefreshTokenAsync(refreshToken);
             return Ok(result);
+        }
+
+        // e-posta doğrulama endpointi
+        // POST: api/auth/verify-email
+        [HttpPost("verify-email")]
+        public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailDto dto)
+        {
+            await authService.VerifyEmailAsync(dto);
+            return Ok(new { Message = "E-posta adresiniz başarıyla doğrulandı. Artık giriş yapabilirsiniz." });
+        }
+
+        // e-posta doğrulama kodunu tekrar gönderme endpointi
+        // POST: api/auth/resend-verification-email
+        [HttpPost("resend-verification-email")]
+        public async Task<IActionResult> ResendVerificationEmail([FromBody] ResendVerificationEmailDto dto)
+        {
+            await authService.ResendVerificationEmailAsync(dto);
+            return Ok(new { Message = "Doğrulama e-postası tekrar gönderildi." });
         }
     }
 }

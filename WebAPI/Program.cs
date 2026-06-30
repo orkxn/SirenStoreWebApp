@@ -12,6 +12,7 @@ using SirenStore.Application.Services;
 using SirenStore.Application.Validators;
 using SirenStore.Infrastructure.Context;
 using SirenStore.Infrastructure.Repositories;
+using SirenStore.Infrastructure.Services;
 using SirenStore.WebAPI.Middleware;
 using System.Text;
 
@@ -27,6 +28,7 @@ builder.Services.AddDbContext<DbContext, ApplicationDbContext>(options =>
 
 // repository ve service kayıtları, dependecy injection
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IAuthService, AuthManager>();
 builder.Services.AddScoped<IUserService, UserManager>();
 builder.Services.AddScoped<ISellerService, SellerManager>();
@@ -137,6 +139,10 @@ app.UseExceptionHandler(errorApp =>
             SirenStore.Application.Exceptions.NotFoundException notFoundEx => (
                 StatusCodes.Status404NotFound,
                 new { Type = "NotFound", Message = notFoundEx.Message } as object
+            ),
+            SirenStore.Application.Exceptions.EmailNotConfirmedException emailNotConfirmedEx => (
+                StatusCodes.Status403Forbidden,
+                new { Type = "EmailNotConfirmed", Message = emailNotConfirmedEx.Message, Email = emailNotConfirmedEx.Email } as object
             ),
             SirenStore.Application.Exceptions.BusinessRuleException businessEx => (
                 StatusCodes.Status422UnprocessableEntity,

@@ -1,4 +1,4 @@
-﻿using System.IdentityModel.Tokens.Jwt;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
@@ -20,19 +20,28 @@ namespace SirenStore.Application.Services
         private readonly IAuditLogService _auditLogService;
         private readonly IValidator<RegisterDto> _registerValidator;
         private readonly IValidator<LoginDto> _loginValidator;
+        private readonly IEmailService _emailService;
+        private readonly IValidator<VerifyEmailDto> _verifyEmailValidator;
+        private readonly IValidator<ResendVerificationEmailDto> _resendVerificationValidator;
 
         public AuthManager(
             IRepository<User> userRepository,
             IConfiguration configuration,
             IValidator<RegisterDto> registerValidator,   
             IValidator<LoginDto> loginValidator,
-            IAuditLogService auditLogService)         
+            IAuditLogService auditLogService,
+            IEmailService emailService,
+            IValidator<VerifyEmailDto> verifyEmailValidator,
+            IValidator<ResendVerificationEmailDto> resendVerificationValidator)         
         {
             _userRepository = userRepository;
             _configuration = configuration;
             _registerValidator = registerValidator;
             _loginValidator = loginValidator;
             _auditLogService = auditLogService;
+            _emailService = emailService;
+            _verifyEmailValidator = verifyEmailValidator;
+            _resendVerificationValidator = resendVerificationValidator;
         }
 
         // yeni kullanıcı kaydı
@@ -56,11 +65,25 @@ namespace SirenStore.Application.Services
                 UserType = UserTypes.Customer,
                 IsActive = true,
                 IsEmailConfirmed = false,
+                EmailVerificationToken = Guid.NewGuid().ToString("N"),
+                EmailVerificationTokenExpiry = DateTime.UtcNow.AddHours(24),
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password)
             };
 
             await _userRepository.AddAsync(user);
             await _userRepository.SaveChangesAsync();
+
+            // Send verification email
+            var clientUrl = _configuration["AppSettings:ClientUrl"] ?? "http://localhost:4200";
+            var verificationLink = $"{clientUrl}/verify-email?token={user.EmailVerificationToken}";
+            var subject = "SirenStore E-posta Doğrulama";
+            var body = $"<h3>SirenStore E-posta Doğrulama</h3>" +
+                       $"<p>Merhaba {user.FirstName} {user.LastName},</p>" +
+                       $"<p>Hesabınızı aktifleştirmek için lütfen aşağıdaki doğrulama kodunu kullanın veya linke tıklayın:</p>" +
+                       $"<p><strong>Doğrulama Kodu:</strong> {user.EmailVerificationToken}</p>" +
+                       $"<p><a href='{verificationLink}' target='_blank'>E-postamı Doğrula</a></p>";
+
+            await _emailService.SendEmailAsync(user.Email, subject, body);
 
             // audit: Log successful registration
             await _auditLogService.LogAuditAsync(user.Id, "USER_REGISTERED", "User", user.Id, $"Email: {user.Email}");
@@ -77,6 +100,9 @@ namespace SirenStore.Application.Services
 
             if (user == null || !user.IsActive)
                 throw new BusinessRuleException("E-posta adresi veya şifre hatalı.");
+
+            if (!user.IsEmailConfirmed)
+                throw new EmailNotConfirmedException(user.Email, "Lütfen giriş yapmadan önce e-posta adresinizi doğrulayın.");
 
             // şifre doğrulama (hash karşılaştırması)
             bool isPasswordValid = BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash);
@@ -156,6 +182,70 @@ namespace SirenStore.Application.Services
             var refreshToken = Guid.NewGuid().ToString("N");
 
             return new TokenDto(accessToken, expires, refreshToken);
+        }
+
+        // e-posta doğrulama
+        public async Task VerifyEmailAsync(VerifyEmailDto dto)
+        {
+            await _verifyEmailValidator.ValidateAndThrowAsync(dto);
+
+            var user = await _userRepository.GetAsync(u => u.Email == dto.Email && !u.IsDeleted);
+
+            if (user == null)
+                throw new BusinessRuleException("Kullanıcı bulunamadı.");
+
+            if (user.IsEmailConfirmed)
+                throw new BusinessRuleException("E-posta adresi zaten doğrulanmış.");
+
+            if (user.EmailVerificationToken != dto.Token)
+                throw new BusinessRuleException("Geçersiz doğrulama kodu.");
+
+            if (user.EmailVerificationTokenExpiry < DateTime.UtcNow)
+                throw new BusinessRuleException("Doğrulama kodunun süresi dolmuş. Lütfen yeni bir kod talep edin.");
+
+            user.IsEmailConfirmed = true;
+            user.EmailVerificationToken = null;
+            user.EmailVerificationTokenExpiry = null;
+
+            _userRepository.Update(user);
+            await _userRepository.SaveChangesAsync();
+
+            // audit: Log email confirmation
+            await _auditLogService.LogAuditAsync(user.Id, "USER_EMAIL_VERIFIED", "User", user.Id, $"Email: {user.Email}");
+        }
+
+        // doğrulama e-postasını tekrar gönderme
+        public async Task ResendVerificationEmailAsync(ResendVerificationEmailDto dto)
+        {
+            await _resendVerificationValidator.ValidateAndThrowAsync(dto);
+
+            var user = await _userRepository.GetAsync(u => u.Email == dto.Email && !u.IsDeleted);
+
+            if (user == null)
+                throw new BusinessRuleException("Kullanıcı bulunamadı.");
+
+            if (user.IsEmailConfirmed)
+                throw new BusinessRuleException("E-posta adresi zaten doğrulanmış.");
+
+            user.EmailVerificationToken = Guid.NewGuid().ToString("N");
+            user.EmailVerificationTokenExpiry = DateTime.UtcNow.AddHours(24);
+
+            _userRepository.Update(user);
+            await _userRepository.SaveChangesAsync();
+
+            var clientUrl = _configuration["AppSettings:ClientUrl"] ?? "http://localhost:4200";
+            var verificationLink = $"{clientUrl}/verify-email?token={user.EmailVerificationToken}";
+            var subject = "SirenStore E-posta Doğrulama (Yeni Kod)";
+            var body = $"<h3>SirenStore E-posta Doğrulama</h3>" +
+                       $"<p>Merhaba {user.FirstName} {user.LastName},</p>" +
+                       $"<p>Hesabınızı aktifleştirmek için yeni doğrulama kodunuz oluşturulmuştur. Lütfen aşağıdaki kodu kullanın veya linke tıklayın:</p>" +
+                       $"<p><strong>Doğrulama Kodu:</strong> {user.EmailVerificationToken}</p>" +
+                       $"<p><a href='{verificationLink}' target='_blank'>E-postamı Doğrula</a></p>";
+
+            await _emailService.SendEmailAsync(user.Email, subject, body);
+
+            // audit: Log verification email resend
+            await _auditLogService.LogAuditAsync(user.Id, "USER_VERIFICATION_RESENT", "User", user.Id, $"Email: {user.Email}");
         }
     }
 }
