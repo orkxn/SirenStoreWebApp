@@ -90,6 +90,14 @@ export class AuthService {
     await firstValueFrom(this.http.post(`${API_BASE_URL}/auth/register`, dto));
   }
 
+  async verifyEmail(dto: { email: string, token: string }): Promise<void> {
+    await firstValueFrom(this.http.post(`${API_BASE_URL}/auth/verify-email`, dto));
+  }
+
+  async resendVerificationEmail(dto: { email: string }): Promise<void> {
+    await firstValueFrom(this.http.post(`${API_BASE_URL}/auth/resend-verification-email`, dto));
+  }
+
   logout() {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');

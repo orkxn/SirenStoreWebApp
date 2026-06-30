@@ -91,10 +91,17 @@ import { ButtonComponent } from '../../components/button/button.component';
                     </span>
                   </td>
                   <td class="py-4 px-4 font-semibold">
-                    <span *ngIf="u.isDeleted; else activeUser" class="text-red-500 text-xs">Banlı</span>
-                    <ng-template #activeUser>
-                      <span class="text-emerald-600 text-xs">Aktif</span>
-                    </ng-template>
+                    <div class="flex flex-col gap-1.5 items-start">
+                      <span *ngIf="u.isDeleted; else activeUser" class="text-red-500 text-xs">Banlı</span>
+                      <ng-template #activeUser>
+                        <span class="text-emerald-600 text-xs">Aktif</span>
+                      </ng-template>
+                      
+                      <span *ngIf="u.isEmailConfirmed; else unconfirmedEmail" class="text-indigo-600 dark:text-indigo-400 text-[10px] font-semibold bg-indigo-500/5 dark:bg-indigo-500/10 px-2 py-0.5 rounded-full border border-indigo-500/15">E-posta Onaylı</span>
+                      <ng-template #unconfirmedEmail>
+                        <span class="text-amber-600 dark:text-amber-400 text-[10px] font-semibold bg-amber-500/5 dark:bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/15">E-posta Onaysız</span>
+                      </ng-template>
+                    </div>
                   </td>
                   <td class="py-4 pl-4 text-right">
                     <div *ngIf="u.userType !== 2 && u.userType !== 3">

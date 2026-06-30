@@ -142,6 +142,7 @@ export interface UserManagementDto {
   lastName: string;
   userType: UserTypes;
   isDeleted: boolean;
+  isEmailConfirmed: boolean;
 }
 
 export interface CommentDto {

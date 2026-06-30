@@ -30,13 +30,21 @@ export const apiInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, nex
       const errorData = error.error as any;
       let errorMessage = 'Beklenmeyen bir hata oluştu.';
       if (errorData) {
-        if (errorData.type === 'ValidationError' && errorData.errors) {
-          errorMessage = errorData.errors.map((e: any) => e.errorMessage).join('\n') || 'Lütfen form verilerini kontrol edin.';
-        } else if (errorData.message) {
-          errorMessage = errorData.message;
+        const type = errorData.type || errorData.Type;
+        const errors = errorData.errors || errorData.Errors;
+        const msg = errorData.message || errorData.Message;
+
+        if (type === 'ValidationError' && errors) {
+          errorMessage = errors.map((e: any) => e.errorMessage || e.ErrorMessage).join('\n') || 'Lütfen form verilerini kontrol edin.';
+        } else if (msg) {
+          errorMessage = msg;
         }
       }
-      return throwError(() => new Error(errorMessage));
+      const customError = new Error(errorMessage) as any;
+      if (errorData) {
+        customError.error = errorData;
+      }
+      return throwError(() => customError);
     })
   );
 };
