@@ -79,20 +79,14 @@ namespace SirenStore.Application.Services
             var subject = "SirenStore - E-posta Adresinizi Doğrulayın";
             var body = $@"
 <div style=""font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff; color: #1a202c;"">
-    <div style=""text-align: center; margin-bottom: 25px;"">
-        <h2 style=""color: #4f46e5; font-size: 26px; font-weight: 800; margin: 0; letter-spacing: 1px;"">SIRENSTORE</h2>
+    <div style=""text-align: center; margin-bottom: 25px; user-select: none;"">
+        <span style=""font-size: 26px; font-weight: 800; color: #09090b; letter-spacing: -1.5px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;"">SIREN</span><span style=""font-size: 26px; font-weight: 800; color: #ffffff; background-color: #09090b; padding: 2px 14px; border-radius: 9999px; margin-left: 5px; display: inline-block; letter-spacing: -1.5px; text-transform: uppercase; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;"">STORE</span>
     </div>
     <div style=""border-top: 1px solid #e2e8f0; padding-top: 25px;"">
         <p style=""font-size: 16px; line-height: 1.5; margin-bottom: 15px;"">Merhaba <strong>{user.FirstName} {user.LastName}</strong>,</p>
-        <p style=""font-size: 15px; line-height: 1.6; color: #4a5568; margin-bottom: 25px;"">SirenStore'a hoş geldiniz! Hesabınızı aktifleştirmek ve alışverişe başlamak için lütfen aşağıdaki doğrulama butonuna tıklayın veya doğrulama kodunu uygulamaya girin:</p>
+        <p style=""font-size: 15px; line-height: 1.6; color: #4a5568; margin-bottom: 25px;"">SirenStore'a hoş geldiniz! Hesabınızı aktifleştirmek ve alışverişe başlamak için lütfen aşağıdaki doğrulama kodunu uygulamaya girin:</p>
         
-        <div style=""text-align: center; margin: 30px 0;"">
-            <a href=""{verificationLink}"" target=""_blank"" style=""background-color: #4f46e5; color: #ffffff; padding: 14px 32px; border-radius: 12px; text-decoration: none; font-weight: bold; display: inline-block; font-size: 15px; box-shadow: 0 4px 10px -1px rgba(79, 70, 229, 0.3);"">
-                E-postamı Doğrula
-            </a>
-        </div>
-        
-        <p style=""font-size: 14px; color: #4a5568;"">Uygulama üzerinden girebileceğiniz tek kullanımlık doğrulama kodunuz:</p>
+        <p style=""font-size: 14px; color: #4a5568; margin-bottom: 5px;"">Uygulama üzerinden girebileceğiniz tek kullanımlık doğrulama kodunuz:</p>
         <div style=""background-color: #f8fafc; padding: 16px; border-radius: 10px; border: 1px dashed #cbd5e1; font-family: monospace; font-size: 20px; font-weight: bold; text-align: center; letter-spacing: 3px; color: #1e293b; margin: 20px 0;"">
             {user.EmailVerificationToken}
         </div>
@@ -258,20 +252,14 @@ namespace SirenStore.Application.Services
             var subject = "SirenStore - Yeni Doğrulama Kodu";
             var body = $@"
 <div style=""font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff; color: #1a202c;"">
-    <div style=""text-align: center; margin-bottom: 25px;"">
-        <h2 style=""color: #4f46e5; font-size: 26px; font-weight: 800; margin: 0; letter-spacing: 1px;"">SIRENSTORE</h2>
+    <div style=""text-align: center; margin-bottom: 25px; user-select: none;"">
+        <span style=""font-size: 26px; font-weight: 800; color: #09090b; letter-spacing: -1.5px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;"">SIREN</span><span style=""font-size: 26px; font-weight: 800; color: #ffffff; background-color: #09090b; padding: 2px 14px; border-radius: 9999px; margin-left: 5px; display: inline-block; letter-spacing: -1.5px; text-transform: uppercase; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;"">STORE</span>
     </div>
     <div style=""border-top: 1px solid #e2e8f0; padding-top: 25px;"">
         <p style=""font-size: 16px; line-height: 1.5; margin-bottom: 15px;"">Merhaba <strong>{user.FirstName} {user.LastName}</strong>,</p>
-        <p style=""font-size: 15px; line-height: 1.6; color: #4a5568; margin-bottom: 25px;"">Hesabınızı aktifleştirmek için yeni bir doğrulama kodu talebinde bulundunuz. Lütfen aşağıdaki doğrulama butonuna tıklayın veya doğrulama kodunu uygulamaya girin:</p>
+        <p style=""font-size: 15px; line-height: 1.6; color: #4a5568; margin-bottom: 25px;"">Hesabınızı aktifleştirmek için yeni bir doğrulama kodu talebinde bulundunuz. Lütfen aşağıdaki doğrulama kodunu uygulamaya girin:</p>
         
-        <div style=""text-align: center; margin: 30px 0;"">
-            <a href=""{verificationLink}"" target=""_blank"" style=""background-color: #4f46e5; color: #ffffff; padding: 14px 32px; border-radius: 12px; text-decoration: none; font-weight: bold; display: inline-block; font-size: 15px; box-shadow: 0 4px 10px -1px rgba(79, 70, 229, 0.3);"">
-                E-postamı Doğrula
-            </a>
-        </div>
-        
-        <p style=""font-size: 14px; color: #4a5568;"">Uygulama üzerinden girebileceğiniz yeni tek kullanımlık doğrulama kodunuz:</p>
+        <p style=""font-size: 14px; color: #4a5568; margin-bottom: 5px;"">Uygulama üzerinden girebileceğiniz yeni tek kullanımlık doğrulama kodunuz:</p>
         <div style=""background-color: #f8fafc; padding: 16px; border-radius: 10px; border: 1px dashed #cbd5e1; font-family: monospace; font-size: 20px; font-weight: bold; text-align: center; letter-spacing: 3px; color: #1e293b; margin: 20px 0;"">
             {user.EmailVerificationToken}
         </div>
