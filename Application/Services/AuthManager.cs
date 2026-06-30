@@ -224,7 +224,7 @@ namespace SirenStore.Application.Services
             if (user.IsEmailConfirmed)
                 throw new BusinessRuleException("E-posta adresi zaten doğrulanmış.");
 
-            user.EmailVerificationToken = Guid.NewGuid().ToString("N");
+            user.EmailVerificationToken = Random.Shared.Next(100000, 1000000).ToString();
             user.EmailVerificationTokenExpiry = DateTime.UtcNow.AddHours(24);
 
             _userRepository.Update(user);
