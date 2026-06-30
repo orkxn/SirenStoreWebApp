@@ -1,4 +1,6 @@
+using Application.Services;
 using AutoMapper;
+using dotenv.net;
 using Entities.Models;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -11,7 +13,6 @@ using SirenStore.Application.Validators;
 using SirenStore.Infrastructure.Context;
 using SirenStore.Infrastructure.Repositories;
 using SirenStore.WebAPI.Middleware;
-using dotenv.net;
 using System.Text;
 
 // .env dosyasını program.cs içine yükler
@@ -35,6 +36,7 @@ builder.Services.AddScoped<IOrderService, OrderManager>();
 builder.Services.AddScoped<ICategoryService, CategoryManager>();
 builder.Services.AddScoped<IAdminService, AdminManager>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
+builder.Services.AddScoped<ICommentService, CommentManager>();
 
 // automapper ve fluentvalidation kayıtları
 builder.Services.AddSingleton<IMapper>(provider =>
