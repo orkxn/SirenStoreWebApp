@@ -263,7 +263,7 @@ import { ButtonComponent } from '../../components/button/button.component';
 
                 <app-input
                   label="Müşteri Destek Hattı"
-                  placeholder="0850xxxxxxx veya 0212xxxxxxx"
+                  placeholder="E-posta Adresi veya Telefon Numarası"
                   [(ngModel)]="sellerData.supportLine"
                   name="supportLine"
                   [error]="sellerErrors.supportLine"
@@ -356,7 +356,7 @@ export class AccountComponent implements OnInit {
     private customerService: CustomerService,
     private sellerService: SellerService,
     private toastService: ToastService
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.authService.profile$.subscribe(prof => {

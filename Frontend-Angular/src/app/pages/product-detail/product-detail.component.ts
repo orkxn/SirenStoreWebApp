@@ -1,10 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
-import { ProductListDto } from '../../models/api.types';
+import { FormsModule } from '@angular/forms';
+import { ProductListDto, CommentDto } from '../../models/api.types';
 import { ProductService } from '../../services/product.service';
 import { CartService } from '../../services/cart.service';
 import { ToastService } from '../../services/toast.service';
+import { CommentService } from '../../services/comment.service';
+import { AuthService } from '../../services/auth.service';
+import { SellerService } from '../../services/seller.service';
 import { ButtonComponent } from '../../components/button/button.component';
 import { ProductCardComponent } from '../../components/product-card/product-card.component';
 import { SkeletonComponent } from '../../components/skeleton/skeleton.component';
@@ -16,6 +20,7 @@ import { FormatPricePipe } from '../../pipes/format-price.pipe';
   imports: [
     CommonModule,
     RouterLink,
+    FormsModule,
     ButtonComponent,
     ProductCardComponent,
     SkeletonComponent,
@@ -108,7 +113,7 @@ import { FormatPricePipe } from '../../pipes/format-price.pipe';
             </div>
 
             <!-- Description -->
-            <p class="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed">
+            <p class="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed whitespace-pre-wrap">
               {{ product.description }}
             </p>
 
@@ -183,6 +188,200 @@ import { FormatPricePipe } from '../../pipes/format-price.pipe';
 
         </div>
 
+        <!-- Comments Section -->
+        <div class="border-t border-zinc-950/5 dark:border-white/5 pt-12 space-y-8">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h2 class="text-2xl font-bold tracking-tight text-zinc-950 dark:text-white uppercase flex items-center gap-2">
+                Değerlendirmeler & Yorumlar
+                <span *ngIf="comments.length > 0" class="text-sm bg-zinc-950/5 dark:bg-white/5 text-zinc-500 px-2.5 py-0.5 rounded-full font-medium">
+                  {{ comments.length }}
+                </span>
+              </h2>
+              <p class="text-xs text-zinc-500">Bu ürün hakkında alıcılar tarafından yapılan yorumlar.</p>
+            </div>
+
+            <!-- Summary Rating Badge -->
+            <div *ngIf="comments.length > 0" class="flex items-center gap-3 bg-zinc-950/[0.02] dark:bg-white/[0.02] border border-zinc-950/5 dark:border-white/10 px-4 py-2.5 rounded-2xl w-fit">
+              <div class="flex items-center text-amber-500">
+                <span class="text-2xl font-black mr-2">{{ averageRating }}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" /></svg>
+              </div>
+              <div class="text-left">
+                <div class="text-xs font-semibold text-zinc-800 dark:text-zinc-200">Ortalama Puan</div>
+                <div class="text-[10px] text-zinc-500">{{ comments.length }} değerlendirme</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Yorum Ekleme Formu -->
+          <div class="glass-surface bg-zinc-950/[0.01] dark:bg-white/5 border border-zinc-950/5 dark:border-white/10 p-6 rounded-3xl space-y-4">
+            <h3 class="text-sm font-bold uppercase tracking-wider text-zinc-950 dark:text-white">
+              Değerlendirme Yazın
+            </h3>
+
+            <!-- If Not Logged In -->
+            <div *ngIf="!authService.isAuthenticated" class="text-center py-4 bg-zinc-950/[0.02] dark:bg-white/[0.02] border border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl">
+              <p class="text-xs text-zinc-500 mb-3">Bu ürüne yorum yapabilmek için üye girişi yapmanız gerekmektedir.</p>
+              <a routerLink="/login" class="inline-block">
+                <app-button variant="primary" size="sm">Giriş Yap</app-button>
+              </a>
+            </div>
+
+            <!-- If Logged In -->
+            <div *ngIf="authService.isAuthenticated" class="space-y-4 text-left">
+              <!-- If User is the Seller/Owner of this product -->
+              <div *ngIf="isProductOwner" class="text-center py-4 bg-zinc-950/[0.02] dark:bg-white/[0.02] border border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl">
+                <p class="text-xs text-zinc-500 font-semibold">Kendi sattığınız ürüne değerlendirme yazamazsınız.</p>
+              </div>
+
+              <!-- If User is NOT the Seller/Owner -->
+              <ng-container *ngIf="!isProductOwner">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-semibold text-zinc-500 mr-2">Ürün Puanı:</span>
+                  <div class="flex items-center gap-1 text-zinc-300 dark:text-zinc-700">
+                    <button 
+                      *ngFor="let star of [1,2,3,4,5]" 
+                      (click)="newCommentRating = star"
+                      type="button"
+                      class="transition-colors hover:scale-110 focus:outline-none"
+                      [class.text-amber-500]="newCommentRating >= star"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" /></svg>
+                    </button>
+                  </div>
+                  <span class="text-xs font-bold text-zinc-900 dark:text-zinc-100 ml-2">({{ newCommentRating }} / 5)</span>
+                </div>
+
+                <div class="space-y-1">
+                  <textarea 
+                    [(ngModel)]="newCommentText" 
+                    rows="3" 
+                    placeholder="Ürün hakkındaki görüşlerinizi, deneyimlerinizi buraya yazın..."
+                    class="w-full text-sm bg-zinc-950/[0.02] dark:bg-zinc-950/20 text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 border border-zinc-300 dark:border-zinc-800 focus:border-zinc-950 dark:focus:border-white focus:ring-0 rounded-2xl p-4 transition-all resize-none focus:outline-none"
+                  ></textarea>
+                </div>
+
+                <div class="flex justify-end">
+                  <app-button 
+                    (click)="submitComment()"
+                    [disabled]="isSubmittingComment || !newCommentText.trim()"
+                    variant="primary"
+                    size="sm"
+                  >
+                    {{ isSubmittingComment ? 'Yorumunuz İletiliyor...' : 'Yorum Yap' }}
+                  </app-button>
+                </div>
+              </ng-container>
+            </div>
+          </div>
+
+          <!-- Yorumlar Listesi -->
+          <div *ngIf="commentsLoading" class="flex justify-center py-10">
+            <div class="animate-spin inline-block w-6 h-6 border-2 border-zinc-900 border-t-transparent dark:border-white rounded-full"></div>
+          </div>
+
+          <div *ngIf="!commentsLoading && comments.length === 0" class="text-center py-12 bg-zinc-950/[0.01] dark:bg-white/[0.01] border border-zinc-950/5 dark:border-white/5 rounded-3xl">
+            <p class="text-xs font-medium text-zinc-500">Bu ürün için henüz yorum yapılmamış. İlk yorumu siz yapın!</p>
+          </div>
+
+          <div *ngIf="!commentsLoading && comments.length > 0" class="space-y-4">
+            <div 
+              *ngFor="let comment of comments" 
+              class="border-b border-zinc-950/5 dark:border-white/5 pb-4 last:border-b-0 space-y-2 text-left"
+            >
+              <div class="flex items-start justify-between gap-4">
+                <div class="space-y-1">
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs font-bold text-zinc-950 dark:text-white">{{ comment.userFullName }}</span>
+                    <!-- Star Rating display -->
+                    <div class="flex items-center text-amber-500">
+                      <svg 
+                        *ngFor="let star of getStarsArray(comment.rating)" 
+                        xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5"
+                      >
+                        <path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" />
+                      </svg>
+                      <svg 
+                        *ngFor="let star of getEmptyStarsArray(comment.rating)" 
+                        xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3.5 h-3.5 text-zinc-300 dark:text-zinc-700"
+                      >
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499c.173-.439.821-.439.993 0l3.181 3.183a.75.75 0 00.56.56l3.183 3.181c.439.173.439.821 0 .993l-3.181 3.182a.75.75 0 00-.56.56l-3.183 3.182a.75.75 0 00-.993 0l-3.183-3.182a.75.75 0 00-.56-.56l-3.182-3.182c-.439-.173-.439-.821 0-.993l3.182-3.182a.75.75 0 00.56-.56l3.182-3.182z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <span class="block text-[10px] text-zinc-400 dark:text-zinc-500">
+                    {{ comment.creationDate | date:'dd.MM.yyyy HH:mm' }}
+                  </span>
+                </div>
+
+                <!-- Comment Action Buttons (Edit / Delete) -->
+                <div *ngIf="isCommentAuthor(comment) || isAdmin()" class="flex items-center gap-2">
+                  <button 
+                    *ngIf="isCommentAuthor(comment) && editingCommentId !== comment.id"
+                    (click)="startEditComment(comment)"
+                    class="text-xs font-semibold text-zinc-500 hover:text-zinc-950 dark:hover:text-white transition-colors"
+                  >
+                    Düzenle
+                  </button>
+                  <button 
+                    (click)="deleteComment(comment.id)"
+                    class="text-xs font-semibold text-red-500 hover:text-red-600 transition-colors"
+                  >
+                    Sil
+                  </button>
+                </div>
+              </div>
+
+              <!-- Comment edit form (Inline) -->
+              <div *ngIf="editingCommentId === comment.id" class="space-y-3 pt-2">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-semibold text-zinc-500 mr-2">Yeni Puan:</span>
+                  <div class="flex items-center gap-1 text-zinc-300 dark:text-zinc-700">
+                    <button 
+                      *ngFor="let star of [1,2,3,4,5]" 
+                      (click)="editingCommentRating = star"
+                      type="button"
+                      class="transition-colors hover:scale-110 focus:outline-none"
+                      [class.text-amber-500]="editingCommentRating >= star"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" /></svg>
+                    </button>
+                  </div>
+                </div>
+                <textarea 
+                  [(ngModel)]="editingCommentText" 
+                  rows="2" 
+                  class="w-full text-sm bg-zinc-950/[0.02] dark:bg-zinc-950/20 text-zinc-900 dark:text-white border border-zinc-300 dark:border-zinc-800 focus:border-zinc-950 dark:focus:border-white focus:ring-0 rounded-2xl p-4 transition-all resize-none focus:outline-none"
+                ></textarea>
+                <div class="flex justify-end gap-2">
+                  <app-button 
+                    (click)="cancelEditComment()"
+                    variant="secondary"
+                    size="sm"
+                  >
+                    Vazgeç
+                  </app-button>
+                  <app-button 
+                    (click)="saveEditComment()"
+                    [disabled]="!editingCommentText.trim()"
+                    variant="primary"
+                    size="sm"
+                  >
+                    Güncelle
+                  </app-button>
+                </div>
+              </div>
+
+              <!-- Comment Text (Standard view) -->
+              <p *ngIf="editingCommentId !== comment.id" class="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed font-medium">
+                {{ comment.text }}
+              </p>
+            </div>
+          </div>
+
+        </div>
+
         <ng-template #noProduct>
           <div class="text-center py-20">
             <p class="text-zinc-500 font-medium text-lg">Ürün bulunamadı.</p>
@@ -223,11 +422,26 @@ export class ProductDetailComponent implements OnInit {
   isLoading = true;
   isAdding = false;
 
+  // Comments state
+  comments: CommentDto[] = [];
+  commentsLoading = false;
+  newCommentText = '';
+  newCommentRating = 5;
+  isSubmittingComment = false;
+  editingCommentId: number | null = null;
+  editingCommentText = '';
+  editingCommentRating = 5;
+  averageRating = 0;
+  isProductOwner = false;
+
   constructor(
     private route: ActivatedRoute,
     private productService: ProductService,
     private cartService: CartService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    public commentService: CommentService,
+    public authService: AuthService,
+    private sellerService: SellerService
   ) {}
 
   ngOnInit() {
@@ -252,11 +466,137 @@ export class ProductDetailComponent implements OnInit {
       // Load similar products in the same category
       const similar = await this.productService.getByCategoryId(data.categoryId);
       this.similarProducts = similar.filter((p) => p.id !== data.id).slice(0, 4);
+
+      // Load comments
+      await this.loadComments(prodId);
+
+      // Check product ownership
+      await this.checkOwnership();
     } catch (err: any) {
       this.toastService.showToast(err.message || 'Ürün yüklenirken bir hata oluştu.', 'error');
     } finally {
       this.isLoading = false;
     }
+  }
+
+  async checkOwnership() {
+    this.isProductOwner = false;
+    if (!this.product || !this.authService.isAuthenticated || this.authService.user?.role !== 'Seller') {
+      return;
+    }
+    try {
+      const status = await this.sellerService.getMyStatus();
+      if (status && status.hasApplied && status.id === this.product.sellerId) {
+        this.isProductOwner = true;
+      }
+    } catch (err) {
+      console.error('Kullanıcı satıcı bilgileri yüklenemedi', err);
+    }
+  }
+
+  async loadComments(prodId: number) {
+    this.commentsLoading = true;
+    try {
+      this.comments = await this.commentService.getByProductId(prodId);
+      this.calculateAverageRating();
+    } catch (err: any) {
+      this.toastService.showToast(err.message || 'Yorumlar yüklenirken bir hata oluştu.', 'error');
+    } finally {
+      this.commentsLoading = false;
+    }
+  }
+
+  calculateAverageRating() {
+    if (this.comments.length === 0) {
+      this.averageRating = 0;
+      return;
+    }
+    const sum = this.comments.reduce((acc, c) => acc + c.rating, 0);
+    this.averageRating = parseFloat((sum / this.comments.length).toFixed(1));
+  }
+
+  async submitComment() {
+    if (!this.product) return;
+    if (!this.newCommentText.trim()) {
+      this.toastService.showToast('Yorum metni boş olamaz.', 'error');
+      return;
+    }
+    this.isSubmittingComment = true;
+    try {
+      await this.commentService.create({
+        productId: this.product.id,
+        text: this.newCommentText,
+        rating: this.newCommentRating
+      });
+      this.toastService.showToast('Yorumunuz başarıyla eklendi.', 'success');
+      this.newCommentText = '';
+      this.newCommentRating = 5;
+      await this.loadComments(this.product.id);
+    } catch (err: any) {
+      this.toastService.showToast(err.message || 'Yorum gönderilirken bir hata oluştu.', 'error');
+    } finally {
+      this.isSubmittingComment = false;
+    }
+  }
+
+  startEditComment(comment: CommentDto) {
+    this.editingCommentId = comment.id;
+    this.editingCommentText = comment.text;
+    this.editingCommentRating = comment.rating;
+  }
+
+  cancelEditComment() {
+    this.editingCommentId = null;
+    this.editingCommentText = '';
+    this.editingCommentRating = 5;
+  }
+
+  async saveEditComment() {
+    if (!this.product || !this.editingCommentId) return;
+    if (!this.editingCommentText.trim()) {
+      this.toastService.showToast('Yorum metni boş olamaz.', 'error');
+      return;
+    }
+    try {
+      await this.commentService.update(this.editingCommentId, {
+        text: this.editingCommentText,
+        rating: this.editingCommentRating
+      });
+      this.toastService.showToast('Yorumunuz başarıyla güncellendi.', 'success');
+      this.cancelEditComment();
+      await this.loadComments(this.product.id);
+    } catch (err: any) {
+      this.toastService.showToast(err.message || 'Yorum güncellenirken bir hata oluştu.', 'error');
+    }
+  }
+
+  async deleteComment(commentId: number) {
+    if (!this.product) return;
+    if (confirm('Yorumunuzu silmek istediğinize emin misiniz?')) {
+      try {
+        await this.commentService.delete(commentId);
+        this.toastService.showToast('Yorumunuz silindi.', 'success');
+        await this.loadComments(this.product.id);
+      } catch (err: any) {
+        this.toastService.showToast(err.message || 'Yorum silinirken bir hata oluştu.', 'error');
+      }
+    }
+  }
+
+  getStarsArray(rating: number): number[] {
+    return Array(rating).fill(0);
+  }
+
+  getEmptyStarsArray(rating: number): number[] {
+    return Array(5 - rating).fill(0);
+  }
+
+  isCommentAuthor(comment: CommentDto): boolean {
+    return this.authService.user?.id === comment.userId;
+  }
+
+  isAdmin(): boolean {
+    return this.authService.user?.role === 'Admin' || this.authService.user?.role === 'SuperAdmin';
   }
 
   get defaultPlaceholder(): string {

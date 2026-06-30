@@ -53,7 +53,7 @@ import { ProductGridSkeletonComponent } from '../../components/skeleton/skeleton
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
               </app-button>
             </a>
-            <a routerLink="/products" [queryParams]="{category: 7}">
+            <a routerLink="/products" [queryParams]="{category: 1}">
               <app-button variant="glass" size="lg">
                 Moda Koleksiyonu
               </app-button>

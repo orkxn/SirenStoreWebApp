@@ -143,3 +143,24 @@ export interface UserManagementDto {
   userType: UserTypes;
   isDeleted: boolean;
 }
+
+export interface CommentDto {
+  id: number;
+  text: string;
+  rating: number;
+  creationDate: string;
+  userId: number;
+  userFullName: string;
+  productId: number;
+}
+
+export interface CommentCreateDto {
+  text: string;
+  rating: number;
+  productId: number;
+}
+
+export interface CommentUpdateDto {
+  text: string;
+  rating: number;
+}

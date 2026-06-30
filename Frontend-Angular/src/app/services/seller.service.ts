@@ -16,7 +16,7 @@ export class SellerService {
     return firstValueFrom(this.http.post(`${API_BASE_URL}/sellers/apply`, dto));
   }
 
-  getMyStatus(): Promise<{ hasApplied: boolean; status: string; storeName?: string; contactEmail?: string; contactPhone?: string; supportLine?: string; taxNumber?: string; taxOffice?: string }> {
+  getMyStatus(): Promise<{ id?: number; hasApplied: boolean; status: string; storeName?: string; contactEmail?: string; contactPhone?: string; supportLine?: string; taxNumber?: string; taxOffice?: string }> {
     return firstValueFrom(this.http.get<any>(`${API_BASE_URL}/sellers/my-status`));
   }
 

@@ -193,9 +193,9 @@ import { FormatPricePipe } from '../../pipes/format-price.pipe';
               <select
                 [(ngModel)]="upsertData.categoryId"
                 name="categoryId"
-                class="w-full bg-transparent border border-zinc-300 dark:border-zinc-800 rounded-xl px-4 py-3 outline-none transition text-zinc-900 dark:text-zinc-550 focus:border-zinc-950 dark:focus:border-white"
+                class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-xl px-4 py-3 outline-none transition text-zinc-900 dark:text-zinc-100 focus:border-zinc-950 dark:focus:border-white"
               >
-                <option *ngFor="let cat of categories" [value]="cat.id" class="dark:bg-zinc-900">
+                <option *ngFor="let cat of categories" [value]="cat.id" class="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-zinc-100">
                   {{ cat.name }}
                 </option>
               </select>
@@ -335,7 +335,7 @@ export class SellerPanelComponent implements OnInit {
     description: '',
     price: 0,
     stock: 0,
-    categoryId: 0,
+    categoryId: 1,
     mainImage: '',
     image2: '',
     image3: ''
@@ -372,7 +372,7 @@ export class SellerPanelComponent implements OnInit {
       this.orders = orderData;
       this.categories = catData;
       if (catData.length > 0 && !this.upsertData.categoryId) {
-        this.upsertData.categoryId = catData[0].id;
+        this.upsertData.categoryId = 1;
       }
     } catch (err: any) {
       this.toastService.showToast(err.message || 'Satıcı verileri yüklenemedi.', 'error');
@@ -405,7 +405,7 @@ export class SellerPanelComponent implements OnInit {
       description: '',
       price: 0,
       stock: 0,
-      categoryId: this.categories[0]?.id || 0,
+      categoryId: 1,
       mainImage: '',
       image2: '',
       image3: ''
