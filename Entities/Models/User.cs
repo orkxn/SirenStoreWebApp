@@ -24,5 +24,6 @@ namespace Entities.Models
         // navigation property
         public Seller? Seller { get; set; }
         public ICollection<LoginHistory> LoginHistories { get; set; }
+        public ICollection<Comment> Comments { get; set; } = new List<Comment>();
     }
 }
