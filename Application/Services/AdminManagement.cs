@@ -34,7 +34,8 @@ namespace SirenStore.Application.Services
                     FirstName = u.FirstName,
                     LastName = u.LastName,
                     UserType = u.UserType,
-                    IsDeleted = u.IsDeleted
+                    IsDeleted = u.IsDeleted,
+                    IsEmailConfirmed = u.IsEmailConfirmed
                 })
                 .ToListAsync();
         }

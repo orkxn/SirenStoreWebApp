@@ -1,4 +1,4 @@
-﻿using Entities.Enums;
+using Entities.Enums;
 using Entities.Models;
 
 namespace SirenStore.Application.DTOs
@@ -11,5 +11,6 @@ namespace SirenStore.Application.DTOs
         public string LastName { get; set; } = string.Empty;
         public UserTypes UserType { get; set; } // kullanıcı tipi
         public bool IsDeleted { get; set; } // banlı mı değil mi
+        public bool IsEmailConfirmed { get; set; } // e-posta onaylandı mı
     }
 }

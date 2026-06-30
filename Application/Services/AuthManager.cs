@@ -101,14 +101,14 @@ namespace SirenStore.Application.Services
             if (user == null || !user.IsActive)
                 throw new BusinessRuleException("E-posta adresi veya şifre hatalı.");
 
-            if (!user.IsEmailConfirmed)
-                throw new EmailNotConfirmedException(user.Email, "Lütfen giriş yapmadan önce e-posta adresinizi doğrulayın.");
-
             // şifre doğrulama (hash karşılaştırması)
             bool isPasswordValid = BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash);
 
             if (!isPasswordValid)
                 throw new BusinessRuleException("E-posta adresi veya şifre hatalı.");
+
+            if (!user.IsEmailConfirmed)
+                throw new EmailNotConfirmedException(user.Email, "Lütfen giriş yapmadan önce e-posta adresinizi doğrulayın.");
 
             // token üretimi ve refresh token ayarlaması
             var tokenDto = GenerateJwtToken(user);
