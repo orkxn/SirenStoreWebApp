@@ -5,6 +5,7 @@ using SirenStore.Infrastructure.Context;
 using System;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 
 namespace SirenStore.Infrastructure
 {
@@ -14,50 +15,41 @@ namespace SirenStore.Infrastructure
         {
             Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
             Thread.CurrentThread.CurrentUICulture = CultureInfo.InvariantCulture;
-            // bulunduğumuz klasörden başlayarak yukarı doğru Solution klasörünü arıyoruz
-            string basePath = AppDomain.CurrentDomain.BaseDirectory;
 
-            // appsettings.json dosyasını bulana kadar üst klasörlere tırmanıyoruz
-            while (!File.Exists(Path.Combine(basePath, "appsettings.json")))
-            {
-                var parent = Directory.GetParent(basePath);
-                if (parent == null)
-                {
-                    // eğer bulamazsak varsayılan olarak WebAPI klasörünü zorla denetelim
-                    basePath = Path.Combine(Directory.GetCurrentDirectory(), "SirenStore.WebAPI");
-                    if (!Directory.Exists(basePath))
-                    {
-                        basePath = Directory.GetCurrentDirectory();
-                    }
-                    break;
-                }
-                basePath = parent.FullName;
-            }
+            // Solution kökünü bul (.slnx veya .sln dosyasının olduğu yer)
+            var solutionRoot = FindSolutionRoot();
 
-            // eğer üst klasörde appsettings.json yoksa, WebAPI alt klasörüne bak
-            if (!File.Exists(Path.Combine(basePath, "appsettings.json")))
+            // WebAPI klasörünü bul (appsettings.json ve .env burada)
+            var webApiPath = Path.Combine(solutionRoot, "WebAPI");
+
+            if (!Directory.Exists(webApiPath))
             {
-                string webApiPath = Path.Combine(basePath, "SirenStore.WebAPI");
-                if (File.Exists(Path.Combine(webApiPath, "appsettings.json")))
-                {
-                    basePath = webApiPath;
-                }
+                throw new InvalidOperationException(
+                    $"WebAPI klasörü bulunamadı. Aranan yol: {webApiPath}");
             }
 
             // .env dosyasını yükle (Program.cs'deki DotEnv.Load() ile aynı mantık)
-            // .env dosyası WebAPI klasöründe veya solution kökünde olabilir
-            LoadEnvFile(basePath);
+            LoadEnvFile(webApiPath);
 
-            // güvenli hale getirdiğimiz yol ile yapılandırıcıyı kuruyoruz
+            // yapılandırıcıyı kuruyoruz
             // AddEnvironmentVariables() ile .env'den yüklenen değerler de okunur
             var configuration = new ConfigurationBuilder()
-                .SetBasePath(basePath)
+                .SetBasePath(webApiPath)
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .AddJsonFile("appsettings.Development.json", optional: true, reloadOnChange: true)
                 .AddEnvironmentVariables()
                 .Build();
 
             var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
             var connectionString = configuration.GetConnectionString("PostgreSQLConnection");
+
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                throw new InvalidOperationException(
+                    $"Connection string 'PostgreSQLConnection' boş veya bulunamadı. " +
+                    $"WebAPI yolu: {webApiPath}, " +
+                    $".env mevcut: {File.Exists(Path.Combine(webApiPath, ".env"))}");
+            }
 
             optionsBuilder.UseNpgsql(connectionString);
 
@@ -65,29 +57,60 @@ namespace SirenStore.Infrastructure
         }
 
         /// <summary>
+        /// Solution kökünü (.slnx / .sln dosyasının olduğu klasör) bulur.
+        /// Birden fazla strateji dener: BaseDirectory'den yukarı tırmanma,
+        /// CurrentDirectory'den yukarı tırmanma, ve Infrastructure klasöründen parent.
+        /// </summary>
+        private static string FindSolutionRoot()
+        {
+            // Strateji 1: AppDomain.CurrentDomain.BaseDirectory'den yukarı tırman
+            var root = SearchUpForSolution(AppDomain.CurrentDomain.BaseDirectory);
+            if (root != null) return root;
+
+            // Strateji 2: Directory.GetCurrentDirectory()'den yukarı tırman
+            root = SearchUpForSolution(Directory.GetCurrentDirectory());
+            if (root != null) return root;
+
+            // Strateji 3: Bu dosyanın bulunduğu Infrastructure klasöründen parent al
+            // Infrastructure.dll -> bin/Debug/net10.0/ -> Infrastructure/ -> SolutionRoot/
+            var assemblyLocation = typeof(DbContextFactory).Assembly.Location;
+            if (!string.IsNullOrEmpty(assemblyLocation))
+            {
+                root = SearchUpForSolution(Path.GetDirectoryName(assemblyLocation)!);
+                if (root != null) return root;
+            }
+
+            throw new InvalidOperationException(
+                "Solution kökü bulunamadı. " +
+                $"BaseDirectory: {AppDomain.CurrentDomain.BaseDirectory}, " +
+                $"CurrentDirectory: {Directory.GetCurrentDirectory()}");
+        }
+
+        /// <summary>
+        /// Verilen dizinden yukarı doğru tırmanarak .slnx veya .sln dosyası arar.
+        /// </summary>
+        private static string? SearchUpForSolution(string startPath)
+        {
+            var dir = new DirectoryInfo(startPath);
+            while (dir != null)
+            {
+                if (dir.GetFiles("*.slnx").Any() || dir.GetFiles("*.sln").Any())
+                {
+                    return dir.FullName;
+                }
+                dir = dir.Parent;
+            }
+            return null;
+        }
+
+        /// <summary>
         /// .env dosyasını bulup environment variable olarak yükler.
         /// dotenv.net paketi Infrastructure projesinde olmayabileceği için manuel parse eder.
         /// </summary>
-        private static void LoadEnvFile(string basePath)
+        private static void LoadEnvFile(string directory)
         {
-            // Önce basePath'te (WebAPI klasörü), sonra solution kökünde ara
-            string? envFilePath = null;
-
-            if (File.Exists(Path.Combine(basePath, ".env")))
-            {
-                envFilePath = Path.Combine(basePath, ".env");
-            }
-            else
-            {
-                // Solution kökünde ara
-                var solutionRoot = Directory.GetParent(basePath)?.FullName;
-                if (solutionRoot != null && File.Exists(Path.Combine(solutionRoot, ".env")))
-                {
-                    envFilePath = Path.Combine(solutionRoot, ".env");
-                }
-            }
-
-            if (envFilePath == null) return;
+            var envFilePath = Path.Combine(directory, ".env");
+            if (!File.Exists(envFilePath)) return;
 
             foreach (var line in File.ReadAllLines(envFilePath))
             {
@@ -113,4 +136,4 @@ namespace SirenStore.Infrastructure
             }
         }
     }
-}
+}
