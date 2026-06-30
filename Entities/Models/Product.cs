@@ -14,5 +14,6 @@ namespace Entities.Models
         public virtual Category Category { get; set; } = null!;
 
         public virtual ICollection<ProductImage> ProductImages { get; set; } = new List<ProductImage>();
+        public ICollection<Comment> Comments { get; set; } = new List<Comment>();
     }
 }
