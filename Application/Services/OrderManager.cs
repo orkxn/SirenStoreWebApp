@@ -56,7 +56,10 @@ namespace SirenStore.Application.Services
                 .ThenInclude(bi => bi.Product)
                 .FirstOrDefaultAsync(b => b.UserId == userId);
 
-            if (basket == null || !basket.BasketItems.Any())
+            // Sadece aktif (silinmemiş) sepet elemanlarını filtrele
+            var activeBasketItems = basket?.BasketItems.Where(bi => !bi.IsDeleted).ToList();
+
+            if (basket == null || activeBasketItems == null || !activeBasketItems.Any())
                 throw new BusinessRuleException("Sepetiniz boş olduğu için sipariş oluşturulamaz.");
 
             // TRANSACTION BAŞLANGICI
@@ -70,14 +73,14 @@ namespace SirenStore.Application.Services
                     AddressTitle = dto.AddressTitle,
                     ShippingAddress = dto.ShippingAddress,
                     Status = OrderStatus.Received,
-                    TotalPrice = basket.BasketItems.Sum(bi => bi.Quantity * bi.Product!.Price)
+                    TotalPrice = activeBasketItems.Sum(bi => bi.Quantity * bi.Product!.Price)
                 };
 
                 await _orderRepository.AddAsync(order);
                 await _orderRepository.SaveChangesAsync(); // Order.Id'yi almak için kaydetmek zorundayız
 
                 // sepetteki her bir ürün için stok kontrolü ve sipariş kalemi oluşturma
-                foreach (var basketItem in basket.BasketItems)
+                foreach (var basketItem in activeBasketItems)
                 {
                     var product = basketItem.Product;
 
@@ -105,8 +108,8 @@ namespace SirenStore.Application.Services
 
                 await _orderItemRepository.SaveChangesAsync();
 
-                // müşteri satın alımı tamamladı, sepet kalemlerini temizliyoruz
-                foreach (var bi in basket.BasketItems.ToList())
+                // müşteri satın alımı tamamladı, sadece sipariş verilen aktif sepet kalemlerini temizliyoruz
+                foreach (var bi in activeBasketItems)
                 {
                     _basketItemRepository.Remove(bi);
                 }
@@ -271,7 +274,7 @@ namespace SirenStore.Application.Services
         public async Task<List<SavedAddressDto>> GetSavedAddressesAsync(long userId)
         {
             return await _orderRepository.AsQueryable()
-                .Where(o => o.UserId == userId && !o.IsDeleted)
+                .Where(o => o.UserId == userId && !o.IsDeleted && !string.IsNullOrEmpty(o.AddressTitle))
                 .GroupBy(o => new { o.AddressTitle, o.ShippingAddress })
                 .Select(g => new
                 {
@@ -286,6 +289,24 @@ namespace SirenStore.Application.Services
                     ShippingAddress = x.ShippingAddress
                 })
                 .ToListAsync();
+        }
+
+        public async Task DeleteSavedAddressAsync(long userId, string addressTitle)
+        {
+            var orders = await _orderRepository.AsQueryable()
+                .Where(o => o.UserId == userId && o.AddressTitle == addressTitle && !o.IsDeleted)
+                .ToListAsync();
+
+            foreach (var order in orders)
+            {
+                order.AddressTitle = string.Empty;
+                _orderRepository.Update(order);
+            }
+
+            await _orderRepository.SaveChangesAsync();
+
+            // audit loglama
+            await _auditLogService.LogAuditAsync(userId, "SAVED_ADDRESS_DELETED", "Order", 0, $"AddressTitle: {addressTitle}");
         }
     }
 }

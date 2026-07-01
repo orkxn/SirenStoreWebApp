@@ -2,6 +2,7 @@ using Entities.Enums;
 using Entities.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using SirenStore.Application.DTOs;
 using SirenStore.Application.Interfaces;
 using System.Security.Claims;
@@ -82,6 +83,16 @@ namespace WebAPI.Controllers
             var userId = GetUserIdFromToken();
             var addresses = await _orderService.GetSavedAddressesAsync(userId);
             return Ok(addresses);
+        }
+
+        // kullanıcının daha önceki siparişlerinde kullandığı bir adresi (başlığını temizleyerek) silme
+        // DELETE: api/orders/saved-addresses
+        [HttpDelete("saved-addresses")]
+        public async Task<IActionResult> DeleteSavedAddress([FromQuery] string addressTitle)
+        {
+            var userId = GetUserIdFromToken();
+            await _orderService.DeleteSavedAddressAsync(userId, addressTitle);
+            return Ok(new { message = "Kayıtlı adres başarıyla silindi." });
         }
 
         // jwt'den kullanıcı kimliğini alma

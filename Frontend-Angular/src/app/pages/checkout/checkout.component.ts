@@ -92,17 +92,29 @@ import { FormatPricePipe } from '../../pipes/format-price.pipe';
                 <!-- Kayıtlı Adres Seçimi -->
                 <div *ngIf="savedAddresses.length > 0" class="flex flex-col gap-1.5">
                   <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">Kayıtlı Adresleriniz</label>
-                  <select
-                    [(ngModel)]="selectedSavedAddressTitle"
-                    (change)="onSavedAddressChange()"
-                    name="selectedSavedAddressTitle"
-                    class="w-full bg-transparent border border-zinc-300 dark:border-zinc-800 focus:border-zinc-950 dark:focus:border-white rounded-xl px-4 py-3 outline-none transition text-zinc-900 dark:text-zinc-50 dark:bg-zinc-950"
-                  >
-                    <option value="new" class="bg-white dark:bg-zinc-950">Yeni Adres Ekle...</option>
-                    <option *ngFor="let addr of savedAddresses" [value]="addr.addressTitle" class="bg-white dark:bg-zinc-950">
-                      {{ addr.addressTitle }}
-                    </option>
-                  </select>
+                  <div class="flex gap-2">
+                    <select
+                      [(ngModel)]="selectedSavedAddressTitle"
+                      (change)="onSavedAddressChange()"
+                      name="selectedSavedAddressTitle"
+                      class="flex-grow bg-transparent border border-zinc-300 dark:border-zinc-800 focus:border-zinc-950 dark:focus:border-white rounded-xl px-4 py-3 outline-none transition text-zinc-900 dark:text-zinc-50 dark:bg-zinc-950"
+                    >
+                      <option value="new" class="bg-white dark:bg-zinc-950">Yeni Adres Ekle...</option>
+                      <option *ngFor="let addr of savedAddresses" [value]="addr.addressTitle" class="bg-white dark:bg-zinc-950">
+                        {{ addr.addressTitle }}
+                      </option>
+                    </select>
+
+                    <button
+                      *ngIf="selectedSavedAddressTitle !== 'new'"
+                      type="button"
+                      (click)="onDeleteAddress()"
+                      class="px-3.5 py-3 border border-red-200 dark:border-red-900/30 text-red-600 hover:bg-red-500/10 rounded-xl transition-all flex items-center justify-center shrink-0"
+                      title="Kayıtlı Adresi Sil"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-[18px] h-[18px]"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                    </button>
+                  </div>
                 </div>
 
                 <app-input
@@ -290,6 +302,34 @@ export class CheckoutComponent implements OnInit {
         this.addressTitle = found.addressTitle;
         this.shippingAddress = found.shippingAddress;
       }
+    }
+  }
+
+  async onDeleteAddress() {
+    if (!this.selectedSavedAddressTitle || this.selectedSavedAddressTitle === 'new') return;
+
+    if (!confirm(`"${this.selectedSavedAddressTitle}" isimli adresi silmek istediğinize emin misiniz?`)) {
+      return;
+    }
+
+    try {
+      await this.orderService.deleteSavedAddress(this.selectedSavedAddressTitle);
+      this.toastService.showToast('Kayıtlı adres başarıyla silindi.', 'success');
+
+      // Reload saved addresses
+      this.savedAddresses = await this.orderService.getSavedAddresses();
+
+      if (this.savedAddresses.length > 0) {
+        this.selectedSavedAddressTitle = this.savedAddresses[0].addressTitle;
+        this.addressTitle = this.savedAddresses[0].addressTitle;
+        this.shippingAddress = this.savedAddresses[0].shippingAddress;
+      } else {
+        this.selectedSavedAddressTitle = 'new';
+        this.addressTitle = '';
+        this.shippingAddress = '';
+      }
+    } catch (err: any) {
+      this.toastService.showToast(err.message || 'Adres silinemedi.', 'error');
     }
   }
 
