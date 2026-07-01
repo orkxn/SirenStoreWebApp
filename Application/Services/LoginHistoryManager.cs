@@ -1,5 +1,7 @@
 using Entities.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using SirenStore.Application.DTOs;
 using SirenStore.Application.Interfaces;
 
 namespace SirenStore.Application.Services
@@ -35,6 +37,25 @@ namespace SirenStore.Application.Services
             {
                 _logger.LogError(ex, "Failed to record login attempt for UserId:{UserId}", userId);
             }
+        }
+
+        /// <summary>
+        /// Tüm giriş geçmişi kayıtlarını tarihe göre azalan sırada getirir (admin paneli için)
+        /// </summary>
+        public async Task<List<LoginHistoryDto>> GetAllLoginHistoriesAsync()
+        {
+            return await _loginHistoryRepository.AsQueryable()
+                .OrderByDescending(l => l.CreationDate)
+                .Select(l => new LoginHistoryDto(
+                    l.Id,
+                    l.UserId,
+                    l.IpAddress,
+                    l.UserAgent,
+                    l.IsSuccessful,
+                    l.FailureReason,
+                    l.CreationDate
+                ))
+                .ToListAsync();
         }
     }
 }
