@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -89,7 +89,24 @@ import { FormatPricePipe } from '../../pipes/format-price.pipe';
               </h3>
               
               <div class="space-y-4">
+                <!-- Kayıtlı Adres Seçimi -->
+                <div *ngIf="savedAddresses.length > 0" class="flex flex-col gap-1.5">
+                  <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">Kayıtlı Adresleriniz</label>
+                  <select
+                    [(ngModel)]="selectedSavedAddressTitle"
+                    (change)="onSavedAddressChange()"
+                    name="selectedSavedAddressTitle"
+                    class="w-full bg-transparent border border-zinc-300 dark:border-zinc-800 focus:border-zinc-950 dark:focus:border-white rounded-xl px-4 py-3 outline-none transition text-zinc-900 dark:text-zinc-50 dark:bg-zinc-950"
+                  >
+                    <option value="new" class="bg-white dark:bg-zinc-950">Yeni Adres Ekle...</option>
+                    <option *ngFor="let addr of savedAddresses" [value]="addr.addressTitle" class="bg-white dark:bg-zinc-950">
+                      {{ addr.addressTitle }}
+                    </option>
+                  </select>
+                </div>
+
                 <app-input
+                  *ngIf="savedAddresses.length === 0 || selectedSavedAddressTitle === 'new'"
                   label="Adres Başlığı"
                   placeholder="Evim, İş Yerim..."
                   [(ngModel)]="addressTitle"
@@ -222,7 +239,7 @@ import { FormatPricePipe } from '../../pipes/format-price.pipe';
     </div>
   `
 })
-export class CheckoutComponent {
+export class CheckoutComponent implements OnInit {
   addressTitle = '';
   shippingAddress = '';
   cardHolderName = '';
@@ -241,11 +258,40 @@ export class CheckoutComponent {
   isSuccess = false;
   createdOrder: any = null;
 
+  savedAddresses: { addressTitle: string; shippingAddress: string }[] = [];
+  selectedSavedAddressTitle = 'new';
+
   constructor(
     public cartService: CartService,
     private orderService: OrderService,
     private toastService: ToastService
   ) {}
+
+  async ngOnInit() {
+    try {
+      this.savedAddresses = await this.orderService.getSavedAddresses();
+      if (this.savedAddresses.length > 0) {
+        this.selectedSavedAddressTitle = this.savedAddresses[0].addressTitle;
+        this.addressTitle = this.savedAddresses[0].addressTitle;
+        this.shippingAddress = this.savedAddresses[0].shippingAddress;
+      }
+    } catch (err) {
+      console.error('Kayıtlı adresler yüklenemedi:', err);
+    }
+  }
+
+  onSavedAddressChange() {
+    if (this.selectedSavedAddressTitle === 'new') {
+      this.addressTitle = '';
+      this.shippingAddress = '';
+    } else {
+      const found = this.savedAddresses.find(a => a.addressTitle === this.selectedSavedAddressTitle);
+      if (found) {
+        this.addressTitle = found.addressTitle;
+        this.shippingAddress = found.shippingAddress;
+      }
+    }
+  }
 
   get cart() {
     return this.cartService.cart;

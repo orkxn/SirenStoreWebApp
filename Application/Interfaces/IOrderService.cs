@@ -20,5 +20,8 @@ namespace SirenStore.Application.Interfaces
 
         // satıcının veya adminin sipariş durumunu güncellemesini sağlar
         Task UpdateOrderItemStatusAsync(long userId, long orderItemId, OrderStatus newStatus);
+
+        // müşterinin geçmiş siparişlerinden tekil adres başlığı ve detay ikililerini getirir
+        Task<List<SavedAddressDto>> GetSavedAddressesAsync(long userId);
     }
 }
