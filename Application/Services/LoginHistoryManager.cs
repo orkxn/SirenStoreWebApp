@@ -27,7 +27,8 @@ namespace SirenStore.Application.Services
                     IpAddress = ipAddress,
                     UserAgent = userAgent,
                     IsSuccessful = isSuccessful,
-                    FailureReason = failureReason
+                    FailureReason = failureReason,
+                    CreationDate = DateTime.UtcNow
                 };
 
                 await _loginHistoryRepository.AddAsync(record);

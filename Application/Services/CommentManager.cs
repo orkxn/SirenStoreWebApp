@@ -3,6 +3,7 @@ using AutoMapper;
 using Entities.Models;
 using Microsoft.EntityFrameworkCore;
 using SirenStore.Application.Exceptions;
+using SirenStore.Application.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,11 +15,13 @@ namespace Application.Services
     {
         private readonly DbContext _context;
         private readonly IMapper _mapper;
+        private readonly IAuditLogService _auditLogService;
 
-        public CommentManager(DbContext context, IMapper mapper)
+        public CommentManager(DbContext context, IMapper mapper, IAuditLogService auditLogService)
         {
             _context = context;
             _mapper = mapper;
+            _auditLogService = auditLogService;
         }
 
         public async Task<IEnumerable<CommentDto>> GetCommentsByProductIdAsync(long productId)
@@ -57,6 +60,9 @@ namespace Application.Services
             await _context.Set<Comment>().AddAsync(comment);
             await _context.SaveChangesAsync();
 
+            // audit: Yorum oluşturma logu
+            await _auditLogService.LogAuditAsync(userId, "COMMENT_CREATED", "Comment", comment.Id, $"Rating: {comment.Rating}");
+
             var savedComment = await _context.Set<Comment>()
                 .Include(c => c.User)
                 .FirstOrDefaultAsync(c => c.Id == comment.Id);
@@ -82,6 +88,9 @@ namespace Application.Services
 
             await _context.SaveChangesAsync();
 
+            // audit: Yorum güncelleme logu
+            await _auditLogService.LogAuditAsync(userId, "COMMENT_UPDATED", "Comment", comment.Id, $"NewRating: {comment.Rating}");
+
             return _mapper.Map<CommentDto>(comment);
         }
 
@@ -99,6 +108,9 @@ namespace Application.Services
             comment.UpdatedDate = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
+
+            // audit: Yorum silme logu
+            await _auditLogService.LogAuditAsync(userId, "COMMENT_DELETED", "Comment", commentId, $"IsAdmin: {isAdmin}");
         }
     }
 }

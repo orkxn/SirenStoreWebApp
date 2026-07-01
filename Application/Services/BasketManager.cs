@@ -13,17 +13,20 @@ namespace SirenStore.Application.Services
         private readonly IRepository<BasketItem> _basketItemRepository;
         private readonly IRepository<Product> _productRepository;
         private readonly IValidator<AddToBasketDto> _validator;
+        private readonly IAuditLogService _auditLogService;
 
         public BasketManager(
             IRepository<Basket> basketRepository,
             IRepository<BasketItem> basketItemRepository,
             IRepository<Product> productRepository,
-            IValidator<AddToBasketDto> validator)
+            IValidator<AddToBasketDto> validator,
+            IAuditLogService auditLogService)
         {
             _basketRepository = basketRepository;
             _basketItemRepository = basketItemRepository;
             _productRepository = productRepository;
             _validator = validator;
+            _auditLogService = auditLogService;
         }
 
         // sepeti getir
@@ -120,6 +123,9 @@ namespace SirenStore.Application.Services
             }
 
             await _basketItemRepository.SaveChangesAsync();
+
+            // audit: Sepete ürün ekleme logu
+            await _auditLogService.LogAuditAsync(userId, "BASKET_ITEM_ADDED", "Product", dto.ProductId, $"Quantity: {dto.Quantity}");
         }
 
         // sepetteki ürünün miktarını güncelle
@@ -145,6 +151,9 @@ namespace SirenStore.Application.Services
             basketItem.Quantity = dto.Quantity;
             _basketItemRepository.Update(basketItem);
             await _basketItemRepository.SaveChangesAsync();
+
+            // audit: Sepet ürün adedi güncelleme logu
+            await _auditLogService.LogAuditAsync(userId, "BASKET_ITEM_QUANTITY_UPDATED", "Product", dto.ProductId, $"NewQuantity: {dto.Quantity}");
         }
 
         // sepetten ürün kaldır
@@ -161,6 +170,9 @@ namespace SirenStore.Application.Services
             {
                 _basketItemRepository.Remove(itemToRemove);
                 await _basketItemRepository.SaveChangesAsync();
+
+                // audit: Sepetten ürün silme logu
+                await _auditLogService.LogAuditAsync(userId, "BASKET_ITEM_REMOVED", "Product", productId, $"ProductId: {productId}");
             }
         }
 
@@ -178,6 +190,9 @@ namespace SirenStore.Application.Services
                     _basketItemRepository.Remove(item);
                 }
                 await _basketItemRepository.SaveChangesAsync();
+
+                // audit: Sepet temizleme logu
+                await _auditLogService.LogAuditAsync(userId, "BASKET_CLEARED", "Basket", basket.Id, "Basket cleared");
             }
         }
     }

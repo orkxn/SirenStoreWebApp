@@ -15,6 +15,7 @@ namespace SirenStore.Application.Services
         private readonly IValidator<CreateProductDto> _createValidator;
         private readonly IValidator<UpdateProductDto> _updateValidator;
         private readonly IRepository<BasketItem> _basketItemRepository;
+        private readonly IAuditLogService _auditLogService;
 
         public ProductManager(
             IRepository<Product> productRepository,
@@ -22,7 +23,8 @@ namespace SirenStore.Application.Services
             IRepository<Category> categoryRepository,
             IValidator<CreateProductDto> createValidator,
             IRepository<BasketItem> basketItemRepository,
-            IValidator<UpdateProductDto> updateValidator)
+            IValidator<UpdateProductDto> updateValidator,
+            IAuditLogService auditLogService)
         {
             _productRepository = productRepository;
             _sellerRepository = sellerRepository;
@@ -30,6 +32,7 @@ namespace SirenStore.Application.Services
             _createValidator = createValidator;
             _updateValidator = updateValidator;
             _basketItemRepository = basketItemRepository;
+            _auditLogService = auditLogService;
         }
 
         /// <summary>
@@ -137,6 +140,9 @@ namespace SirenStore.Application.Services
 
             await _productRepository.AddAsync(newProduct);
             await _productRepository.SaveChangesAsync();
+
+            // audit: Ürün oluşturma logu
+            await _auditLogService.LogAuditAsync(userId, "PRODUCT_CREATED", "Product", newProduct.Id, $"Name: {newProduct.Name}");
         }
 
         // ürün güncelleme
@@ -189,6 +195,9 @@ namespace SirenStore.Application.Services
 
             _productRepository.Update(product);
             await _productRepository.SaveChangesAsync();
+
+            // audit: Ürün güncelleme logu
+            await _auditLogService.LogAuditAsync(userId, "PRODUCT_UPDATED", "Product", product.Id, $"Name: {product.Name}");
         }
 
         // ürünü silme
@@ -216,6 +225,9 @@ namespace SirenStore.Application.Services
             }
 
             await _productRepository.SaveChangesAsync();
+
+            // audit: Ürün silme logu
+            await _auditLogService.LogAuditAsync(userId, "PRODUCT_DELETED", "Product", productId, $"ProductId: {productId}");
         }
     }
 }

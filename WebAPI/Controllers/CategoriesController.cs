@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SirenStore.Application.DTOs;
 using SirenStore.Application.Interfaces;
@@ -40,7 +40,8 @@ namespace SirenStore.WebAPI.Controllers
         [Authorize(Roles = "Admin")] // sadece adminler kategori oluşturabilir
         public async Task<IActionResult> Create([FromBody] CreateCategoryDto dto)
         {
-            var result = await _categoryService.CreateCategoryAsync(dto);
+            var userId = long.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
+            var result = await _categoryService.CreateCategoryAsync(userId, dto);
             // sonucu 201 Created ile döndürür
             return StatusCode(201, result);
         }
@@ -51,7 +52,8 @@ namespace SirenStore.WebAPI.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update(long id, [FromBody] UpdateCategoryDto dto)
         {
-            var result = await _categoryService.UpdateCategoryAsync(id, dto);
+            var userId = long.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
+            var result = await _categoryService.UpdateCategoryAsync(userId, id, dto);
             return Ok(result);
         }
 
@@ -61,7 +63,8 @@ namespace SirenStore.WebAPI.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(long id)
         {
-            await _categoryService.DeleteCategoryAsync(id);
+            var userId = long.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
+            await _categoryService.DeleteCategoryAsync(userId, id);
             return Ok(new { message = "Kategori başarıyla silindi (Soft Delete)." });
         }
     }

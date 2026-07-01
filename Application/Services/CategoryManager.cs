@@ -1,4 +1,4 @@
-﻿using Entities.Models;
+using Entities.Models;
 using Microsoft.EntityFrameworkCore;
 using SirenStore.Application.DTOs;
 using SirenStore.Application.Interfaces;
@@ -9,10 +9,12 @@ namespace SirenStore.Application.Services
     public class CategoryManager : ICategoryService
     {
         private readonly IRepository<Category> _categoryRepository;
+        private readonly IAuditLogService _auditLogService;
 
-        public CategoryManager(IRepository<Category> categoryRepository)
+        public CategoryManager(IRepository<Category> categoryRepository, IAuditLogService auditLogService)
         {
             _categoryRepository = categoryRepository;
+            _auditLogService = auditLogService;
         }
 
         // tüm kategorileri getir
@@ -47,7 +49,7 @@ namespace SirenStore.Application.Services
         }
 
         // kategori oluştur
-        public async Task<CategoryDto> CreateCategoryAsync(CreateCategoryDto dto)
+        public async Task<CategoryDto> CreateCategoryAsync(long userId, CreateCategoryDto dto)
         {
             var exist = await _categoryRepository.GetAsync(c => c.Name.ToLower() == dto.Name.ToLower() && !c.IsDeleted);
             if (exist != null) throw new BusinessRuleException("Bu isimde bir kategori zaten mevcut.");
@@ -56,11 +58,14 @@ namespace SirenStore.Application.Services
             await _categoryRepository.AddAsync(category);
             await _categoryRepository.SaveChangesAsync();
 
+            // audit: Kategori oluşturma logu
+            await _auditLogService.LogAuditAsync(userId, "CATEGORY_CREATED", "Category", category.Id, $"Name: {category.Name}");
+
             return new CategoryDto { Id = category.Id, Name = category.Name };
         }
 
         // kategori güncelle
-        public async Task<CategoryDto> UpdateCategoryAsync(long id, UpdateCategoryDto dto)
+        public async Task<CategoryDto> UpdateCategoryAsync(long userId, long id, UpdateCategoryDto dto)
         {
             var category = await _categoryRepository.GetAsync(c => c.Id == id && !c.IsDeleted);
             if (category == null) throw new NotFoundException("Kategori bulunamadı.");
@@ -69,11 +74,14 @@ namespace SirenStore.Application.Services
             _categoryRepository.Update(category);
             await _categoryRepository.SaveChangesAsync();
 
+            // audit: Kategori güncelleme logu
+            await _auditLogService.LogAuditAsync(userId, "CATEGORY_UPDATED", "Category", category.Id, $"NewName: {category.Name}");
+
             return new CategoryDto { Id = category.Id, Name = category.Name };
         }
 
         // kategori sil
-        public async Task DeleteCategoryAsync(long id)
+        public async Task DeleteCategoryAsync(long userId, long id)
         {
             var category = await _categoryRepository.GetAsync(c => c.Id == id && !c.IsDeleted);
             if (category == null) throw new NotFoundException("Kategori bulunamadı.");
@@ -81,6 +89,9 @@ namespace SirenStore.Application.Services
             category.IsDeleted = true;
             _categoryRepository.Update(category);
             await _categoryRepository.SaveChangesAsync();
+
+            // audit: Kategori silme logu
+            await _auditLogService.LogAuditAsync(userId, "CATEGORY_DELETED", "Category", id, $"Name: {category.Name}");
         }
     }
 }

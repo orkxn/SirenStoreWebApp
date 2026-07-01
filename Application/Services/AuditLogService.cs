@@ -35,7 +35,8 @@ namespace SirenStore.Application.Services
                     EntityName = entityName,
                     EntityId = entityId,
                     NewValues = details,
-                    UserEmail = userId.HasValue ? $"User_{userId}" : "System"
+                    UserEmail = userId.HasValue ? $"User_{userId}" : "System",
+                    CreationDate = DateTime.UtcNow
                 };
 
                 await _auditLogRepository.AddAsync(auditLog);
