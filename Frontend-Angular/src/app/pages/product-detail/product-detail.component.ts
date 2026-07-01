@@ -237,41 +237,51 @@ import { FormatPricePipe } from '../../pipes/format-price.pipe';
 
               <!-- If User is NOT the Seller/Owner -->
               <ng-container *ngIf="!isProductOwner">
-                <div class="flex items-center gap-2">
-                  <span class="text-xs font-semibold text-zinc-500 mr-2">Ürün Puanı:</span>
-                  <div class="flex items-center gap-1 text-zinc-300 dark:text-zinc-700">
-                    <button 
-                      *ngFor="let star of [1,2,3,4,5]" 
-                      (click)="newCommentRating = star"
-                      type="button"
-                      class="transition-colors hover:scale-110 focus:outline-none"
-                      [class.text-amber-500]="newCommentRating >= star"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" /></svg>
-                    </button>
+                <ng-container *ngIf="isEligibleToComment; else notEligible">
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs font-semibold text-zinc-500 mr-2">Ürün Puanı:</span>
+                    <div class="flex items-center gap-1 text-zinc-300 dark:text-zinc-755 text-zinc-400">
+                      <button 
+                        *ngFor="let star of [1,2,3,4,5]" 
+                        (click)="newCommentRating = star"
+                        type="button"
+                        class="transition-colors hover:scale-110 focus:outline-none"
+                        [class.text-amber-500]="newCommentRating >= star"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" /></svg>
+                      </button>
+                    </div>
+                    <span class="text-xs font-bold text-zinc-900 dark:text-zinc-100 ml-2">({{ newCommentRating }} / 5)</span>
                   </div>
-                  <span class="text-xs font-bold text-zinc-900 dark:text-zinc-100 ml-2">({{ newCommentRating }} / 5)</span>
-                </div>
 
-                <div class="space-y-1">
-                  <textarea 
-                    [(ngModel)]="newCommentText" 
-                    rows="3" 
-                    placeholder="Ürün hakkındaki görüşlerinizi, deneyimlerinizi buraya yazın..."
-                    class="w-full text-sm bg-zinc-950/[0.02] dark:bg-zinc-950/20 text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 border border-zinc-300 dark:border-zinc-800 focus:border-zinc-950 dark:focus:border-white focus:ring-0 rounded-2xl p-4 transition-all resize-none focus:outline-none"
-                  ></textarea>
-                </div>
+                  <div class="space-y-1">
+                    <textarea 
+                      [(ngModel)]="newCommentText" 
+                      rows="3" 
+                      placeholder="Ürün hakkındaki görüşlerinizi, deneyimlerinizi buraya yazın..."
+                      class="w-full text-sm bg-zinc-950/[0.02] dark:bg-zinc-950/20 text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 border border-zinc-300 dark:border-zinc-800 focus:border-zinc-950 dark:focus:border-white focus:ring-0 rounded-2xl p-4 transition-all resize-none focus:outline-none"
+                    ></textarea>
+                  </div>
 
-                <div class="flex justify-end">
-                  <app-button 
-                    (click)="submitComment()"
-                    [disabled]="isSubmittingComment || !newCommentText.trim()"
-                    variant="primary"
-                    size="sm"
-                  >
-                    {{ isSubmittingComment ? 'Yorumunuz İletiliyor...' : 'Yorum Yap' }}
-                  </app-button>
-                </div>
+                  <div class="flex justify-end">
+                    <app-button 
+                      (click)="submitComment()"
+                      [disabled]="isSubmittingComment || !newCommentText.trim()"
+                      variant="primary"
+                      size="sm"
+                    >
+                      {{ isSubmittingComment ? 'Yorumunuz İletiliyor...' : 'Yorum Yap' }}
+                    </app-button>
+                  </div>
+                </ng-container>
+
+                <ng-template #notEligible>
+                  <div class="text-center py-6 bg-zinc-950/[0.02] dark:bg-white/[0.02] border border-dashed border-zinc-200 dark:border-white/10 rounded-2xl p-4">
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 font-semibold leading-relaxed">
+                      Bu ürüne yorum yapabilmek için ürünü satın almış olmanız ve siparişinizin teslim edilmiş olması gerekmektedir.
+                    </p>
+                  </div>
+                </ng-template>
               </ng-container>
             </div>
           </div>
@@ -433,6 +443,7 @@ export class ProductDetailComponent implements OnInit {
   editingCommentRating = 5;
   averageRating = 0;
   isProductOwner = false;
+  isEligibleToComment = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -472,6 +483,9 @@ export class ProductDetailComponent implements OnInit {
 
       // Check product ownership
       await this.checkOwnership();
+
+      // Check commenting eligibility
+      await this.checkCommentEligibility(prodId);
     } catch (err: any) {
       this.toastService.showToast(err.message || 'Ürün yüklenirken bir hata oluştu.', 'error');
     } finally {
@@ -491,6 +505,19 @@ export class ProductDetailComponent implements OnInit {
       }
     } catch (err) {
       console.error('Kullanıcı satıcı bilgileri yüklenemedi', err);
+    }
+  }
+
+  async checkCommentEligibility(prodId: number) {
+    this.isEligibleToComment = false;
+    if (!this.authService.isAuthenticated) {
+      return;
+    }
+    try {
+      const res = await this.commentService.checkEligibility(prodId);
+      this.isEligibleToComment = res.isEligible;
+    } catch (err) {
+      console.error('Yorum yapabilme uygunluğu kontrol edilemedi', err);
     }
   }
 
@@ -532,6 +559,7 @@ export class ProductDetailComponent implements OnInit {
       this.newCommentText = '';
       this.newCommentRating = 5;
       await this.loadComments(this.product.id);
+      await this.checkCommentEligibility(this.product.id);
     } catch (err: any) {
       this.toastService.showToast(err.message || 'Yorum gönderilirken bir hata oluştu.', 'error');
     } finally {
@@ -577,6 +605,7 @@ export class ProductDetailComponent implements OnInit {
         await this.commentService.delete(commentId);
         this.toastService.showToast('Yorumunuz silindi.', 'success');
         await this.loadComments(this.product.id);
+        await this.checkCommentEligibility(this.product.id);
       } catch (err: any) {
         this.toastService.showToast(err.message || 'Yorum silinirken bir hata oluştu.', 'error');
       }

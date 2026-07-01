@@ -459,8 +459,8 @@ export class SellerPanelComponent implements OnInit {
     if (!this.upsertData.description) {
       this.upsertErrors.description = 'Açıklama zorunludur.';
       isValid = false;
-    } else if (this.upsertData.description.length > 1000) {
-      this.upsertErrors.description = 'En fazla 1000 karakter olabilir.';
+    } else if (this.upsertData.description.length > 10000) {
+      this.upsertErrors.description = 'En fazla 10000 karakter olabilir.';
       isValid = false;
     }
 

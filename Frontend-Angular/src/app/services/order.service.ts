@@ -8,7 +8,14 @@ import { API_BASE_URL } from '../interceptors/api.interceptor';
 export class OrderService {
   constructor(private http: HttpClient) {}
 
-  createOrder(dto: { addressTitle: string; shippingAddress: string }): Promise<OrderDto> {
+  createOrder(dto: { 
+    addressTitle: string; 
+    shippingAddress: string;
+    cardNumber: string;
+    cardHolderName: string;
+    cardExpiry: string;
+    cardCvv: string;
+  }): Promise<OrderDto> {
     return firstValueFrom(this.http.post<OrderDto>(`${API_BASE_URL}/orders`, dto));
   }
 

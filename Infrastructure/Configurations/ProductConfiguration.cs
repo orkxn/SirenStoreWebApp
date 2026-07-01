@@ -18,7 +18,7 @@ namespace Infrastructure.Configurations
 
             builder.Property(p => p.Description)
                 .IsRequired()
-                .HasMaxLength(1000);
+                .HasMaxLength(10000);
 
             builder.Property(p => p.Price)
                 .HasColumnType("decimal(18,2)");

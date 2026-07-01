@@ -182,7 +182,7 @@ namespace SirenStore.Application.Services
         }
 
         // e-posta doğrulama
-        public async Task VerifyEmailAsync(VerifyEmailDto dto)
+        public async Task<TokenDto> VerifyEmailAsync(VerifyEmailDto dto)
         {
             await _verifyEmailValidator.ValidateAndThrowAsync(dto);
 
@@ -204,11 +204,18 @@ namespace SirenStore.Application.Services
             user.EmailVerificationToken = null;
             user.EmailVerificationTokenExpiry = null;
 
+            // token üretimi ve refresh token ayarlaması
+            var tokenDto = GenerateJwtToken(user);
+            user.RefreshToken = tokenDto.RefreshToken;
+            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+
             _userRepository.Update(user);
             await _userRepository.SaveChangesAsync();
 
             // audit: Log email confirmation
             await _auditLogService.LogAuditAsync(user.Id, "USER_EMAIL_VERIFIED", "User", user.Id, $"Email: {user.Email}");
+
+            return tokenDto;
         }
 
         // doğrulama e-postasını tekrar gönderme

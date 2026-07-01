@@ -104,7 +104,7 @@ import { FormatPricePipe } from '../../pipes/format-price.pipe';
                     rows="3"
                     [(ngModel)]="shippingAddress"
                     name="shippingAddress"
-                    [class]="'w-full bg-transparent border rounded-xl px-4 py-3 outline-none transition text-zinc-900 dark:text-zinc-550 ' + 
+                    [class]="'w-full bg-transparent border rounded-xl px-4 py-3 outline-none transition text-zinc-900 dark:text-zinc-50 ' + 
                       (shippingAddressError 
                         ? 'border-red-500' 
                         : 'border-zinc-300 dark:border-zinc-800 focus:border-zinc-950 dark:focus:border-white')"
@@ -136,25 +136,31 @@ import { FormatPricePipe } from '../../pipes/format-price.pipe';
                 <app-input
                   label="Kart Numarası"
                   placeholder="4000 1234 5678 9010"
-                  [(ngModel)]="cardNumber"
+                  [ngModel]="cardNumber"
+                  (ngModelChange)="onCardNumberChange($event)"
                   name="cardNumber"
                   [error]="cardNumberError"
+                  maxLength="19"
                 ></app-input>
 
                 <div class="grid grid-cols-2 gap-4">
                   <app-input
                     label="Son Kullanma Tarihi (AA/YY)"
                     placeholder="12/28"
-                    [(ngModel)]="cardExpiry"
+                    [ngModel]="cardExpiry"
+                    (ngModelChange)="onCardExpiryChange($event)"
                     name="cardExpiry"
                     [error]="cardExpiryError"
+                    maxLength="5"
                   ></app-input>
                   <app-input
                     label="Güvenlik Kodu (CVV)"
                     placeholder="321"
-                    [(ngModel)]="cardCvv"
+                    [ngModel]="cardCvv"
+                    (ngModelChange)="onCardCvvChange($event)"
                     name="cardCvv"
                     [error]="cardCvvError"
+                    maxLength="3"
                   ></app-input>
                 </div>
               </div>
@@ -325,7 +331,11 @@ export class CheckoutComponent {
     try {
       const result = await this.orderService.createOrder({
         addressTitle: this.addressTitle,
-        shippingAddress: this.shippingAddress
+        shippingAddress: this.shippingAddress,
+        cardNumber: this.cardNumber,
+        cardHolderName: this.cardHolderName,
+        cardExpiry: this.cardExpiry,
+        cardCvv: this.cardCvv
       });
       this.createdOrder = result;
       this.isSuccess = true;
@@ -336,5 +346,37 @@ export class CheckoutComponent {
     } finally {
       this.isLoading = false;
     }
+  }
+
+  onCardNumberChange(val: string) {
+    let clean = val.replace(/\D/g, '');
+    if (clean.length > 16) {
+      clean = clean.substring(0, 16);
+    }
+    const parts = [];
+    for (let i = 0; i < clean.length; i += 4) {
+      parts.push(clean.substring(i, i + 4));
+    }
+    this.cardNumber = parts.join(' ');
+  }
+
+  onCardExpiryChange(val: string) {
+    let clean = val.replace(/\D/g, '');
+    if (clean.length > 4) {
+      clean = clean.substring(0, 4);
+    }
+    if (clean.length > 2) {
+      this.cardExpiry = clean.substring(0, 2) + '/' + clean.substring(2);
+    } else {
+      this.cardExpiry = clean;
+    }
+  }
+
+  onCardCvvChange(val: string) {
+    let clean = val.replace(/\D/g, '');
+    if (clean.length > 3) {
+      clean = clean.substring(0, 3);
+    }
+    this.cardCvv = clean;
   }
 }

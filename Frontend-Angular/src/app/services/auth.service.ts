@@ -91,7 +91,11 @@ export class AuthService {
   }
 
   async verifyEmail(dto: { email: string, token: string }): Promise<void> {
-    await firstValueFrom(this.http.post(`${API_BASE_URL}/auth/verify-email`, dto));
+    const result = await firstValueFrom(this.http.post<TokenDto>(`${API_BASE_URL}/auth/verify-email`, dto));
+    localStorage.setItem('accessToken', result.accessToken);
+    localStorage.setItem('refreshToken', result.refreshToken);
+    this.loadUserFromToken(result.accessToken);
+    await this.fetchProfile();
   }
 
   async resendVerificationEmail(dto: { email: string }): Promise<void> {

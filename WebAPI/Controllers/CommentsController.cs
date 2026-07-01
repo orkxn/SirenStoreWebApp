@@ -27,6 +27,28 @@ namespace WebAPI.Controllers
             return Ok(comments);
         }
 
+        // kullanıcının yorumlarını getirme
+        // GET: api/comments/my-comments
+        [Authorize]
+        [HttpGet("my-comments")]
+        public async Task<IActionResult> GetMyComments()
+        {
+            var userId = GetUserIdFromToken();
+            var comments = await _commentService.GetCommentsByUserIdAsync(userId);
+            return Ok(comments);
+        }
+
+        // yorum yapabilme uygunluğunu kontrol etme
+        // GET: api/comments/eligibility/{productId}
+        [Authorize]
+        [HttpGet("eligibility/{productId}")]
+        public async Task<IActionResult> CheckEligibility(long productId)
+        {
+            var userId = GetUserIdFromToken();
+            var isEligible = await _commentService.CanUserCommentOnProductAsync(userId, productId);
+            return Ok(new { isEligible });
+        }
+
         // ürüne yorum ekleme 
         // POST: api/comments
         [Authorize]

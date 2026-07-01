@@ -271,9 +271,9 @@ export class LoginComponent {
         email: this.verificationEmail,
         token: this.verificationCode
       });
-      this.toastService.showToast('Hesabınız başarıyla doğrulandı! Artık giriş yapabilirsiniz.', 'success');
+      this.toastService.showToast('Hesabınız başarıyla doğrulandı ve giriş yapıldı!', 'success');
       this.isVerificationMode = false;
-      this.password = ''; // safety
+      this.router.navigate(['/']);
     } catch (err: any) {
       this.codeError = err.error?.message || err.message || 'Geçersiz doğrulama kodu.';
       this.toastService.showToast(this.codeError, 'error');

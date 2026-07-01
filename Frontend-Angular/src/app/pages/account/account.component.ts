@@ -1,10 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { CustomerService } from '../../services/customer.service';
 import { SellerService } from '../../services/seller.service';
 import { ToastService } from '../../services/toast.service';
+import { CommentService } from '../../services/comment.service';
+import { CommentDto } from '../../models/api.types';
 import { InputComponent } from '../../components/input/input.component';
 import { ButtonComponent } from '../../components/button/button.component';
 
@@ -14,6 +17,7 @@ import { ButtonComponent } from '../../components/button/button.component';
   imports: [
     CommonModule,
     FormsModule,
+    RouterLink,
     InputComponent,
     ButtonComponent
   ],
@@ -53,6 +57,16 @@ import { ButtonComponent } from '../../components/button/button.component';
                 : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-950/5 dark:hover:bg-white/5')"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Şifre Değiştir
+          </button>
+
+          <button
+            (click)="setActiveTab('comments')"
+            [class]="'flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-semibold text-left transition-all ' + 
+              (activeTab === 'comments'
+                ? 'bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 shadow-md'
+                : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-950/5 dark:hover:bg-white/5')"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Değerlendirmelerim
           </button>
           
           <button
@@ -296,6 +310,96 @@ import { ButtonComponent } from '../../components/button/button.component';
 
           </div>
 
+          <!-- Tab 4: Değerlendirmelerim -->
+          <div *ngIf="activeTab === 'comments'" class="space-y-6">
+            <h3 class="text-lg font-bold text-zinc-950 dark:text-white uppercase tracking-wide border-b border-zinc-950/5 dark:border-white/5 pb-2.5 flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-zinc-400"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Değerlendirmelerim
+            </h3>
+
+            <!-- Loading Spinner -->
+            <div *ngIf="loadingComments" class="text-center py-10">
+              <div class="animate-spin inline-block w-6 h-6 border-2 border-zinc-900 border-t-transparent dark:border-white rounded-full"></div>
+            </div>
+
+            <div *ngIf="!loadingComments">
+              <!-- Empty State -->
+              <div *ngIf="myComments.length === 0" class="text-center py-12 space-y-3">
+                <div class="w-12 h-12 bg-zinc-950/5 dark:bg-white/5 text-zinc-400 rounded-full flex items-center justify-center mx-auto">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                </div>
+                <h4 class="text-sm font-semibold text-zinc-900 dark:text-white">Henüz Değerlendirme Yapmadınız</h4>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400 max-w-xs mx-auto leading-relaxed">
+                  Satın aldığınız veya incelediğiniz ürünlere yorum yaparak diğer kullanıcılarla paylaşabilirsiniz.
+                </p>
+              </div>
+
+              <!-- Comments List -->
+              <div *ngIf="myComments.length > 0" class="space-y-4">
+                <div *ngFor="let comment of myComments" class="flex gap-4 p-5 rounded-2xl bg-zinc-950/[0.01] dark:bg-white/[0.02] border border-zinc-950/5 dark:border-white/10 text-left">
+                  <!-- Product Image -->
+                  <a [routerLink]="'/product/' + comment.productId" class="shrink-0">
+                    <img 
+                      *ngIf="comment.productImageUrl" 
+                      [src]="comment.productImageUrl" 
+                      [alt]="comment.productName"
+                      class="w-16 h-16 object-cover rounded-xl border border-zinc-950/5 dark:border-white/5 bg-zinc-100 dark:bg-zinc-800"
+                    />
+                    <div *ngIf="!comment.productImageUrl" class="w-16 h-16 bg-zinc-100 dark:bg-zinc-800 border border-zinc-950/5 dark:border-white/5 rounded-xl flex items-center justify-center text-zinc-400">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"/><polyline points="16 5 21 5 21 10"/><line x1="12" y1="12" x2="21" y2="3"/></svg>
+                    </div>
+                  </a>
+
+                  <!-- Details -->
+                  <div class="flex-grow space-y-1">
+                    <div class="flex items-start justify-between gap-4">
+                      <div>
+                        <a [routerLink]="'/product/' + comment.productId" class="text-sm font-bold text-zinc-950 dark:text-white hover:underline line-clamp-1">
+                          {{ comment.productName }}
+                        </a>
+                        <!-- Rating stars -->
+                        <div class="flex items-center gap-0.5 mt-0.5">
+                          <svg 
+                            *ngFor="let star of [1,2,3,4,5]" 
+                            xmlns="http://www.w3.org/2000/svg" 
+                            width="14" 
+                            height="14" 
+                            viewBox="0 0 24 24" 
+                            [attr.fill]="star <= comment.rating ? 'currentColor' : 'none'" 
+                            stroke="currentColor" 
+                            stroke-width="2" 
+                            stroke-linecap="round" 
+                            stroke-linejoin="round" 
+                            [class]="star <= comment.rating ? 'text-amber-500' : 'text-zinc-300 dark:text-zinc-600'"
+                          >
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                          </svg>
+                        </div>
+                      </div>
+                      
+                      <!-- Delete Action -->
+                      <button 
+                        (click)="onDeleteComment(comment.id)"
+                        class="text-zinc-400 hover:text-red-500 transition-colors p-1.5 rounded-lg hover:bg-red-500/10"
+                        title="Değerlendirmeyi Sil"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                      </button>
+                    </div>
+
+                    <p class="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed pt-1.5 whitespace-pre-line">
+                      {{ comment.text }}
+                    </p>
+
+                    <div class="text-[10px] text-zinc-400 dark:text-zinc-500 pt-1 flex items-center gap-1.5">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                      {{ comment.creationDate | date:'dd.MM.yyyy HH:mm' }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </main>
       </div>
 
@@ -303,9 +407,11 @@ import { ButtonComponent } from '../../components/button/button.component';
   `
 })
 export class AccountComponent implements OnInit {
-  activeTab: 'profile' | 'password' | 'seller' = 'profile';
+  activeTab: 'profile' | 'password' | 'seller' | 'comments' = 'profile';
   isLoading = false;
   loadingStatus = false;
+  loadingComments = false;
+  myComments: CommentDto[] = [];
 
   // Profile data
   profileData = {
@@ -355,7 +461,8 @@ export class AccountComponent implements OnInit {
     public authService: AuthService,
     private customerService: CustomerService,
     private sellerService: SellerService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private commentService: CommentService
   ) { }
 
   ngOnInit() {
@@ -373,10 +480,38 @@ export class AccountComponent implements OnInit {
     }
   }
 
-  setActiveTab(tab: 'profile' | 'password' | 'seller') {
+  setActiveTab(tab: 'profile' | 'password' | 'seller' | 'comments') {
     this.activeTab = tab;
     if (tab === 'seller' && this.authService.user?.role !== 'Seller') {
       this.fetchSellerStatus();
+    } else if (tab === 'comments') {
+      this.fetchMyComments();
+    }
+  }
+
+  async fetchMyComments() {
+    this.loadingComments = true;
+    try {
+      this.myComments = await this.commentService.getMyComments();
+    } catch (err: any) {
+      this.toastService.showToast('Değerlendirmeleriniz yüklenemedi.', 'error');
+      console.error(err);
+    } finally {
+      this.loadingComments = false;
+    }
+  }
+
+  async onDeleteComment(commentId: number) {
+    if (!confirm('Bu değerlendirmeyi silmek istediğinize emin misiniz?')) {
+      return;
+    }
+    try {
+      await this.commentService.delete(commentId);
+      this.toastService.showToast('Değerlendirmeniz silindi.', 'success');
+      await this.fetchMyComments();
+    } catch (err: any) {
+      this.toastService.showToast('Değerlendirme silinemedi.', 'error');
+      console.error(err);
     }
   }
 

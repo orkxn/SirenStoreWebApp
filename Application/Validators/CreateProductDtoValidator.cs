@@ -13,7 +13,7 @@ namespace SirenStore.Application.Validators
 
             RuleFor(x => x.Description)
                 .NotEmpty().WithMessage("Ürün açıklaması boş bırakılamaz.")
-                .MaximumLength(1000).WithMessage("Ürün açıklaması en fazla 1000 karakter olabilir.");
+                .MaximumLength(10000).WithMessage("Ürün açıklaması en fazla 10000 karakter olabilir.");
 
             RuleFor(x => x.Price)
                 .GreaterThan(0).WithMessage("Ürün fiyatı 0'dan büyük olmalıdır.");

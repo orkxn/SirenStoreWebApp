@@ -51,8 +51,8 @@ namespace SirenStore.WebAPI.Controllers
         [HttpPost("verify-email")]
         public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailDto dto)
         {
-            await authService.VerifyEmailAsync(dto);
-            return Ok(new { Message = "E-posta adresiniz başarıyla doğrulandı. Artık giriş yapabilirsiniz." });
+            var tokenResult = await authService.VerifyEmailAsync(dto);
+            return Ok(tokenResult);
         }
 
         // e-posta doğrulama kodunu tekrar gönderme endpointi
