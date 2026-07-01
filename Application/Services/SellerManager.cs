@@ -13,15 +13,18 @@ namespace SirenStore.Application.Services
         private readonly IRepository<Seller> _sellerRepository;
         private readonly IRepository<User> _userRepository;
         private readonly IValidator<CreateSellerDto> _validator;
+        private readonly IAuditLogService _auditLogService;
 
         public SellerManager(
             IRepository<Seller> sellerRepository,
             IRepository<User> userRepository,
-            IValidator<CreateSellerDto> validator)
+            IValidator<CreateSellerDto> validator,
+            IAuditLogService auditLogService)
         {
             _sellerRepository = sellerRepository;
             _userRepository = userRepository;
             _validator = validator;
+            _auditLogService = auditLogService;
         }
 
         // satıcı başvuru mekanizması
@@ -51,6 +54,7 @@ namespace SirenStore.Application.Services
                 existingSeller.Status = SellerStatus.Pending;
                 _sellerRepository.Update(existingSeller);
                 await _sellerRepository.SaveChangesAsync();
+                await _auditLogService.LogAuditAsync(userId, "SELLER_APPLICATION_SUBMITTED", "Seller", existingSeller.Id, $"StoreName: {dto.StoreName} (Updated)");
                 return;
             }
 
@@ -68,6 +72,7 @@ namespace SirenStore.Application.Services
 
             await _sellerRepository.AddAsync(newSeller);
             await _sellerRepository.SaveChangesAsync();
+            await _auditLogService.LogAuditAsync(userId, "SELLER_APPLICATION_SUBMITTED", "Seller", newSeller.Id, $"StoreName: {dto.StoreName}");
         }
 
         // admin onay mekanizması
@@ -91,6 +96,7 @@ namespace SirenStore.Application.Services
             }
 
             await _sellerRepository.SaveChangesAsync();
+            await _auditLogService.LogAuditAsync(seller.UserId, "SELLER_APPLICATION_APPROVED", "Seller", sellerId, $"StoreName: {seller.StoreName}");
         }
 
         // admin red mekanizması
@@ -107,6 +113,7 @@ namespace SirenStore.Application.Services
             _sellerRepository.Update(seller);
 
             await _sellerRepository.SaveChangesAsync();
+            await _auditLogService.LogAuditAsync(seller.UserId, "SELLER_APPLICATION_REJECTED", "Seller", sellerId, $"StoreName: {seller.StoreName}");
         }
 
         // satıcının public profilini çekmek için

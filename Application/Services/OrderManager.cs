@@ -19,6 +19,7 @@ namespace SirenStore.Application.Services
         private readonly IRepository<Seller> _sellerRepository;
         private readonly IRepository<User> _userRepository;
         private readonly DbContext _context;
+        private readonly IAuditLogService _auditLogService;
 
         public OrderManager(
             IRepository<Order> orderRepository,
@@ -29,7 +30,8 @@ namespace SirenStore.Application.Services
             IValidator<CreateOrderDto> validator,
             IRepository<Seller> sellerRepository,
             IRepository<User> userRepository,
-            DbContext context) 
+            DbContext context,
+            IAuditLogService auditLogService) 
         {
             _orderRepository = orderRepository;
             _orderItemRepository = orderItemRepository;
@@ -40,6 +42,7 @@ namespace SirenStore.Application.Services
             _sellerRepository = sellerRepository;
             _userRepository = userRepository;
             _context = context;
+            _auditLogService = auditLogService;
         }
 
         // sipariş oluşturma işlemi + transaction yönetimi
@@ -111,6 +114,9 @@ namespace SirenStore.Application.Services
 
                 // her şey kusursuz bittiyse veritabanına commit
                 await transaction.CommitAsync();
+
+                // audit: Sipariş oluşturma logu
+                await _auditLogService.LogAuditAsync(userId, "ORDER_CREATED", "Order", order.Id, $"TotalPrice: {order.TotalPrice}");
 
                 // Yeni siparişin detaylarını geri döndürüyoruz DTO olarak
                 return await GetOrderByIdAsync(userId, order.Id);
@@ -257,6 +263,9 @@ namespace SirenStore.Application.Services
             _orderItemRepository.Update(orderItem);
 
             await _orderItemRepository.SaveChangesAsync();
+
+            // audit: Sipariş kalemi durum güncelleme logu
+            await _auditLogService.LogAuditAsync(userId, "ORDER_ITEM_STATUS_UPDATED", "OrderItem", orderItem.Id, $"NewStatus: {newStatus}");
         }
     }
 }

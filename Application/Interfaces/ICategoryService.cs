@@ -1,4 +1,4 @@
-﻿using SirenStore.Application.DTOs;
+using SirenStore.Application.DTOs;
 
 namespace SirenStore.Application.Interfaces
 {
@@ -6,8 +6,8 @@ namespace SirenStore.Application.Interfaces
     {
         Task<List<CategoryDto>> GetAllCategoriesAsync();
         Task<CategoryDto> GetCategoryByIdAsync(long id);
-        Task<CategoryDto> CreateCategoryAsync(CreateCategoryDto dto);
-        Task<CategoryDto> UpdateCategoryAsync(long id, UpdateCategoryDto dto);
-        Task DeleteCategoryAsync(long id);
+        Task<CategoryDto> CreateCategoryAsync(long userId, CreateCategoryDto dto);
+        Task<CategoryDto> UpdateCategoryAsync(long userId, long id, UpdateCategoryDto dto);
+        Task DeleteCategoryAsync(long userId, long id);
     }
 }

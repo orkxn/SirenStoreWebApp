@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using BCrypt.Net;
 using Entities.Models;
 using FluentValidation;
@@ -14,13 +14,16 @@ namespace SirenStore.Application.Services
         private readonly IMapper _mapper;
         private readonly IValidator<UpdateProfileDto> _updateProfileValidator;
         private readonly IValidator<ChangePasswordDto> _changePasswordValidator;
+        private readonly IAuditLogService _auditLogService;
+
         public UserManager(IRepository<User> userRepository, IMapper mapper, IValidator<UpdateProfileDto> updateProfileValidator,
-            IValidator<ChangePasswordDto> changePasswordValidator)
+            IValidator<ChangePasswordDto> changePasswordValidator, IAuditLogService auditLogService)
         {
             _userRepository = userRepository;
             _mapper = mapper;
             _updateProfileValidator = updateProfileValidator;
             _changePasswordValidator = changePasswordValidator;
+            _auditLogService = auditLogService;
         }
 
         // profil bilgilerini getirme
@@ -51,6 +54,9 @@ namespace SirenStore.Application.Services
 
             _userRepository.Update(user);
             await _userRepository.SaveChangesAsync();
+
+            // audit: Profil güncelleme logu
+            await _auditLogService.LogAuditAsync(userId, "USER_PROFILE_UPDATED", "User", userId, $"Email: {user.Email}");
         }
 
         // güvenli şifre değiştirme
@@ -75,6 +81,9 @@ namespace SirenStore.Application.Services
 
             _userRepository.Update(user);
             await _userRepository.SaveChangesAsync();
+
+            // audit: Şifre değiştirme logu
+            await _auditLogService.LogAuditAsync(userId, "USER_PASSWORD_CHANGED", "User", userId, $"Email: {user.Email}");
         }
     }
 }
