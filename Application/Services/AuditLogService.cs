@@ -1,5 +1,7 @@
 using Entities.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using SirenStore.Application.DTOs;
 using SirenStore.Application.Interfaces;
 
 namespace SirenStore.Application.Services
@@ -46,6 +48,27 @@ namespace SirenStore.Application.Services
                 // Log audit failures but don't throw - operations should continue even if logging fails
                 _logger.LogError(ex, $"Failed to log audit: {action} on {entityName}:{entityId}");
             }
+        }
+
+        /// <summary>
+        /// Tüm audit loglarını tarihe göre azalan sırada getirir (admin paneli için)
+        /// </summary>
+        public async Task<List<AuditLogDto>> GetAllAuditLogsAsync()
+        {
+            return await _auditLogRepository.AsQueryable()
+                .OrderByDescending(a => a.CreationDate)
+                .Select(a => new AuditLogDto(
+                    a.Id,
+                    a.UserId,
+                    a.UserEmail,
+                    a.Action,
+                    a.EntityName,
+                    a.EntityId,
+                    a.NewValues,
+                    a.IpAddress,
+                    a.CreationDate
+                ))
+                .ToListAsync();
         }
     }
 }
