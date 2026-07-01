@@ -34,4 +34,8 @@ export class OrderService {
   updateOrderItemStatus(orderItemId: number, status: OrderStatus): Promise<any> {
     return firstValueFrom(this.http.put(`${API_BASE_URL}/orders/items/${orderItemId}/status`, status));
   }
+
+  getSavedAddresses(): Promise<{ addressTitle: string; shippingAddress: string }[]> {
+    return firstValueFrom(this.http.get<{ addressTitle: string; shippingAddress: string }[]>(`${API_BASE_URL}/orders/saved-addresses`));
+  }
 }

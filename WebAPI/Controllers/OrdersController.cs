@@ -74,6 +74,16 @@ namespace WebAPI.Controllers
             return Ok(new { message = $"Sipariş kaleminin durumu başarıyla '{newStatus.ToString()}' olarak güncellendi." });
         }
 
+        // kullanıcının daha önceki siparişlerinde kullandığı adresleri listeleme
+        // GET: api/orders/saved-addresses
+        [HttpGet("saved-addresses")]
+        public async Task<IActionResult> GetSavedAddresses()
+        {
+            var userId = GetUserIdFromToken();
+            var addresses = await _orderService.GetSavedAddressesAsync(userId);
+            return Ok(addresses);
+        }
+
         // jwt'den kullanıcı kimliğini alma
         private long GetUserIdFromToken()
         {

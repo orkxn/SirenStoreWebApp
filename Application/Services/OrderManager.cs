@@ -267,5 +267,25 @@ namespace SirenStore.Application.Services
             // audit: Sipariş kalemi durum güncelleme logu
             await _auditLogService.LogAuditAsync(userId, "ORDER_ITEM_STATUS_UPDATED", "OrderItem", orderItem.Id, $"NewStatus: {newStatus}");
         }
+
+        public async Task<List<SavedAddressDto>> GetSavedAddressesAsync(long userId)
+        {
+            return await _orderRepository.AsQueryable()
+                .Where(o => o.UserId == userId && !o.IsDeleted)
+                .GroupBy(o => new { o.AddressTitle, o.ShippingAddress })
+                .Select(g => new
+                {
+                    AddressTitle = g.Key.AddressTitle,
+                    ShippingAddress = g.Key.ShippingAddress,
+                    LastUsed = g.Max(x => x.CreationDate)
+                })
+                .OrderByDescending(x => x.LastUsed)
+                .Select(x => new SavedAddressDto
+                {
+                    AddressTitle = x.AddressTitle,
+                    ShippingAddress = x.ShippingAddress
+                })
+                .ToListAsync();
+        }
     }
 }
