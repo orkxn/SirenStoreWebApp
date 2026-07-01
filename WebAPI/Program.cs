@@ -40,6 +40,7 @@ builder.Services.AddScoped<IAdminService, AdminManager>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddScoped<ILoginHistoryService, LoginHistoryManager>();
 builder.Services.AddScoped<ICommentService, CommentManager>();
+builder.Services.AddScoped<IFavoriteService, FavoriteManager>();
 
 // automapper ve fluentvalidation kayıtları
 builder.Services.AddSingleton<IMapper>(provider =>
