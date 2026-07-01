@@ -1,8 +1,10 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import { ProductListDto } from '../../models/api.types';
 import { CartService } from '../../services/cart.service';
+import { FavoriteService } from '../../services/favorite.service';
+import { AuthService } from '../../services/auth.service';
 import { FormatPricePipe } from '../../pipes/format-price.pipe';
 
 @Component({
@@ -22,6 +24,31 @@ import { FormatPricePipe } from '../../pipes/format-price.pipe';
           class="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
           loading="lazy"
         />
+        
+        <!-- Favorite toggle button -->
+        <button
+          type="button"
+          (click)="handleToggleFavorite($event)"
+          class="absolute top-2.5 right-2.5 z-10 p-2 rounded-full glass-surface bg-white/70 dark:bg-zinc-950/70 border border-zinc-950/10 dark:border-white/10 hover:bg-white dark:hover:bg-zinc-900 text-zinc-500 hover:text-red-500 dark:text-zinc-400 dark:hover:text-red-500 transition-all shadow-sm"
+          [attr.aria-label]="isFavorite ? 'Favorilerden Çıkar' : 'Favorilere Ekle'"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            [attr.fill]="isFavorite ? 'currentColor' : 'none'"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            [class.text-red-500]="isFavorite"
+            class="w-4 h-4 transition-transform active:scale-125"
+          >
+            <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+          </svg>
+        </button>
+
         <div *ngIf="product.stock === 0" class="absolute inset-0 bg-zinc-950/60 backdrop-blur-sm flex items-center justify-center">
           <span class="text-white text-sm font-semibold tracking-wide uppercase px-3 py-1 border border-white/20 rounded-full">Tükendi</span>
         </div>
@@ -63,7 +90,16 @@ export class ProductCardComponent {
     return `https://placehold.co/600x600/0a0a0a/fafafa?text=${encodeURIComponent(this.product.name)}`;
   }
 
-  constructor(private cartService: CartService) {}
+  get isFavorite(): boolean {
+    return this.favoriteService.isFavorite(this.product.id);
+  }
+
+  constructor(
+    private cartService: CartService,
+    private favoriteService: FavoriteService,
+    private authService: AuthService,
+    private router: Router
+  ) {}
 
   async handleAddToCart(e: Event) {
     e.preventDefault();
@@ -76,6 +112,23 @@ export class ProductCardComponent {
       this.error.emit(err.message || 'Ürün sepete eklenemedi.');
     } finally {
       this.isAdding = false;
+    }
+  }
+
+  async handleToggleFavorite(e: Event) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!this.authService.isAuthenticated) {
+      this.router.navigate(['/login']);
+      this.error.emit('Favorilere eklemek için önce giriş yapmalısınız.');
+      return;
+    }
+
+    try {
+      await this.favoriteService.toggleFavorite(this.product.id);
+    } catch (err: any) {
+      this.error.emit(err.message || 'Favori işlemi başarısız oldu.');
     }
   }
 }

@@ -33,6 +33,7 @@ namespace SirenStore.Infrastructure.Context
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<Basket> Baskets { get; set; }
         public DbSet<BasketItem> BasketItems { get; set; }
+        public DbSet<Favorite> Favorites { get; set; }
 
         // içerik ve destek
         public DbSet<CmsContent> CmsContents { get; set; }
