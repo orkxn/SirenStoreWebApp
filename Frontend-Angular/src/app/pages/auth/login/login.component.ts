@@ -63,6 +63,13 @@ import { ButtonComponent } from '../../../components/button/button.component';
               </button>
             </div>
 
+            <!-- Forgot Password Link -->
+            <div class="flex justify-end -mt-3 text-left">
+              <a routerLink="/forgot-password" class="text-xs font-semibold text-zinc-500 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-white transition-colors">
+                Şifremi Unuttum
+              </a>
+            </div>
+
             <app-button
               type="submit"
               variant="primary"

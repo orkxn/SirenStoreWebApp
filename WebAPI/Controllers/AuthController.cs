@@ -63,5 +63,23 @@ namespace SirenStore.WebAPI.Controllers
             await authService.ResendVerificationEmailAsync(dto);
             return Ok(new { Message = "Doğrulama e-postası tekrar gönderildi." });
         }
+
+        // şifremi unuttum endpointi
+        // POST: api/auth/forgot-password
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto dto)
+        {
+            await authService.ForgotPasswordAsync(dto);
+            return Ok(new { Message = "Şifre sıfırlama bağlantısı e-posta adresinize gönderildi." });
+        }
+
+        // şifreyi sıfırlama endpointi
+        // POST: api/auth/reset-password
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto dto)
+        {
+            await authService.ResetPasswordAsync(dto);
+            return Ok(new { Message = "Şifreniz başarıyla güncellendi. Yeni şifrenizle giriş yapabilirsiniz." });
+        }
     }
 }

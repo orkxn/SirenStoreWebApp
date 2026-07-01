@@ -9,5 +9,7 @@ namespace SirenStore.Application.Interfaces
         Task<TokenDto> RefreshTokenAsync(string refreshToken);
         Task<TokenDto> VerifyEmailAsync(VerifyEmailDto dto);
         Task ResendVerificationEmailAsync(ResendVerificationEmailDto dto);
+        Task ForgotPasswordAsync(ForgotPasswordDto dto);
+        Task ResetPasswordAsync(ResetPasswordDto dto);
     }
 }

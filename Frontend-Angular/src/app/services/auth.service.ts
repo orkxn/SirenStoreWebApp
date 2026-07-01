@@ -102,6 +102,14 @@ export class AuthService {
     await firstValueFrom(this.http.post(`${API_BASE_URL}/auth/resend-verification-email`, dto));
   }
 
+  forgotPassword(email: string): Promise<any> {
+    return firstValueFrom(this.http.post(`${API_BASE_URL}/auth/forgot-password`, { email }));
+  }
+
+  resetPassword(dto: any): Promise<any> {
+    return firstValueFrom(this.http.post(`${API_BASE_URL}/auth/reset-password`, dto));
+  }
+
   logout() {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
