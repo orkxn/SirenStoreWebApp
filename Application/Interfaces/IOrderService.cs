@@ -23,5 +23,8 @@ namespace SirenStore.Application.Interfaces
 
         // müşterinin geçmiş siparişlerinden tekil adres başlığı ve detay ikililerini getirir
         Task<List<SavedAddressDto>> GetSavedAddressesAsync(long userId);
+
+        // müşterinin geçmiş siparişlerinden belirli bir adres başlığını siler (temizler)
+        Task DeleteSavedAddressAsync(long userId, string addressTitle);
     }
 }

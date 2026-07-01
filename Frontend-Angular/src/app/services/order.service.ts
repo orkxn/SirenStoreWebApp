@@ -38,4 +38,10 @@ export class OrderService {
   getSavedAddresses(): Promise<{ addressTitle: string; shippingAddress: string }[]> {
     return firstValueFrom(this.http.get<{ addressTitle: string; shippingAddress: string }[]>(`${API_BASE_URL}/orders/saved-addresses`));
   }
+
+  deleteSavedAddress(addressTitle: string): Promise<any> {
+    return firstValueFrom(this.http.delete(`${API_BASE_URL}/orders/saved-addresses`, {
+      params: { addressTitle }
+    }));
+  }
 }

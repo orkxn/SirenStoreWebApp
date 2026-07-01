@@ -90,6 +90,37 @@ namespace SirenStore.Infrastructure.Context
             }
         }
 
+        public override int SaveChanges()
+        {
+            SetBaseModelProperties();
+            return base.SaveChanges();
+        }
+
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            SetBaseModelProperties();
+            return await base.SaveChangesAsync(cancellationToken);
+        }
+
+        private void SetBaseModelProperties()
+        {
+            var entries = ChangeTracker.Entries<BaseModel>();
+            foreach (var entry in entries)
+            {
+                if (entry.State == EntityState.Added)
+                {
+                    if (entry.Entity.CreationDate == default)
+                    {
+                        entry.Entity.CreationDate = DateTime.UtcNow;
+                    }
+                }
+                else if (entry.State == EntityState.Modified)
+                {
+                    entry.Entity.UpdatedDate = DateTime.UtcNow;
+                }
+            }
+        }
+
         /// <summary>
         /// pascalcase veya camelcase stringi snake_case stringe çevirir
         /// </summary>
