@@ -1,4 +1,5 @@
 using Entities.Models;
+using SirenStore.Application.DTOs;
 
 namespace SirenStore.Application.Interfaces
 {
@@ -16,5 +17,10 @@ namespace SirenStore.Application.Interfaces
         /// <param name="entityId">ID of the entity being modified</param>
         /// <param name="details">Additional details about the operation</param>
         Task LogAuditAsync(long? userId, string action, string entityName, long entityId, string? details = null);
+
+        /// <summary>
+        /// Tüm audit loglarını tarihe göre azalan sırada getirir (admin paneli için)
+        /// </summary>
+        Task<List<AuditLogDto>> GetAllAuditLogsAsync();
     }
 }
