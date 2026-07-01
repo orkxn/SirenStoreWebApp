@@ -18,9 +18,15 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.OpenApi" Version="2.0.0" />
+
 		<Compile Remove="**/OpenApiXmlComment*.cs" />
+		<CompilerVisibleProperty Include="PublishTrimmed" />
 	</ItemGroup>
+
+	<PropertyGroup>
+		<InheritDocEnabled>false</InheritDocEnabled>
+		<DisableOpenApiSourceGenerators>true</DisableOpenApiSourceGenerators>
+	</PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Application\Application.csproj" />

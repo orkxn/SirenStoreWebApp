@@ -153,6 +153,8 @@ export interface CommentDto {
   userId: number;
   userFullName: string;
   productId: number;
+  productName?: string;
+  productImageUrl?: string | null;
 }
 
 export interface CommentCreateDto {

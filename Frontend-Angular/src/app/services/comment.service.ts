@@ -12,6 +12,14 @@ export class CommentService {
     return firstValueFrom(this.http.get<CommentDto[]>(`${API_BASE_URL}/comments/product/${productId}`));
   }
 
+  getMyComments(): Promise<CommentDto[]> {
+    return firstValueFrom(this.http.get<CommentDto[]>(`${API_BASE_URL}/comments/my-comments`));
+  }
+
+  checkEligibility(productId: number): Promise<{ isEligible: boolean }> {
+    return firstValueFrom(this.http.get<{ isEligible: boolean }>(`${API_BASE_URL}/comments/eligibility/${productId}`));
+  }
+
   create(dto: CommentCreateDto): Promise<CommentDto> {
     return firstValueFrom(this.http.post<CommentDto>(`${API_BASE_URL}/comments`, dto));
   }

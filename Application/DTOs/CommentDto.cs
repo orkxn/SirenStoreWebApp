@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace Application.DTOs.Comment
 {
@@ -14,6 +14,8 @@ namespace Application.DTOs.Comment
         public string UserFullName { get; set; } = null!;
 
         public long ProductId { get; set; }
+        public string? ProductName { get; set; }
+        public string? ProductImageUrl { get; set; }
     }
 
     // yeni bir yorum yapılacağı zaman istenen veriler

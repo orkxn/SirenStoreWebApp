@@ -24,6 +24,7 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
         (blur)="onTouched()"
         [class]="inputClasses"
         [attr.step]="step"
+        [attr.maxlength]="maxLength"
       />
       <span *ngIf="error" class="text-xs text-red-500 mt-0.5 font-medium">{{ error }}</span>
     </div>
@@ -36,6 +37,7 @@ export class InputComponent implements ControlValueAccessor {
   @Input() error = '';
   @Input() step = '';
   @Input() className = '';
+  @Input() maxLength: string | number = '';
 
   value = '';
   isDisabled = false;

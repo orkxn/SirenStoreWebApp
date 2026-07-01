@@ -1,6 +1,7 @@
 using Application.DTOs.Comment;
 using AutoMapper;
 using Entities.Models;
+using Entities.Enums;
 using Microsoft.EntityFrameworkCore;
 using SirenStore.Application.Exceptions;
 using SirenStore.Application.Interfaces;
@@ -35,6 +36,44 @@ namespace Application.Services
             return _mapper.Map<IEnumerable<CommentDto>>(comments);
         }
 
+        public async Task<IEnumerable<CommentDto>> GetCommentsByUserIdAsync(long userId)
+        {
+            var comments = await _context.Set<Comment>()
+                .Include(c => c.User)
+                .Include(c => c.Product)
+                    .ThenInclude(p => p.ProductImages)
+                .Where(c => c.UserId == userId && !c.IsDeleted)
+                .OrderByDescending(c => c.CreationDate)
+                .ToListAsync();
+
+            return _mapper.Map<IEnumerable<CommentDto>>(comments);
+        }
+
+        public async Task<bool> CanUserCommentOnProductAsync(long userId, long productId)
+        {
+            var product = await _context.Set<Product>().FirstOrDefaultAsync(p => p.Id == productId && !p.IsDeleted);
+            if (product == null) return false;
+
+            // Satıcının kendi ürününe yorum yapmasını engelle
+            var seller = await _context.Set<Seller>().FirstOrDefaultAsync(s => s.Id == product.SellerId && !s.IsDeleted);
+            if (seller != null && seller.UserId == userId) return false;
+
+            // aynı ürüne çift yorum kontrolü
+            var alreadyCommented = await _context.Set<Comment>()
+                .AnyAsync(c => c.ProductId == productId && c.UserId == userId && !c.IsDeleted);
+            if (alreadyCommented) return false;
+
+            // Yalnızca ürünü satın alan ve teslim alan kişiler yorum yapabilir
+            var hasDeliveredOrder = await _context.Set<OrderItem>()
+                .AnyAsync(oi => oi.ProductId == productId 
+                                && oi.Order.UserId == userId 
+                                && (oi.Status == OrderStatus.Delivered || oi.Order.Status == OrderStatus.Delivered)
+                                && !oi.IsDeleted 
+                                && !oi.Order.IsDeleted);
+
+            return hasDeliveredOrder;
+        }
+
         public async Task<CommentDto> CreateCommentAsync(CommentCreateDto dto, long userId)
         {
             var product = await _context.Set<Product>().FirstOrDefaultAsync(p => p.Id == dto.ProductId && !p.IsDeleted);
@@ -51,6 +90,11 @@ namespace Application.Services
                 .AnyAsync(c => c.ProductId == dto.ProductId && c.UserId == userId && !c.IsDeleted);
             if (alreadyCommented)
                 throw new BusinessRuleException("Bu ürüne zaten yorum yaptınız.");
+
+            // Satın alma ve teslimat kontrolü
+            var canComment = await CanUserCommentOnProductAsync(userId, dto.ProductId);
+            if (!canComment)
+                throw new BusinessRuleException("Yalnızca satın aldığınız ve teslim edilen ürünlere yorum yapabilirsiniz.");
 
             var comment = _mapper.Map<Comment>(dto);
             comment.UserId = userId;
