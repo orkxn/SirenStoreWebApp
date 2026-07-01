@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SirenStore.Application.Interfaces;
 
@@ -10,10 +10,17 @@ namespace SirenStore.WebAPI.Controllers
     public class AdminController : ControllerBase
     {
         private readonly IAdminService _adminService;
+        private readonly IAuditLogService _auditLogService;
+        private readonly ILoginHistoryService _loginHistoryService;
 
-        public AdminController(IAdminService adminService)
+        public AdminController(
+            IAdminService adminService,
+            IAuditLogService auditLogService,
+            ILoginHistoryService loginHistoryService)
         {
             _adminService = adminService;
+            _auditLogService = auditLogService;
+            _loginHistoryService = loginHistoryService;
         }
 
         // sistemdeki tüm kullanıcıları listeler
@@ -71,6 +78,24 @@ namespace SirenStore.WebAPI.Controllers
             await _adminService.UnbanUserAsync(currentUserId, id);
 
             return Ok(new { message = "Kullanıcının banı başarıyla kaldırıldı." });
+        }
+
+        // tüm işlem loglarını getirir (audit logs)
+        // GET: api/admin/audit-logs
+        [HttpGet("audit-logs")]
+        public async Task<IActionResult> GetAuditLogs()
+        {
+            var logs = await _auditLogService.GetAllAuditLogsAsync();
+            return Ok(logs);
+        }
+
+        // tüm giriş geçmişi kayıtlarını getirir (login history)
+        // GET: api/admin/login-histories
+        [HttpGet("login-histories")]
+        public async Task<IActionResult> GetLoginHistories()
+        {
+            var histories = await _loginHistoryService.GetAllLoginHistoriesAsync();
+            return Ok(histories);
         }
     }
 }
