@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-import { SellerManagementDto, UserManagementDto } from '../models/api.types';
+import { AuditLogDto, LoginHistoryDto, SellerManagementDto, UserManagementDto } from '../models/api.types';
 import { API_BASE_URL } from '../interceptors/api.interceptor';
 
 @Injectable({ providedIn: 'root' })
@@ -23,4 +23,13 @@ export class AdminService {
   unbanUser(id: number): Promise<any> {
     return firstValueFrom(this.http.post(`${API_BASE_URL}/admin/users/${id}/unban`, null));
   }
+
+  getAuditLogs(): Promise<AuditLogDto[]> {
+    return firstValueFrom(this.http.get<AuditLogDto[]>(`${API_BASE_URL}/admin/audit-logs`));
+  }
+
+  getLoginHistories(): Promise<LoginHistoryDto[]> {
+    return firstValueFrom(this.http.get<LoginHistoryDto[]>(`${API_BASE_URL}/admin/login-histories`));
+  }
 }
+

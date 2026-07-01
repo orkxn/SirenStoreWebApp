@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { SellerManagementDto, UserManagementDto, CategoryDto, SellerStatus, UserTypes } from '../../models/api.types';
+import { AuditLogDto, LoginHistoryDto, SellerManagementDto, UserManagementDto, CategoryDto, SellerStatus, UserTypes } from '../../models/api.types';
 import { AdminService } from '../../services/admin.service';
 import { SellerService } from '../../services/seller.service';
 import { CategoryService } from '../../services/category.service';
@@ -24,7 +24,7 @@ import { ButtonComponent } from '../../components/button/button.component';
       <!-- Header -->
       <div class="border-b border-zinc-950/5 dark:border-white/5 pb-6">
         <h1 class="text-4xl font-extrabold tracking-tight text-zinc-950 dark:text-white uppercase leading-none">Yönetici Paneli</h1>
-        <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1.5">Sistem kullanıcılarını denetleyin, satıcı dükkan başvurularını onaylayın ve kategorileri yönetin.</p>
+        <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1.5">Sistem kullanıcılarını denetleyin, satıcı dükkan başvurularını onaylayın, kategorileri yönetin ve sistem loglarını inceleyin.</p>
       </div>
 
       <!-- Tabs -->
@@ -57,6 +57,26 @@ import { ButtonComponent } from '../../components/button/button.component';
               : 'border-transparent text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300')"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/><path d="M12 10v6"/><path d="M9 13h6"/></svg> Kategori Yönetimi ({{ categories.length }})
+        </button>
+
+        <button
+          (click)="setActiveTab('auditLogs')"
+          [class]="'flex items-center gap-2 px-6 py-3 font-semibold text-sm transition-all border-b-2 ' + 
+            (activeTab === 'auditLogs'
+              ? 'border-zinc-950 dark:border-white text-zinc-950 dark:text-white'
+              : 'border-transparent text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300')"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg> İşlem Logları ({{ auditLogs.length }})
+        </button>
+
+        <button
+          (click)="setActiveTab('loginHistories')"
+          [class]="'flex items-center gap-2 px-6 py-3 font-semibold text-sm transition-all border-b-2 ' + 
+            (activeTab === 'loginHistories'
+              ? 'border-zinc-950 dark:border-white text-zinc-950 dark:text-white'
+              : 'border-transparent text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300')"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Giriş Geçmişi ({{ loginHistories.length }})
         </button>
       </div>
 
@@ -229,16 +249,102 @@ import { ButtonComponent } from '../../components/button/button.component';
 
         </div>
 
+        <!-- Tab 4: Audit Logs (İşlem Logları) -->
+        <div *ngIf="activeTab === 'auditLogs'" class="space-y-6">
+          <div *ngIf="auditLogs.length === 0" class="text-center py-12 text-zinc-500">Henüz kayıtlı işlem logu bulunmamaktadır.</div>
+
+          <div *ngIf="auditLogs.length > 0" class="overflow-x-auto">
+            <table class="w-full text-sm text-left border-collapse">
+              <thead>
+                <tr class="border-b border-zinc-950/5 dark:border-white/5 text-zinc-400 dark:text-zinc-500 text-[10px] uppercase font-bold tracking-wider">
+                  <th class="pb-3 pr-4">Tarih</th>
+                  <th class="pb-3 px-4">İşlem</th>
+                  <th class="pb-3 px-4">Kullanıcı</th>
+                  <th class="pb-3 px-4">Varlık</th>
+                  <th class="pb-3 pl-4">Detaylar</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-zinc-950/5 dark:divide-white/5">
+                <tr *ngFor="let log of auditLogs" class="hover:bg-zinc-950/[0.01] dark:hover:bg-white/[0.01] transition-all">
+                  <td class="py-3.5 pr-4 text-zinc-500 text-xs font-mono whitespace-nowrap">
+                    {{ formatDate(log.creationDate) }}
+                  </td>
+                  <td class="py-3.5 px-4">
+                    <span [class]="getAuditActionBadgeClass(log.action)">{{ log.action }}</span>
+                  </td>
+                  <td class="py-3.5 px-4 text-zinc-600 dark:text-zinc-300 text-xs">
+                    <div class="flex flex-col">
+                      <span class="font-semibold">{{ log.userEmail }}</span>
+                      <span class="text-zinc-400 text-[10px]">ID: {{ log.userId ?? '—' }}</span>
+                    </div>
+                  </td>
+                  <td class="py-3.5 px-4 text-xs">
+                    <span class="font-mono text-zinc-500 bg-zinc-950/[0.03] dark:bg-white/5 px-2 py-0.5 rounded">{{ log.entityName }}:{{ log.entityId }}</span>
+                  </td>
+                  <td class="py-3.5 pl-4 text-zinc-500 text-xs max-w-xs truncate" [title]="log.newValues ?? ''">
+                    {{ log.newValues || '—' }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Tab 5: Login Histories (Giriş Geçmişi) -->
+        <div *ngIf="activeTab === 'loginHistories'" class="space-y-6">
+          <div *ngIf="loginHistories.length === 0" class="text-center py-12 text-zinc-500">Henüz giriş geçmişi kaydı bulunmamaktadır.</div>
+
+          <div *ngIf="loginHistories.length > 0" class="overflow-x-auto">
+            <table class="w-full text-sm text-left border-collapse">
+              <thead>
+                <tr class="border-b border-zinc-950/5 dark:border-white/5 text-zinc-400 dark:text-zinc-500 text-[10px] uppercase font-bold tracking-wider">
+                  <th class="pb-3 pr-4">Tarih</th>
+                  <th class="pb-3 px-4">Kullanıcı ID</th>
+                  <th class="pb-3 px-4">IP Adresi</th>
+                  <th class="pb-3 px-4">Cihaz / Tarayıcı</th>
+                  <th class="pb-3 px-4">Durum</th>
+                  <th class="pb-3 pl-4">Hata Sebebi</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-zinc-950/5 dark:divide-white/5">
+                <tr *ngFor="let h of loginHistories" class="hover:bg-zinc-950/[0.01] dark:hover:bg-white/[0.01] transition-all">
+                  <td class="py-3.5 pr-4 text-zinc-500 text-xs font-mono whitespace-nowrap">
+                    {{ formatDate(h.creationDate) }}
+                  </td>
+                  <td class="py-3.5 px-4 text-zinc-600 dark:text-zinc-300 text-xs font-semibold">
+                    {{ h.userId }}
+                  </td>
+                  <td class="py-3.5 px-4 text-xs">
+                    <span class="font-mono text-zinc-500 bg-zinc-950/[0.03] dark:bg-white/5 px-2 py-0.5 rounded">{{ h.ipAddress }}</span>
+                  </td>
+                  <td class="py-3.5 px-4 text-zinc-500 text-xs max-w-[200px] truncate" [title]="h.userAgent ?? ''">
+                    {{ truncateUserAgent(h.userAgent) }}
+                  </td>
+                  <td class="py-3.5 px-4">
+                    <span *ngIf="h.isSuccessful" class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/15">Başarılı</span>
+                    <span *ngIf="!h.isSuccessful" class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/15">Başarısız</span>
+                  </td>
+                  <td class="py-3.5 pl-4 text-zinc-500 text-xs">
+                    {{ h.failureReason || '—' }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
       </main>
 
     </div>
   `
 })
 export class AdminPanelComponent implements OnInit {
-  activeTab: 'users' | 'sellers' | 'categories' = 'users';
+  activeTab: 'users' | 'sellers' | 'categories' | 'auditLogs' | 'loginHistories' = 'users';
   users: UserManagementDto[] = [];
   sellers: SellerManagementDto[] = [];
   categories: CategoryDto[] = [];
+  auditLogs: AuditLogDto[] = [];
+  loginHistories: LoginHistoryDto[] = [];
   isLoading = false;
   isSubmitLoading = false;
   editCategory: CategoryDto | null = null;
@@ -260,14 +366,18 @@ export class AdminPanelComponent implements OnInit {
   async loadAdminData() {
     this.isLoading = true;
     try {
-      const [userData, sellerData, catData] = await Promise.all([
+      const [userData, sellerData, catData, auditData, loginData] = await Promise.all([
         this.adminService.getAllUsers(),
         this.adminService.getAllSellers(),
-        this.categoryService.getAll()
+        this.categoryService.getAll(),
+        this.adminService.getAuditLogs(),
+        this.adminService.getLoginHistories()
       ]);
       this.users = userData;
       this.sellers = sellerData;
       this.categories = catData;
+      this.auditLogs = auditData;
+      this.loginHistories = loginData;
     } catch (err: any) {
       this.toastService.showToast(err.message || 'Yönetici verileri yüklenemedi.', 'error');
     } finally {
@@ -365,6 +475,46 @@ export class AdminPanelComponent implements OnInit {
     }
   }
 
+  // ─── Helpers ────────────────────────────────────────────────
+
+  formatDate(dateStr: string): string {
+    const d = new Date(dateStr);
+    return d.toLocaleString('tr-TR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
+  truncateUserAgent(ua: string | null): string {
+    if (!ua) return '—';
+    return ua.length > 60 ? ua.substring(0, 60) + '…' : ua;
+  }
+
+  getAuditActionBadgeClass(action: string): string {
+    const base = 'text-[10px] font-bold px-2.5 py-1 rounded-full border ';
+    const upper = action.toUpperCase();
+
+    if (upper.includes('BAN'))
+      return base + 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/15';
+    if (upper.includes('UNBAN'))
+      return base + 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/15';
+    if (upper.includes('LOGIN'))
+      return base + 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/15';
+    if (upper.includes('REGISTER'))
+      return base + 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/15';
+    if (upper.includes('VERIFIED') || upper.includes('VERIFICATION'))
+      return base + 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/15';
+    if (upper.includes('SELLER'))
+      return base + 'bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/15';
+    if (upper.includes('ORDER'))
+      return base + 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/15';
+
+    return base + 'bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 border-zinc-500/15';
+  }
+
   getUserTypeBadgeLabel(type: UserTypes): string {
     switch (type) {
       case UserTypes.Admin:
@@ -411,7 +561,7 @@ export class AdminPanelComponent implements OnInit {
     }
   }
 
-  setActiveTab(tab: 'users' | 'sellers' | 'categories') {
+  setActiveTab(tab: 'users' | 'sellers' | 'categories' | 'auditLogs' | 'loginHistories') {
     this.activeTab = tab;
   }
 }

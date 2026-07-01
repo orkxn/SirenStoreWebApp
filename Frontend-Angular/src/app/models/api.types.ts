@@ -165,3 +165,26 @@ export interface CommentUpdateDto {
   text: string;
   rating: number;
 }
+
+export interface AuditLogDto {
+  id: number;
+  userId: number | null;
+  userEmail: string;
+  action: string;
+  entityName: string;
+  entityId: number | null;
+  newValues: string | null;
+  ipAddress: string | null;
+  creationDate: string;
+}
+
+export interface LoginHistoryDto {
+  id: number;
+  userId: number;
+  ipAddress: string;
+  userAgent: string | null;
+  isSuccessful: boolean;
+  failureReason: string | null;
+  creationDate: string;
+}
+
