@@ -1,3 +1,4 @@
+using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -24,6 +25,8 @@ namespace SirenStore.Application.Services
         private readonly IValidator<VerifyEmailDto> _verifyEmailValidator;
         private readonly IValidator<ResendVerificationEmailDto> _resendVerificationValidator;
         private readonly ILoginHistoryService _loginHistoryService;
+        private readonly IValidator<ForgotPasswordDto> _forgotPasswordValidator;
+        private readonly IValidator<ResetPasswordDto> _resetPasswordValidator;
 
         public AuthManager(
             IRepository<User> userRepository,
@@ -34,7 +37,9 @@ namespace SirenStore.Application.Services
             IEmailService emailService,
             IValidator<VerifyEmailDto> verifyEmailValidator,
             IValidator<ResendVerificationEmailDto> resendVerificationValidator,
-            ILoginHistoryService loginHistoryService)
+            ILoginHistoryService loginHistoryService,
+            IValidator<ForgotPasswordDto> forgotPasswordValidator,
+            IValidator<ResetPasswordDto> resetPasswordValidator)
         {
             _userRepository = userRepository;
             _configuration = configuration;
@@ -45,6 +50,8 @@ namespace SirenStore.Application.Services
             _verifyEmailValidator = verifyEmailValidator;
             _resendVerificationValidator = resendVerificationValidator;
             _loginHistoryService = loginHistoryService;
+            _forgotPasswordValidator = forgotPasswordValidator;
+            _resetPasswordValidator = resetPasswordValidator;
         }
 
         // yeni kullanıcı kaydı
@@ -264,6 +271,77 @@ namespace SirenStore.Application.Services
 
             // audit: Log verification email resend
             await _auditLogService.LogAuditAsync(user.Id, "USER_VERIFICATION_RESENT", "User", user.Id, $"Email: {user.Email}");
+        }
+
+        // şifremi unuttum akışı - e-posta gönderimi
+        public async Task ForgotPasswordAsync(ForgotPasswordDto dto)
+        {
+            await _forgotPasswordValidator.ValidateAndThrowAsync(dto);
+
+            var user = await _userRepository.GetAsync(u => u.Email == dto.Email && !u.IsDeleted);
+            if (user == null)
+            {
+                // Güvenlik amacıyla e-posta adresinin sistemde olup olmadığını sızdırmıyoruz
+                return;
+            }
+
+            user.PasswordResetToken = Guid.NewGuid().ToString("N");
+            user.PasswordResetTokenExpiry = DateTime.UtcNow.AddHours(1);
+
+            _userRepository.Update(user);
+            await _userRepository.SaveChangesAsync();
+
+            var clientUrl = _configuration["AppSettings:ClientUrl"] ?? "http://localhost:4200";
+            var resetLink = $"{clientUrl}/reset-password?token={user.PasswordResetToken}&email={Uri.EscapeDataString(user.Email)}";
+            var subject = "SirenStore - Şifre Sıfırlama Talebi";
+            var body = $@"
+<div style=""font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff; color: #1a202c;"">
+    <div style=""text-align: center; margin-bottom: 25px; user-select: none;"">
+        <span style=""font-size: 26px; font-weight: 800; color: #09090b; letter-spacing: -1.5px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;"">SIREN</span><span style=""font-size: 26px; font-weight: 800; color: #ffffff; background-color: #09090b; padding: 2px 14px; border-radius: 9999px; margin-left: 5px; display: inline-block; letter-spacing: -1.5px; text-transform: uppercase; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;"">STORE</span>
+    </div>
+    <div style=""border-top: 1px solid #e2e8f0; padding-top: 25px;"">
+        <p style=""font-size: 16px; line-height: 1.5; margin-bottom: 15px;"">Merhaba <strong>{user.FirstName} {user.LastName}</strong>,</p>
+        <p style=""font-size: 15px; line-height: 1.6; color: #4a5568; margin-bottom: 25px;"">Hesabınızın şifresini sıfırlamak için bir talepte bulundunuz. Şifrenizi sıfırlamak için lütfen aşağıdaki butona tıklayın:</p>
+        
+        <div style=""text-align: center; margin: 30px 0;"">
+            <a href=""{resetLink}"" style=""background-color: #09090b; color: #ffffff; padding: 12px 30px; border-radius: 9999px; text-decoration: none; font-weight: 600; font-size: 15px; display: inline-block; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);"">Şifremi Sıfırla</a>
+        </div>
+
+        <p style=""font-size: 13px; color: #71717a; line-height: 1.5; margin-bottom: 10px;"">Eğer yukarıdaki buton çalışmıyorsa aşağıdaki bağlantıyı tarayıcınıza kopyalayabilirsiniz:</p>
+        <p style=""font-size: 12px; color: #2563eb; word-break: break-all; margin-bottom: 25px;""><a href=""{resetLink}"">{resetLink}</a></p>
+        
+        <p style=""font-size: 12px; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 15px; margin-top: 20px;"">
+            Bu bağlantı 1 saat boyunca geçerlidir. Eğer bu talebi siz gerçekleştirmediyseniz, hesabınız güvendedir ve bu e-postayı yok sayabilirsiniz.
+        </p>
+    </div>
+</div>";
+
+            await _emailService.SendEmailAsync(user.Email, subject, body);
+
+            // audit log
+            await _auditLogService.LogAuditAsync(user.Id, "PASSWORD_RESET_REQUESTED", "User", user.Id, $"Email: {user.Email}");
+        }
+
+        // yeni şifrenin kaydedilmesi
+        public async Task ResetPasswordAsync(ResetPasswordDto dto)
+        {
+            await _resetPasswordValidator.ValidateAndThrowAsync(dto);
+
+            var user = await _userRepository.GetAsync(u => u.Email == dto.Email && !u.IsDeleted);
+            if (user == null || user.PasswordResetToken != dto.Token || user.PasswordResetTokenExpiry == null || user.PasswordResetTokenExpiry < DateTime.UtcNow)
+            {
+                throw new BusinessRuleException("Geçersiz veya süresi dolmuş şifre sıfırlama talebi.");
+            }
+
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+            user.PasswordResetToken = null;
+            user.PasswordResetTokenExpiry = null;
+
+            _userRepository.Update(user);
+            await _userRepository.SaveChangesAsync();
+
+            // audit log
+            await _auditLogService.LogAuditAsync(user.Id, "PASSWORD_RESET_COMPLETED", "User", user.Id, $"Email: {user.Email}");
         }
     }
 }
