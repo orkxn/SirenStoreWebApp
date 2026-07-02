@@ -2,6 +2,7 @@ using Application.DTOs.Comment;
 using Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SirenStore.WebAPI.Extensions;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
@@ -33,7 +34,7 @@ namespace WebAPI.Controllers
         [HttpGet("my-comments")]
         public async Task<IActionResult> GetMyComments()
         {
-            var userId = GetUserIdFromToken();
+            var userId = User.GetUserId();
             var comments = await _commentService.GetCommentsByUserIdAsync(userId);
             return Ok(comments);
         }
@@ -44,7 +45,7 @@ namespace WebAPI.Controllers
         [HttpGet("eligibility/{productId}")]
         public async Task<IActionResult> CheckEligibility(long productId)
         {
-            var userId = GetUserIdFromToken();
+            var userId = User.GetUserId();
             var isEligible = await _commentService.CanUserCommentOnProductAsync(userId, productId);
             return Ok(new { isEligible });
         }
@@ -55,7 +56,7 @@ namespace WebAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CommentCreateDto dto)
         {
-            var userId = GetUserIdFromToken();
+            var userId = User.GetUserId();
             var result = await _commentService.CreateCommentAsync(dto, userId);
             return CreatedAtAction(nameof(GetByProductId), new { productId = result.ProductId }, result);
         }
@@ -66,7 +67,7 @@ namespace WebAPI.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(long id, [FromBody] CommentUpdateDto dto)
         {
-            var userId = GetUserIdFromToken();
+            var userId = User.GetUserId();
             var result = await _commentService.UpdateCommentAsync(id, dto, userId);
             return Ok(result);
         }
@@ -77,20 +78,10 @@ namespace WebAPI.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(long id)
         {
-            var userId = GetUserIdFromToken();
+            var userId = User.GetUserId();
             var isAdmin = User.IsInRole("Admin");
             await _commentService.DeleteCommentAsync(id, userId, isAdmin);
             return NoContent();
-        }
-
-        private long GetUserIdFromToken()
-        {
-            var nameIdentifier = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (long.TryParse(nameIdentifier, out long userId))
-            {
-                return userId;
-            }
-            throw new UnauthorizedAccessException();
         }
     }
 }

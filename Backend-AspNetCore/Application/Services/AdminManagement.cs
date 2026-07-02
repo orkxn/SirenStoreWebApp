@@ -26,7 +26,7 @@ namespace SirenStore.Application.Services
         // sistemdeki tüm kullanıcıları DTO ile listeler
         public async Task<List<UserManagementDto>> GetAllUsersAsync()
         {
-            return await _userRepository.AsQueryable()
+            return await _userRepository.AsQueryable(includeDeleted: true)
                 .Select(u => new UserManagementDto
                 {
                     Id = u.Id,
@@ -80,6 +80,16 @@ namespace SirenStore.Application.Services
             // soft delete ile kullanıcıyı banla
             targetUser.IsDeleted = true;
             _userRepository.Update(targetUser);
+
+            // eğer kullanıcının satıcı profili varsa onu da soft delete yap
+            var seller = await _sellerRepository.AsQueryable(includeDeleted: true)
+                .FirstOrDefaultAsync(s => s.UserId == targetUserId);
+            if (seller != null)
+            {
+                seller.IsDeleted = true;
+                _sellerRepository.Update(seller);
+            }
+
             await _userRepository.SaveChangesAsync();
 
             // audit log: kullanıcı banlandı
@@ -94,8 +104,7 @@ namespace SirenStore.Application.Services
             if (currentUserId == targetUserId)
                 throw new BusinessRuleException("Kendi kendinizi unbanlayamazsınız!");
 
-            var user = await _userRepository.AsQueryable()
-                .IgnoreQueryFilters()
+            var user = await _userRepository.AsQueryable(includeDeleted: true)
                 .FirstOrDefaultAsync(u => u.Id == targetUserId);
 
             if (user == null)
@@ -103,8 +112,17 @@ namespace SirenStore.Application.Services
 
             // kullanıcının banını aç
             user.IsDeleted = false;
-
             _userRepository.Update(user);
+
+            // eğer kullanıcının satıcı profili varsa onun da banını kaldır
+            var seller = await _sellerRepository.AsQueryable(includeDeleted: true)
+                .FirstOrDefaultAsync(s => s.UserId == targetUserId);
+            if (seller != null)
+            {
+                seller.IsDeleted = false;
+                _sellerRepository.Update(seller);
+            }
+
             await _userRepository.SaveChangesAsync();
 
             // audit: Log user unban

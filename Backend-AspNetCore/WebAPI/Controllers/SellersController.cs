@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SirenStore.Application.DTOs;
 using SirenStore.Application.Interfaces;
+using SirenStore.WebAPI.Extensions;
 using System.Security.Claims;
 
 namespace SirenStore.WebAPI.Controllers
@@ -32,10 +33,7 @@ namespace SirenStore.WebAPI.Controllers
         [HttpPost("apply")]
         public async Task<IActionResult> BecomeSeller([FromBody] CreateSellerDto dto)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out long userId))
-                return Unauthorized("Geçersiz kullanıcı oturumu.");
+            var userId = User.GetUserId();
 
             await _sellerService.BecomeSellerAsync(userId, dto);
 
@@ -48,9 +46,7 @@ namespace SirenStore.WebAPI.Controllers
         [HttpGet("my-status")]
         public async Task<IActionResult> GetMySellerStatus()
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out long userId))
-                return Unauthorized("Geçersiz kullanıcı oturumu.");
+            var userId = User.GetUserId();
 
             var seller = await _sellerService.GetSellerByUserIdAsync(userId);
             if (seller == null)

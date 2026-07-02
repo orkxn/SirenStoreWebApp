@@ -39,9 +39,9 @@ namespace SirenStore.Infrastructure.Repositories
             await _dbSet.AddAsync(entity);
         }
 
-        public IQueryable<T> AsQueryable()
+        public IQueryable<T> AsQueryable(bool includeDeleted = false)
         {
-            return _dbSet.Where(x => !x.IsDeleted);
+            return includeDeleted ? _dbSet : _dbSet.Where(x => !x.IsDeleted);
         }
 
         public void Update(T entity)

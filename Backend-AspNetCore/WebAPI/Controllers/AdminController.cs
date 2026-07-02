@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SirenStore.Application.Interfaces;
+using SirenStore.WebAPI.Extensions;
 
 namespace SirenStore.WebAPI.Controllers
 {
@@ -46,14 +47,8 @@ namespace SirenStore.WebAPI.Controllers
         [HttpPost("users/{id:long}/ban")]
         public async Task<IActionResult> BanUser(long id)
         {
-            // jwt token içerisinden isteği atan adminin ID'sini çekiyoruz, amaç adminin kendisini banlamasını engellemek
-            var currentUserIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
-
-            if (currentUserIdClaim == null)
-                return Unauthorized(new { message = "Geçersiz oturum. Kullanıcı kimliği doğrulanamadı." });
-
             // adminin kendi hesabını banlamasını engellemek için kontrol parametresi
-            long currentUserId = long.Parse(currentUserIdClaim.Value);
+            long currentUserId = User.GetUserId();
 
             // servise hem isteği yapanı hem de hedeflenen kişiyi gönderiyoruz
             await _adminService.BanUserAsync(currentUserId, id);
@@ -67,12 +62,7 @@ namespace SirenStore.WebAPI.Controllers
         public async Task<IActionResult> UnbanUser(long id)
         {
             // adminin kendi hesabını unbanlamasını engellemek için kontrol parametresi
-            var currentUserIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
-
-            if (currentUserIdClaim == null)
-                return Unauthorized(new { message = "Geçersiz oturum. Kullanıcı kimliği doğrulanamadı." });
-
-            long currentUserId = long.Parse(currentUserIdClaim.Value);
+            long currentUserId = User.GetUserId();
 
             // servise hem isteği yapanı hem de hedeflenen kişiyi gönderiyoruz
             await _adminService.UnbanUserAsync(currentUserId, id);

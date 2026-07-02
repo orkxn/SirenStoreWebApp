@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SirenStore.Application.DTOs;
 using SirenStore.Application.Interfaces;
+using SirenStore.WebAPI.Extensions;
 using System.Security.Claims;
 
 namespace WebAPI.Controllers
@@ -55,7 +56,7 @@ namespace WebAPI.Controllers
         [HttpGet("my-products")]
         public async Task<IActionResult> GetMyProducts()
         {
-            var userId = GetUserIdFromToken();
+            var userId = User.GetUserId();
             var products = await _productService.GetMyProductsAsync(userId);
             return Ok(products);
         }
@@ -66,7 +67,7 @@ namespace WebAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateProductDto dto)
         {
-            var userId = GetUserIdFromToken();
+            var userId = User.GetUserId();
             await _productService.CreateAsync(userId, dto);
             return StatusCode(201, new { message = "Ürün başarıyla oluşturuldu ve kataloğa eklendi." });
         }
@@ -77,7 +78,7 @@ namespace WebAPI.Controllers
         [HttpPut]
         public async Task<IActionResult> Update([FromBody] UpdateProductDto dto)
         {
-            var userId = GetUserIdFromToken();
+            var userId = User.GetUserId();
             await _productService.UpdateAsync(userId, dto);
             return Ok(new { message = "Ürün ve görselleri başarıyla güncellendi." });
         }
@@ -88,19 +89,9 @@ namespace WebAPI.Controllers
         [HttpDelete("{id:long}")]
         public async Task<IActionResult> Delete(long id)
         {
-            var userId = GetUserIdFromToken();
+            var userId = User.GetUserId();
             await _productService.DeleteAsync(userId, id);
             return Ok(new { message = "Ürün başarıyla silindi." });
-        }
-
-        // jwt'den kullanıcı kimliğini alma
-        private long GetUserIdFromToken()
-        {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null)
-                throw new UnauthorizedAccessException("Geçerli bir kullanıcı kimliği bulunamadı.");
-
-            return long.Parse(userIdClaim.Value);
         }
     }
 }
