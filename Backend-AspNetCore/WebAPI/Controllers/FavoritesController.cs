@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SirenStore.Application.Interfaces;
+using SirenStore.WebAPI.Extensions;
 using System.Security.Claims;
 
 namespace SirenStore.WebAPI.Controllers
@@ -20,7 +21,7 @@ namespace SirenStore.WebAPI.Controllers
         [HttpGet]
         public async Task<IActionResult> GetMyFavorites()
         {
-            var userId = GetUserIdFromToken();
+            var userId = User.GetUserId();
             var favorites = await _favoriteService.GetFavoritesAsync(userId);
             return Ok(favorites);
         }
@@ -28,7 +29,7 @@ namespace SirenStore.WebAPI.Controllers
         [HttpGet("ids")]
         public async Task<IActionResult> GetMyFavoriteIds()
         {
-            var userId = GetUserIdFromToken();
+            var userId = User.GetUserId();
             var ids = await _favoriteService.GetFavoriteProductIdsAsync(userId);
             return Ok(ids);
         }
@@ -36,7 +37,7 @@ namespace SirenStore.WebAPI.Controllers
         [HttpPost("{productId:long}")]
         public async Task<IActionResult> AddToFavorites(long productId)
         {
-            var userId = GetUserIdFromToken();
+            var userId = User.GetUserId();
             await _favoriteService.AddToFavoritesAsync(userId, productId);
             return Ok(new { message = "Ürün favorilerinize eklendi." });
         }
@@ -44,18 +45,9 @@ namespace SirenStore.WebAPI.Controllers
         [HttpDelete("{productId:long}")]
         public async Task<IActionResult> RemoveFromFavorites(long productId)
         {
-            var userId = GetUserIdFromToken();
+            var userId = User.GetUserId();
             await _favoriteService.RemoveFromFavoritesAsync(userId, productId);
             return Ok(new { message = "Ürün favorilerinizden çıkarıldı." });
-        }
-
-        private long GetUserIdFromToken()
-        {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null)
-                throw new UnauthorizedAccessException("Geçerli bir kullanıcı kimliği bulunamadı.");
-
-            return long.Parse(userIdClaim.Value);
         }
     }
 }

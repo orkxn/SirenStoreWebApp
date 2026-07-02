@@ -1,7 +1,8 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SirenStore.Application.DTOs;
 using SirenStore.Application.Interfaces;
+using SirenStore.WebAPI.Extensions;
 using System.Security.Claims;
 
 namespace WebAPI.Controllers
@@ -23,7 +24,7 @@ namespace WebAPI.Controllers
         [HttpGet]
         public async Task<IActionResult> GetBasket()
         {
-            var userId = GetUserIdFromToken();
+            var userId = User.GetUserId();
             var basket = await _basketService.GetBasketAsync(userId);
             return Ok(basket);
         }
@@ -33,7 +34,7 @@ namespace WebAPI.Controllers
         [HttpPost("items")]
         public async Task<IActionResult> AddToBasket([FromBody] AddToBasketDto dto)
         {
-            var userId = GetUserIdFromToken();
+            var userId = User.GetUserId();
             await _basketService.AddToBasketAsync(userId, dto);
             return Ok(new { message = "Ürün başarıyla sepetinize eklendi." });
         }
@@ -43,7 +44,7 @@ namespace WebAPI.Controllers
         [HttpPut("items")]
         public async Task<IActionResult> UpdateItemQuantity([FromBody] AddToBasketDto dto)
         {
-            var userId = GetUserIdFromToken();
+            var userId = User.GetUserId();
             await _basketService.UpdateBasketItemQuantityAsync(userId, dto);
             return Ok(new { message = "Sepetinizdeki ürün adedi güncellendi." });
         }
@@ -53,7 +54,7 @@ namespace WebAPI.Controllers
         [HttpDelete("items/{productId:long}")]
         public async Task<IActionResult> RemoveFromBasket(long productId)
         {
-            var userId = GetUserIdFromToken();
+            var userId = User.GetUserId();
             await _basketService.RemoveFromBasketAsync(userId, productId);
             return Ok(new { message = "Ürün sepetinizden kaldırıldı." });
         }
@@ -63,19 +64,9 @@ namespace WebAPI.Controllers
         [HttpDelete("clear")]
         public async Task<IActionResult> ClearBasket()
         {
-            var userId = GetUserIdFromToken();
+            var userId = User.GetUserId();
             await _basketService.ClearBasketAsync(userId);
             return Ok(new { message = "Sepetiniz tamamen boşaltıldı." });
-        }
-
-        // jwt token'dan kullanıcı id'sini alır
-        private long GetUserIdFromToken()
-        {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null)
-                throw new UnauthorizedAccessException("Geçerli bir kullanıcı kimliği bulunamadı.");
-
-            return long.Parse(userIdClaim.Value);
         }
     }
 }

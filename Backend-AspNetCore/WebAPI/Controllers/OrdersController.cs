@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SirenStore.Application.DTOs;
 using SirenStore.Application.Interfaces;
+using SirenStore.WebAPI.Extensions;
 using System.Security.Claims;
 
 namespace WebAPI.Controllers
@@ -26,7 +27,7 @@ namespace WebAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateOrder([FromBody] CreateOrderDto dto)
         {
-            var userId = GetUserIdFromToken();
+            var userId = User.GetUserId();
             var order = await _orderService.CreateOrderAsync(userId, dto);
             return Ok(order);
         }
@@ -36,7 +37,7 @@ namespace WebAPI.Controllers
         [HttpGet]
         public async Task<IActionResult> GetMyOrders()
         {
-            var userId = GetUserIdFromToken();
+            var userId = User.GetUserId();
             var orders = await _orderService.GetUserOrdersAsync(userId);
             return Ok(orders);
         }
@@ -47,7 +48,7 @@ namespace WebAPI.Controllers
         [Authorize(Roles = "Seller")]
         public async Task<IActionResult> GetSellerOrders()
         {
-            var userId = GetUserIdFromToken();
+            var userId = User.GetUserId();
             var orders = await _orderService.GetSellerOrdersAsync(userId);
             return Ok(orders);
         }
@@ -57,7 +58,7 @@ namespace WebAPI.Controllers
         [HttpGet("{id:long}")]
         public async Task<IActionResult> GetOrderById(long id)
         {
-            var userId = GetUserIdFromToken();
+            var userId = User.GetUserId();
             var order = await _orderService.GetOrderByIdAsync(userId, id);
             return Ok(order);
         }
@@ -68,7 +69,7 @@ namespace WebAPI.Controllers
         [Authorize(Roles = "Admin,Seller")]
         public async Task<IActionResult> UpdateItemStatus(long orderItemId, [FromBody] OrderStatus newStatus)
         {
-            var userId = GetUserIdFromToken();
+            var userId = User.GetUserId();
 
             await _orderService.UpdateOrderItemStatusAsync(userId, orderItemId, newStatus);
 
@@ -80,7 +81,7 @@ namespace WebAPI.Controllers
         [HttpGet("saved-addresses")]
         public async Task<IActionResult> GetSavedAddresses()
         {
-            var userId = GetUserIdFromToken();
+            var userId = User.GetUserId();
             var addresses = await _orderService.GetSavedAddressesAsync(userId);
             return Ok(addresses);
         }
@@ -90,19 +91,9 @@ namespace WebAPI.Controllers
         [HttpDelete("saved-addresses")]
         public async Task<IActionResult> DeleteSavedAddress([FromQuery] string addressTitle)
         {
-            var userId = GetUserIdFromToken();
+            var userId = User.GetUserId();
             await _orderService.DeleteSavedAddressAsync(userId, addressTitle);
             return Ok(new { message = "Kayıtlı adres başarıyla silindi." });
-        }
-
-        // jwt'den kullanıcı kimliğini alma
-        private long GetUserIdFromToken()
-        {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null)
-                throw new UnauthorizedAccessException("Geçerli bir kullanıcı kimliği bulunamadı.");
-
-            return long.Parse(userIdClaim.Value);
         }
     }
 }

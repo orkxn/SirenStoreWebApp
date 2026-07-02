@@ -12,7 +12,7 @@ namespace SirenStore.Application.Interfaces
         Task<IEnumerable<T>> GetAllAsync();
         Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>> predicate);
         Task AddAsync(T entity);
-        IQueryable<T> AsQueryable();
+        IQueryable<T> AsQueryable(bool includeDeleted = false);
         void Update(T entity);
         void Remove(T entity);
         Task<bool> AnyAsync(Expression<Func<T, bool>> predicate);

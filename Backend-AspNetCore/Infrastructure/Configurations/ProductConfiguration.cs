@@ -23,8 +23,8 @@ namespace Infrastructure.Configurations
             builder.Property(p => p.Price)
                 .HasColumnType("decimal(18,2)");
 
-            // Global Query Filter: silinmiş ürünler default olarak sorgularda gelmez
-            builder.HasQueryFilter(p => !p.IsDeleted);
+            // Global Query Filter: silinmiş ürünler veya silinmiş satıcıların ürünleri default olarak sorgularda gelmez
+            builder.HasQueryFilter(p => !p.IsDeleted && !p.Seller.IsDeleted);
 
             // bire çok ilişki var
             builder.HasOne(p => p.Category)
