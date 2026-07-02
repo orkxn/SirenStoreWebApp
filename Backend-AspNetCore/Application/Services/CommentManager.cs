@@ -2,6 +2,7 @@ using Application.DTOs.Comment;
 using AutoMapper;
 using Entities.Models;
 using Entities.Enums;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using SirenStore.Application.Exceptions;
 using SirenStore.Application.Interfaces;
@@ -17,12 +18,21 @@ namespace Application.Services
         private readonly DbContext _context;
         private readonly IMapper _mapper;
         private readonly IAuditLogService _auditLogService;
+        private readonly IValidator<CommentCreateDto> _createValidator;
+        private readonly IValidator<CommentUpdateDto> _updateValidator;
 
-        public CommentManager(DbContext context, IMapper mapper, IAuditLogService auditLogService)
+        public CommentManager(
+            DbContext context, 
+            IMapper mapper, 
+            IAuditLogService auditLogService,
+            IValidator<CommentCreateDto> createValidator,
+            IValidator<CommentUpdateDto> updateValidator)
         {
             _context = context;
             _mapper = mapper;
             _auditLogService = auditLogService;
+            _createValidator = createValidator;
+            _updateValidator = updateValidator;
         }
 
         public async Task<IEnumerable<CommentDto>> GetCommentsByProductIdAsync(long productId)
@@ -76,6 +86,8 @@ namespace Application.Services
 
         public async Task<CommentDto> CreateCommentAsync(CommentCreateDto dto, long userId)
         {
+            await _createValidator.ValidateAndThrowAsync(dto);
+
             var product = await _context.Set<Product>().FirstOrDefaultAsync(p => p.Id == dto.ProductId && !p.IsDeleted);
             if (product == null)
                 throw new NotFoundException("Ürün bulunamadı.");
@@ -116,6 +128,8 @@ namespace Application.Services
 
         public async Task<CommentDto> UpdateCommentAsync(long commentId, CommentUpdateDto dto, long userId)
         {
+            await _updateValidator.ValidateAndThrowAsync(dto);
+
             var comment = await _context.Set<Comment>()
                 .Include(c => c.User)
                 .FirstOrDefaultAsync(c => c.Id == commentId);

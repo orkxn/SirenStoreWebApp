@@ -23,7 +23,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // veri tabanı connection string bağlantısı
 var connectionString = builder.Configuration.GetConnectionString("PostgreSQLConnection");
-builder.Services.AddDbContext<DbContext, ApplicationDbContext>(options =>
+builder.Services.AddDbContextPool<DbContext, ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
 
 // repository ve service kayıtları, dependecy injection
