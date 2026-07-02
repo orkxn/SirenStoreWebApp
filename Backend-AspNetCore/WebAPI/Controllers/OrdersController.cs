@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SirenStore.Application.DTOs;
-using SirenStore.Application.Interfaces;
+using SirenStore.Application.Services;
 using SirenStore.WebAPI.Extensions;
 using System.Security.Claims;
 
@@ -15,9 +15,9 @@ namespace WebAPI.Controllers
     [Authorize]
     public class OrdersController : ControllerBase
     {
-        private readonly IOrderService _orderService;
+        private readonly OrderService _orderService;
 
-        public OrdersController(IOrderService orderService)
+        public OrdersController(OrderService orderService)
         {
             _orderService = orderService;
         }

@@ -4,64 +4,50 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using BCrypt.Net;
 using Entities.Enums;
 using Entities.Models;
 using SirenStore.Application.DTOs;
 using SirenStore.Application.Exceptions;
-using SirenStore.Application.Interfaces;
 using FluentValidation;
+using Microsoft.EntityFrameworkCore;
 
 namespace SirenStore.Application.Services
 {
-    public class AuthManager : IAuthService
+    public class AuthService
     {
-        private readonly IRepository<User> _userRepository;
+        private readonly DbContext _context;
         private readonly IConfiguration _configuration;
-        private readonly IAuditLogService _auditLogService;
-        private readonly IValidator<RegisterDto> _registerValidator;
-        private readonly IValidator<LoginDto> _loginValidator;
-        private readonly IEmailService _emailService;
-        private readonly IValidator<VerifyEmailDto> _verifyEmailValidator;
-        private readonly IValidator<ResendVerificationEmailDto> _resendVerificationValidator;
-        private readonly ILoginHistoryService _loginHistoryService;
-        private readonly IValidator<ForgotPasswordDto> _forgotPasswordValidator;
-        private readonly IValidator<ResetPasswordDto> _resetPasswordValidator;
+        private readonly AuditLogService _auditLogService;
+        private readonly EmailService _emailService;
+        private readonly LoginHistoryService _loginHistoryService;
+        private readonly IServiceProvider _serviceProvider;
 
-        public AuthManager(
-            IRepository<User> userRepository,
+        public AuthService(
+            DbContext context,
             IConfiguration configuration,
-            IValidator<RegisterDto> registerValidator,
-            IValidator<LoginDto> loginValidator,
-            IAuditLogService auditLogService,
-            IEmailService emailService,
-            IValidator<VerifyEmailDto> verifyEmailValidator,
-            IValidator<ResendVerificationEmailDto> resendVerificationValidator,
-            ILoginHistoryService loginHistoryService,
-            IValidator<ForgotPasswordDto> forgotPasswordValidator,
-            IValidator<ResetPasswordDto> resetPasswordValidator)
+            AuditLogService auditLogService,
+            EmailService emailService,
+            LoginHistoryService loginHistoryService,
+            IServiceProvider serviceProvider)
         {
-            _userRepository = userRepository;
+            _context = context;
             _configuration = configuration;
-            _registerValidator = registerValidator;
-            _loginValidator = loginValidator;
             _auditLogService = auditLogService;
             _emailService = emailService;
-            _verifyEmailValidator = verifyEmailValidator;
-            _resendVerificationValidator = resendVerificationValidator;
             _loginHistoryService = loginHistoryService;
-            _forgotPasswordValidator = forgotPasswordValidator;
-            _resetPasswordValidator = resetPasswordValidator;
+            _serviceProvider = serviceProvider;
         }
 
         // yeni kullanıcı kaydı
         public async Task RegisterAsync(RegisterDto dto)
         {
             // validator kullanarak veri doğrulama
-            await _registerValidator.ValidateAndThrowAsync(dto);
+            await _serviceProvider.GetRequiredService<IValidator<RegisterDto>>().ValidateAndThrowAsync(dto);
 
             // business rule: email unique olmalı
-            var emailExists = await _userRepository.AnyAsync(u => u.Email == dto.Email && !u.IsDeleted);
+            var emailExists = await _context.Set<User>().AnyAsync(u => u.Email == dto.Email && !u.IsDeleted);
             if (emailExists)
                 throw new BusinessRuleException("Bu e-posta adresi zaten sistemde kayıtlı!");
 
@@ -80,8 +66,8 @@ namespace SirenStore.Application.Services
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password)
             };
 
-            await _userRepository.AddAsync(user);
-            await _userRepository.SaveChangesAsync();
+            await _context.Set<User>().AddAsync(user);
+            await _context.SaveChangesAsync();
 
             // audit: Log successful registration
             await _auditLogService.LogAuditAsync(user.Id, "USER_REGISTERED", "User", user.Id, $"Email: {user.Email}");
@@ -91,10 +77,10 @@ namespace SirenStore.Application.Services
         public async Task<TokenDto> LoginAsync(LoginDto dto, string ipAddress, string? userAgent)
         {
             // validator
-            await _loginValidator.ValidateAndThrowAsync(dto);
+            await _serviceProvider.GetRequiredService<IValidator<LoginDto>>().ValidateAndThrowAsync(dto);
 
             // kullanıcıyı email ile bulma ve aktiflik kontrolü
-            var user = await _userRepository.GetAsync(u => u.Email == dto.Email && !u.IsDeleted);
+            var user = await _context.Set<User>().FirstOrDefaultAsync(u => u.Email == dto.Email && !u.IsDeleted);
 
             if (user == null || !user.IsActive)
                 throw new BusinessRuleException("E-posta adresi veya şifre hatalı.");
@@ -119,8 +105,7 @@ namespace SirenStore.Application.Services
             user.RefreshToken = tokenDto.RefreshToken;
             user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
 
-            _userRepository.Update(user);
-            await _userRepository.SaveChangesAsync();
+            await _context.SaveChangesAsync();
 
             await _loginHistoryService.RecordLoginAttemptAsync(user.Id, ipAddress, userAgent, true);
             await _auditLogService.LogAuditAsync(user.Id, "USER_LOGIN", "User", user.Id, $"Email: {user.Email}");
@@ -134,7 +119,7 @@ namespace SirenStore.Application.Services
             if (string.IsNullOrWhiteSpace(refreshToken))
                 throw new BusinessRuleException("Refresh token boş olamaz.");
 
-            var user = await _userRepository.GetAsync(u => u.RefreshToken == refreshToken && !u.IsDeleted);
+            var user = await _context.Set<User>().FirstOrDefaultAsync(u => u.RefreshToken == refreshToken && !u.IsDeleted);
 
             if (user == null || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
                 throw new BusinessRuleException("Oturum süreniz dolmuş veya geçersiz istek. Lütfen tekrar giriş yapın.");
@@ -144,8 +129,7 @@ namespace SirenStore.Application.Services
             user.RefreshToken = tokenDto.RefreshToken;
             user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
 
-            _userRepository.Update(user);
-            await _userRepository.SaveChangesAsync();
+            await _context.SaveChangesAsync();
 
             return tokenDto;
         }
@@ -191,9 +175,9 @@ namespace SirenStore.Application.Services
         // e-posta doğrulama
         public async Task<TokenDto> VerifyEmailAsync(VerifyEmailDto dto)
         {
-            await _verifyEmailValidator.ValidateAndThrowAsync(dto);
+            await _serviceProvider.GetRequiredService<IValidator<VerifyEmailDto>>().ValidateAndThrowAsync(dto);
 
-            var user = await _userRepository.GetAsync(u => u.Email == dto.Email && !u.IsDeleted);
+            var user = await _context.Set<User>().FirstOrDefaultAsync(u => u.Email == dto.Email && !u.IsDeleted);
 
             if (user == null)
                 throw new BusinessRuleException("Kullanıcı bulunamadı.");
@@ -216,8 +200,7 @@ namespace SirenStore.Application.Services
             user.RefreshToken = tokenDto.RefreshToken;
             user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
 
-            _userRepository.Update(user);
-            await _userRepository.SaveChangesAsync();
+            await _context.SaveChangesAsync();
 
             // audit: Log email confirmation
             await _auditLogService.LogAuditAsync(user.Id, "USER_EMAIL_VERIFIED", "User", user.Id, $"Email: {user.Email}");
@@ -228,9 +211,9 @@ namespace SirenStore.Application.Services
         // doğrulama e-postasını tekrar gönderme
         public async Task ResendVerificationEmailAsync(ResendVerificationEmailDto dto)
         {
-            await _resendVerificationValidator.ValidateAndThrowAsync(dto);
+            await _serviceProvider.GetRequiredService<IValidator<ResendVerificationEmailDto>>().ValidateAndThrowAsync(dto);
 
-            var user = await _userRepository.GetAsync(u => u.Email == dto.Email && !u.IsDeleted);
+            var user = await _context.Set<User>().FirstOrDefaultAsync(u => u.Email == dto.Email && !u.IsDeleted);
 
             if (user == null)
                 throw new BusinessRuleException("Kullanıcı bulunamadı.");
@@ -241,8 +224,7 @@ namespace SirenStore.Application.Services
             user.EmailVerificationToken = Random.Shared.Next(100000, 1000000).ToString();
             user.EmailVerificationTokenExpiry = DateTime.UtcNow.AddHours(24);
 
-            _userRepository.Update(user);
-            await _userRepository.SaveChangesAsync();
+            await _context.SaveChangesAsync();
 
             var clientUrl = _configuration["AppSettings:ClientUrl"] ?? "http://localhost:4200";
             var verificationLink = $"{clientUrl}/verify-email?token={user.EmailVerificationToken}";
@@ -276,9 +258,9 @@ namespace SirenStore.Application.Services
         // şifremi unuttum akışı - e-posta gönderimi
         public async Task ForgotPasswordAsync(ForgotPasswordDto dto)
         {
-            await _forgotPasswordValidator.ValidateAndThrowAsync(dto);
+            await _serviceProvider.GetRequiredService<IValidator<ForgotPasswordDto>>().ValidateAndThrowAsync(dto);
 
-            var user = await _userRepository.GetAsync(u => u.Email == dto.Email && !u.IsDeleted);
+            var user = await _context.Set<User>().FirstOrDefaultAsync(u => u.Email == dto.Email && !u.IsDeleted);
             if (user == null)
             {
                 // Güvenlik amacıyla e-posta adresinin sistemde olup olmadığını sızdırmıyoruz
@@ -288,8 +270,7 @@ namespace SirenStore.Application.Services
             user.PasswordResetToken = Guid.NewGuid().ToString("N");
             user.PasswordResetTokenExpiry = DateTime.UtcNow.AddHours(1);
 
-            _userRepository.Update(user);
-            await _userRepository.SaveChangesAsync();
+            await _context.SaveChangesAsync();
 
             var clientUrl = _configuration["AppSettings:ClientUrl"] ?? "http://localhost:4200";
             var resetLink = $"{clientUrl}/reset-password?token={user.PasswordResetToken}&email={Uri.EscapeDataString(user.Email)}";
@@ -325,9 +306,9 @@ namespace SirenStore.Application.Services
         // yeni şifrenin kaydedilmesi
         public async Task ResetPasswordAsync(ResetPasswordDto dto)
         {
-            await _resetPasswordValidator.ValidateAndThrowAsync(dto);
+            await _serviceProvider.GetRequiredService<IValidator<ResetPasswordDto>>().ValidateAndThrowAsync(dto);
 
-            var user = await _userRepository.GetAsync(u => u.Email == dto.Email && !u.IsDeleted);
+            var user = await _context.Set<User>().FirstOrDefaultAsync(u => u.Email == dto.Email && !u.IsDeleted);
             if (user == null || user.PasswordResetToken != dto.Token || user.PasswordResetTokenExpiry == null || user.PasswordResetTokenExpiry < DateTime.UtcNow)
             {
                 throw new BusinessRuleException("Geçersiz veya süresi dolmuş şifre sıfırlama talebi.");
@@ -337,8 +318,7 @@ namespace SirenStore.Application.Services
             user.PasswordResetToken = null;
             user.PasswordResetTokenExpiry = null;
 
-            _userRepository.Update(user);
-            await _userRepository.SaveChangesAsync();
+            await _context.SaveChangesAsync();
 
             // audit log
             await _auditLogService.LogAuditAsync(user.Id, "PASSWORD_RESET_COMPLETED", "User", user.Id, $"Email: {user.Email}");

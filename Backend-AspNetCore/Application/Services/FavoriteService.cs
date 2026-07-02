@@ -2,33 +2,29 @@ using Entities.Models;
 using Microsoft.EntityFrameworkCore;
 using SirenStore.Application.DTOs;
 using SirenStore.Application.Exceptions;
-using SirenStore.Application.Interfaces;
 
 namespace SirenStore.Application.Services
 {
-    public class FavoriteManager : IFavoriteService
+    public class FavoriteService
     {
-        private readonly IRepository<Favorite> _favoriteRepository;
-        private readonly IRepository<Product> _productRepository;
-        private readonly IAuditLogService _auditLogService;
+        private readonly DbContext _context;
+        private readonly AuditLogService _auditLogService;
 
-        public FavoriteManager(
-            IRepository<Favorite> favoriteRepository,
-            IRepository<Product> productRepository,
-            IAuditLogService auditLogService)
+        public FavoriteService(
+            DbContext context,
+            AuditLogService auditLogService)
         {
-            _favoriteRepository = favoriteRepository;
-            _productRepository = productRepository;
+            _context = context;
             _auditLogService = auditLogService;
         }
 
         public async Task AddToFavoritesAsync(long userId, long productId)
         {
-            var product = await _productRepository.GetByIdAsync(productId);
+            var product = await _context.Set<Product>().FirstOrDefaultAsync(p => p.Id == productId && !p.IsDeleted);
             if (product == null)
                 throw new NotFoundException("Ürün bulunamadı.");
 
-            var exists = await _favoriteRepository.AnyAsync(f => f.UserId == userId && f.ProductId == productId);
+            var exists = await _context.Set<Favorite>().AnyAsync(f => f.UserId == userId && f.ProductId == productId && !f.IsDeleted);
             if (exists) return; // Zaten favorilerde ise hata vermeden dön
 
             var favorite = new Favorite
@@ -37,19 +33,19 @@ namespace SirenStore.Application.Services
                 ProductId = productId
             };
 
-            await _favoriteRepository.AddAsync(favorite);
-            await _favoriteRepository.SaveChangesAsync();
+            await _context.Set<Favorite>().AddAsync(favorite);
+            await _context.SaveChangesAsync();
 
             await _auditLogService.LogAuditAsync(userId, "PRODUCT_FAVORITED", "Product", productId, $"ProductId: {productId}");
         }
 
         public async Task RemoveFromFavoritesAsync(long userId, long productId)
         {
-            var favorite = await _favoriteRepository.GetAsync(f => f.UserId == userId && f.ProductId == productId);
+            var favorite = await _context.Set<Favorite>().FirstOrDefaultAsync(f => f.UserId == userId && f.ProductId == productId && !f.IsDeleted);
             if (favorite != null)
             {
-                _favoriteRepository.Remove(favorite);
-                await _favoriteRepository.SaveChangesAsync();
+                favorite.IsDeleted = true;
+                await _context.SaveChangesAsync();
 
                 await _auditLogService.LogAuditAsync(userId, "PRODUCT_UNFAVORITED", "Product", productId, $"ProductId: {productId}");
             }
@@ -57,8 +53,8 @@ namespace SirenStore.Application.Services
 
         public async Task<List<ProductListDto>> GetFavoritesAsync(long userId)
         {
-            return await _favoriteRepository.AsQueryable()
-                .Where(f => f.UserId == userId && f.Product != null && !f.Product.IsDeleted)
+            return await _context.Set<Favorite>()
+                .Where(f => f.UserId == userId && !f.IsDeleted && f.Product != null && !f.Product.IsDeleted)
                 .OrderByDescending(f => f.CreationDate)
                 .Select(f => new ProductListDto
                 {
@@ -79,8 +75,8 @@ namespace SirenStore.Application.Services
 
         public async Task<List<long>> GetFavoriteProductIdsAsync(long userId)
         {
-            return await _favoriteRepository.AsQueryable()
-                .Where(f => f.UserId == userId)
+            return await _context.Set<Favorite>()
+                .Where(f => f.UserId == userId && !f.IsDeleted)
                 .Select(f => f.ProductId)
                 .ToListAsync();
         }

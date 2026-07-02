@@ -2,29 +2,22 @@ using Entities.Models;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using SirenStore.Application.DTOs;
-using SirenStore.Application.Interfaces;
 using SirenStore.Application.Exceptions; 
 
 namespace SirenStore.Application.Services
 {
-    public class BasketManager : IBasketService
+    public class BasketService
     {
-        private readonly IRepository<Basket> _basketRepository;
-        private readonly IRepository<BasketItem> _basketItemRepository;
-        private readonly IRepository<Product> _productRepository;
+        private readonly DbContext _context;
         private readonly IValidator<AddToBasketDto> _validator;
-        private readonly IAuditLogService _auditLogService;
+        private readonly AuditLogService _auditLogService;
 
-        public BasketManager(
-            IRepository<Basket> basketRepository,
-            IRepository<BasketItem> basketItemRepository,
-            IRepository<Product> productRepository,
+        public BasketService(
+            DbContext context,
             IValidator<AddToBasketDto> validator,
-            IAuditLogService auditLogService)
+            AuditLogService auditLogService)
         {
-            _basketRepository = basketRepository;
-            _basketItemRepository = basketItemRepository;
-            _productRepository = productRepository;
+            _context = context;
             _validator = validator;
             _auditLogService = auditLogService;
         }
@@ -32,8 +25,8 @@ namespace SirenStore.Application.Services
         // sepeti getir
         public async Task<BasketDto> GetBasketAsync(long userId)
         {
-            var basketDto = await _basketRepository.AsQueryable()
-                .Where(b => b.UserId == userId)
+            var basketDto = await _context.Set<Basket>()
+                .Where(b => b.UserId == userId && !b.IsDeleted)
                 .Select(b => new BasketDto
                 {
                     Id = b.Id,
@@ -64,9 +57,9 @@ namespace SirenStore.Application.Services
             await _validator.ValidateAndThrowAsync(dto);
 
             // ürün var mı ve aktif mi
-            var product = await _productRepository.AsQueryable()
+            var product = await _context.Set<Product>()
                 .Include(p => p.Seller)
-                .FirstOrDefaultAsync(p => p.Id == dto.ProductId);
+                .FirstOrDefaultAsync(p => p.Id == dto.ProductId && !p.IsDeleted);
 
             if (product == null)
                 throw new NotFoundException("Eklemek istediğiniz ürün bulunamadı.");
@@ -78,15 +71,15 @@ namespace SirenStore.Application.Services
                 throw new BusinessRuleException($"Yetersiz stok! Mağazada sadece {product.Stock} adet ürün var.");
 
             // sepeti bul, yoksa oluştur
-            var basket = await _basketRepository.AsQueryable()
+            var basket = await _context.Set<Basket>()
                 .Include(b => b.BasketItems)
-                .FirstOrDefaultAsync(b => b.UserId == userId);
+                .FirstOrDefaultAsync(b => b.UserId == userId && !b.IsDeleted);
 
             if (basket == null)
             {
                 basket = new Basket { UserId = userId };
-                await _basketRepository.AddAsync(basket);
-                await _basketRepository.SaveChangesAsync(); 
+                await _context.Set<Basket>().AddAsync(basket);
+                await _context.SaveChangesAsync(); 
             }
 
             // ürün sepette zaten var mı
@@ -108,8 +101,6 @@ namespace SirenStore.Application.Services
 
                     existingItem.Quantity += dto.Quantity;
                 }
-                
-                _basketItemRepository.Update(existingItem);
             }
             else
             {
@@ -119,10 +110,10 @@ namespace SirenStore.Application.Services
                     ProductId = dto.ProductId,
                     Quantity = dto.Quantity
                 };
-                await _basketItemRepository.AddAsync(newItem);
+                await _context.Set<BasketItem>().AddAsync(newItem);
             }
 
-            await _basketItemRepository.SaveChangesAsync();
+            await _context.SaveChangesAsync();
 
             // audit: Sepete ürün ekleme logu
             await _auditLogService.LogAuditAsync(userId, "BASKET_ITEM_ADDED", "Product", dto.ProductId, $"Quantity: {dto.Quantity}");
@@ -133,9 +124,9 @@ namespace SirenStore.Application.Services
         {
             await _validator.ValidateAndThrowAsync(dto);
 
-            var basket = await _basketRepository.AsQueryable()
+            var basket = await _context.Set<Basket>()
                 .Include(b => b.BasketItems)
-                .FirstOrDefaultAsync(b => b.UserId == userId);
+                .FirstOrDefaultAsync(b => b.UserId == userId && !b.IsDeleted);
 
             if (basket == null)
                 throw new NotFoundException("Sepetiniz bulunamadı.");
@@ -144,13 +135,12 @@ namespace SirenStore.Application.Services
             if (basketItem == null)
                 throw new NotFoundException("Ürün sepetinizde bulunmuyor.");
 
-            var product = await _productRepository.GetAsync(p => p.Id == dto.ProductId);
+            var product = await _context.Set<Product>().FirstOrDefaultAsync(p => p.Id == dto.ProductId && !p.IsDeleted);
             if (product != null && product.Stock < dto.Quantity)
                 throw new BusinessRuleException($"Yetersiz stok! Bu üründen en fazla {product.Stock} adet seçebilirsiniz.");
 
             basketItem.Quantity = dto.Quantity;
-            _basketItemRepository.Update(basketItem);
-            await _basketItemRepository.SaveChangesAsync();
+            await _context.SaveChangesAsync();
 
             // audit: Sepet ürün adedi güncelleme logu
             await _auditLogService.LogAuditAsync(userId, "BASKET_ITEM_QUANTITY_UPDATED", "Product", dto.ProductId, $"NewQuantity: {dto.Quantity}");
@@ -159,17 +149,17 @@ namespace SirenStore.Application.Services
         // sepetten ürün kaldır
         public async Task RemoveFromBasketAsync(long userId, long productId)
         {
-            var basket = await _basketRepository.AsQueryable()
+            var basket = await _context.Set<Basket>()
                 .Include(b => b.BasketItems)
-                .FirstOrDefaultAsync(b => b.UserId == userId);
+                .FirstOrDefaultAsync(b => b.UserId == userId && !b.IsDeleted);
 
             if (basket == null) return;
 
             var itemToRemove = basket.BasketItems.FirstOrDefault(bi => bi.ProductId == productId && !bi.IsDeleted);
             if (itemToRemove != null)
             {
-                _basketItemRepository.Remove(itemToRemove);
-                await _basketItemRepository.SaveChangesAsync();
+                itemToRemove.IsDeleted = true;
+                await _context.SaveChangesAsync();
 
                 // audit: Sepetten ürün silme logu
                 await _auditLogService.LogAuditAsync(userId, "BASKET_ITEM_REMOVED", "Product", productId, $"ProductId: {productId}");
@@ -179,17 +169,17 @@ namespace SirenStore.Application.Services
         // sepeti tamamen temizle
         public async Task ClearBasketAsync(long userId)
         {
-            var basket = await _basketRepository.AsQueryable()
+            var basket = await _context.Set<Basket>()
                 .Include(b => b.BasketItems)
-                .FirstOrDefaultAsync(b => b.UserId == userId);
+                .FirstOrDefaultAsync(b => b.UserId == userId && !b.IsDeleted);
 
             if (basket != null && basket.BasketItems.Any(bi => !bi.IsDeleted))
             {
                 foreach (var item in basket.BasketItems.Where(bi => !bi.IsDeleted).ToList())
                 {
-                    _basketItemRepository.Remove(item);
+                    item.IsDeleted = true;
                 }
-                await _basketItemRepository.SaveChangesAsync();
+                await _context.SaveChangesAsync();
 
                 // audit: Sepet temizleme logu
                 await _auditLogService.LogAuditAsync(userId, "BASKET_CLEARED", "Basket", basket.Id, "Basket cleared");

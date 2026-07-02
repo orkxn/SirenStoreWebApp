@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SirenStore.Application.Interfaces;
+using SirenStore.Application.Services;
 using SirenStore.WebAPI.Extensions;
 
 namespace SirenStore.WebAPI.Controllers
@@ -10,14 +10,14 @@ namespace SirenStore.WebAPI.Controllers
     [Authorize(Roles = "Admin")] 
     public class AdminController : ControllerBase
     {
-        private readonly IAdminService _adminService;
-        private readonly IAuditLogService _auditLogService;
-        private readonly ILoginHistoryService _loginHistoryService;
+        private readonly AdminService _adminService;
+        private readonly AuditLogService _auditLogService;
+        private readonly LoginHistoryService _loginHistoryService;
 
         public AdminController(
-            IAdminService adminService,
-            IAuditLogService auditLogService,
-            ILoginHistoryService loginHistoryService)
+            AdminService adminService,
+            AuditLogService auditLogService,
+            LoginHistoryService loginHistoryService)
         {
             _adminService = adminService;
             _auditLogService = auditLogService;

@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SirenStore.Application.DTOs;
-using SirenStore.Application.Interfaces;
+using SirenStore.Application.Services;
 using SirenStore.WebAPI.Extensions;
 using System.Security.Claims;
 
@@ -11,9 +11,9 @@ namespace SirenStore.WebAPI.Controllers
     [Route("api/[controller]")]
     public class SellersController : ControllerBase
     {
-        private readonly ISellerService _sellerService;
+        private readonly SellerService _sellerService;
 
-        public SellersController(ISellerService sellerService)
+        public SellersController(SellerService sellerService)
         {
             _sellerService = sellerService;
         }

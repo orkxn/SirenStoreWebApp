@@ -2,7 +2,6 @@ using Entities.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SirenStore.Application.DTOs;
-using SirenStore.Application.Interfaces;
 
 namespace SirenStore.Application.Services
 {
@@ -10,14 +9,14 @@ namespace SirenStore.Application.Services
     /// Service for logging sensitive operations to the AuditLog table
     /// Tracks who did what, when, and why for security and compliance
     /// </summary>
-    public class AuditLogService : IAuditLogService
+    public class AuditLogService
     {
-        private readonly IRepository<AuditLog> _auditLogRepository;
+        private readonly DbContext _context;
         private readonly ILogger<AuditLogService> _logger;
 
-        public AuditLogService(IRepository<AuditLog> auditLogRepository, ILogger<AuditLogService> logger)
+        public AuditLogService(DbContext context, ILogger<AuditLogService> logger)
         {
-            _auditLogRepository = auditLogRepository;
+            _context = context;
             _logger = logger;
         }
 
@@ -39,8 +38,8 @@ namespace SirenStore.Application.Services
                     CreationDate = DateTime.UtcNow
                 };
 
-                await _auditLogRepository.AddAsync(auditLog);
-                await _auditLogRepository.SaveChangesAsync();
+                await _context.Set<AuditLog>().AddAsync(auditLog);
+                await _context.SaveChangesAsync();
 
                 _logger.LogInformation($"Audit logged: {action} on {entityName}:{entityId} by User:{userId}");
             }
@@ -56,7 +55,7 @@ namespace SirenStore.Application.Services
         /// </summary>
         public async Task<List<AuditLogDto>> GetAllAuditLogsAsync()
         {
-            return await _auditLogRepository.AsQueryable()
+            return await _context.Set<AuditLog>()
                 .OrderByDescending(a => a.CreationDate)
                 .Select(a => new AuditLogDto(
                     a.Id,
@@ -66,7 +65,7 @@ namespace SirenStore.Application.Services
                     a.EntityName,
                     a.EntityId,
                     a.NewValues,
-                    a.IpAddress,
+                    null,
                     a.CreationDate
                 ))
                 .ToListAsync();

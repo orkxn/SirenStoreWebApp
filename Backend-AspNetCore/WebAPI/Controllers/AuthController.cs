@@ -1,12 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
 using SirenStore.Application.DTOs;
-using SirenStore.Application.Interfaces;
+using SirenStore.Application.Services;
 
 namespace SirenStore.WebAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")] // api/auth
-    public class AuthController(IAuthService authService) : ControllerBase
+    public class AuthController(AuthService authService) : ControllerBase
     {
         // sisteme kayıt olma endpointi
         // POST: api/auth/register

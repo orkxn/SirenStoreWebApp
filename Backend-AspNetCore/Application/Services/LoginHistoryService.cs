@@ -2,18 +2,17 @@ using Entities.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SirenStore.Application.DTOs;
-using SirenStore.Application.Interfaces;
 
 namespace SirenStore.Application.Services
 {
-    public class LoginHistoryManager : ILoginHistoryService
+    public class LoginHistoryService
     {
-        private readonly IRepository<LoginHistory> _loginHistoryRepository;
-        private readonly ILogger<LoginHistoryManager> _logger;
+        private readonly DbContext _context;
+        private readonly ILogger<LoginHistoryService> _logger;
 
-        public LoginHistoryManager(IRepository<LoginHistory> loginHistoryRepository, ILogger<LoginHistoryManager> logger)
+        public LoginHistoryService(DbContext context, ILogger<LoginHistoryService> logger)
         {
-            _loginHistoryRepository = loginHistoryRepository;
+            _context = context;
             _logger = logger;
         }
 
@@ -31,8 +30,8 @@ namespace SirenStore.Application.Services
                     CreationDate = DateTime.UtcNow
                 };
 
-                await _loginHistoryRepository.AddAsync(record);
-                await _loginHistoryRepository.SaveChangesAsync();
+                await _context.Set<LoginHistory>().AddAsync(record);
+                await _context.SaveChangesAsync();
             }
             catch (Exception ex)
             {
@@ -45,7 +44,7 @@ namespace SirenStore.Application.Services
         /// </summary>
         public async Task<List<LoginHistoryDto>> GetAllLoginHistoriesAsync()
         {
-            return await _loginHistoryRepository.AsQueryable()
+            return await _context.Set<LoginHistory>()
                 .OrderByDescending(l => l.CreationDate)
                 .Select(l => new LoginHistoryDto(
                     l.Id,

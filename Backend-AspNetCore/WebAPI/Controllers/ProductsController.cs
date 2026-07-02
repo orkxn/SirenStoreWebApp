@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SirenStore.Application.DTOs;
-using SirenStore.Application.Interfaces;
+using SirenStore.Application.Services;
 using SirenStore.WebAPI.Extensions;
 using System.Security.Claims;
 
@@ -11,15 +11,11 @@ namespace WebAPI.Controllers
     [ApiController]
     public class ProductsController : ControllerBase
     {
-        private readonly IProductService _productService;
-        private readonly IRepository<Entities.Models.Seller> _sellerRepository;
-        private readonly IRepository<Entities.Models.User> _userRepository;
+        private readonly ProductService _productService;
 
-        public ProductsController(IProductService productService, IRepository<Entities.Models.Seller> sellerRepository, IRepository<Entities.Models.User> userRepository)
+        public ProductsController(ProductService productService)
         {
             _productService = productService;
-            _sellerRepository = sellerRepository;
-            _userRepository = userRepository;
         }
 
 

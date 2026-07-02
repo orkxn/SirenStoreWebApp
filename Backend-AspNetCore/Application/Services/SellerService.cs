@@ -4,25 +4,21 @@ using Entities.Models;
 using FluentValidation;
 using SirenStore.Application.DTOs;
 using SirenStore.Application.Exceptions;
-using SirenStore.Application.Interfaces;
 
 namespace SirenStore.Application.Services
 {
-    public class SellerManager : ISellerService
+    public class SellerService
     {
-        private readonly IRepository<Seller> _sellerRepository;
-        private readonly IRepository<User> _userRepository;
+        private readonly DbContext _context;
         private readonly IValidator<CreateSellerDto> _validator;
-        private readonly IAuditLogService _auditLogService;
+        private readonly AuditLogService _auditLogService;
 
-        public SellerManager(
-            IRepository<Seller> sellerRepository,
-            IRepository<User> userRepository,
+        public SellerService(
+            DbContext context,
             IValidator<CreateSellerDto> validator,
-            IAuditLogService auditLogService)
+            AuditLogService auditLogService)
         {
-            _sellerRepository = sellerRepository;
-            _userRepository = userRepository;
+            _context = context;
             _validator = validator;
             _auditLogService = auditLogService;
         }
@@ -32,11 +28,11 @@ namespace SirenStore.Application.Services
         {
             await _validator.ValidateAndThrowAsync(dto);
 
-            var user = await _userRepository.GetAsync(u => u.Id == userId && !u.IsDeleted);
+            var user = await _context.Set<User>().FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted);
             if (user == null)
                 throw new NotFoundException("Kullanıcı bulunamadı.");
 
-            var existingSeller = await _sellerRepository.GetAsync(s => s.UserId == userId);
+            var existingSeller = await _context.Set<Seller>().FirstOrDefaultAsync(s => s.UserId == userId && !s.IsDeleted);
             if (existingSeller != null)
             {
                 if (existingSeller.Status == SellerStatus.Pending)
@@ -52,8 +48,8 @@ namespace SirenStore.Application.Services
                 existingSeller.TaxNumber = dto.TaxNumber;
                 existingSeller.TaxOffice = dto.TaxOffice;
                 existingSeller.Status = SellerStatus.Pending;
-                _sellerRepository.Update(existingSeller);
-                await _sellerRepository.SaveChangesAsync();
+
+                await _context.SaveChangesAsync();
                 await _auditLogService.LogAuditAsync(userId, "SELLER_APPLICATION_SUBMITTED", "Seller", existingSeller.Id, $"StoreName: {dto.StoreName} (Updated)");
                 return;
             }
@@ -70,15 +66,15 @@ namespace SirenStore.Application.Services
                 Status = SellerStatus.Pending
             };
 
-            await _sellerRepository.AddAsync(newSeller);
-            await _sellerRepository.SaveChangesAsync();
+            await _context.Set<Seller>().AddAsync(newSeller);
+            await _context.SaveChangesAsync();
             await _auditLogService.LogAuditAsync(userId, "SELLER_APPLICATION_SUBMITTED", "Seller", newSeller.Id, $"StoreName: {dto.StoreName}");
         }
 
         // admin onay mekanizması
         public async Task ApproveSellerAsync(long sellerId)
         {
-            var seller = await _sellerRepository.GetAsync(s => s.Id == sellerId);
+            var seller = await _context.Set<Seller>().FirstOrDefaultAsync(s => s.Id == sellerId && !s.IsDeleted);
             if (seller == null)
                 throw new NotFoundException("Satıcı başvurusu bulunamadı.");
 
@@ -86,23 +82,21 @@ namespace SirenStore.Application.Services
                 throw new BusinessRuleException("Bu başvuru zaten onaylanmış.");
 
             seller.Status = SellerStatus.Approved;
-            _sellerRepository.Update(seller);
 
-            var user = await _userRepository.GetAsync(u => u.Id == seller.UserId);
+            var user = await _context.Set<User>().FirstOrDefaultAsync(u => u.Id == seller.UserId && !u.IsDeleted);
             if (user != null)
             {
                 user.UserType = UserTypes.Seller; 
-                _userRepository.Update(user);
             }
 
-            await _sellerRepository.SaveChangesAsync();
+            await _context.SaveChangesAsync();
             await _auditLogService.LogAuditAsync(seller.UserId, "SELLER_APPLICATION_APPROVED", "Seller", sellerId, $"StoreName: {seller.StoreName}");
         }
 
         // admin red mekanizması
         public async Task RejectSellerAsync(long sellerId)
         {
-            var seller = await _sellerRepository.GetAsync(s => s.Id == sellerId);
+            var seller = await _context.Set<Seller>().FirstOrDefaultAsync(s => s.Id == sellerId && !s.IsDeleted);
             if (seller == null)
                 throw new NotFoundException("Satıcı başvurusu bulunamadı.");
 
@@ -110,17 +104,16 @@ namespace SirenStore.Application.Services
                 throw new BusinessRuleException("Onaylanmış bir dükkanı reddedemezsiniz.");
 
             seller.Status = SellerStatus.Rejected;
-            _sellerRepository.Update(seller);
 
-            await _sellerRepository.SaveChangesAsync();
+            await _context.SaveChangesAsync();
             await _auditLogService.LogAuditAsync(seller.UserId, "SELLER_APPLICATION_REJECTED", "Seller", sellerId, $"StoreName: {seller.StoreName}");
         }
 
         // satıcının public profilini çekmek için
         public async Task<SellerPublicProfileDto> GetSellerProfileAsync(long sellerId)
         {
-            var sellerDto = await _sellerRepository.AsQueryable()
-                .Where(s => s.Id == sellerId)
+            var sellerDto = await _context.Set<Seller>()
+                .Where(s => s.Id == sellerId && !s.IsDeleted)
                 .Select(s => new SellerPublicProfileDto
                 {
                     Id = s.Id,
@@ -162,7 +155,7 @@ namespace SirenStore.Application.Services
 
         public async Task<Seller?> GetSellerByUserIdAsync(long userId)
         {
-            return await _sellerRepository.GetAsync(s => s.UserId == userId);
+            return await _context.Set<Seller>().FirstOrDefaultAsync(s => s.UserId == userId && !s.IsDeleted);
         }
     }
 }

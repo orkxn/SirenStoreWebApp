@@ -1,13 +1,12 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using SirenStore.Application.Interfaces;
 using MimeKit;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 
-namespace SirenStore.Infrastructure.Services
+namespace SirenStore.Application.Services
 {
-    public class EmailService : IEmailService
+    public class EmailService
     {
         private readonly IConfiguration _configuration;
         private readonly ILogger<EmailService> _logger;

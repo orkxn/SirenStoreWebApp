@@ -1,4 +1,3 @@
-using Application.Services;
 using AutoMapper;
 using dotenv.net;
 using Entities.Models;
@@ -6,13 +5,10 @@ using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using SirenStore.Application.Interfaces;
 using SirenStore.Application.Mapping;
 using SirenStore.Application.Services;
 using SirenStore.Application.Validators;
 using SirenStore.Infrastructure.Context;
-using SirenStore.Infrastructure.Repositories;
-using SirenStore.Infrastructure.Services;
 using SirenStore.WebAPI.Middleware;
 using System.Text;
 
@@ -26,32 +22,23 @@ var connectionString = builder.Configuration.GetConnectionString("PostgreSQLConn
 builder.Services.AddDbContextPool<DbContext, ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
 
-// repository ve service kayıtları, dependecy injection
-builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-builder.Services.AddScoped<IEmailService, EmailService>();
-builder.Services.AddScoped<IAuthService, AuthManager>();
-builder.Services.AddScoped<IUserService, UserManager>();
-builder.Services.AddScoped<ISellerService, SellerManager>();
-builder.Services.AddScoped<IProductService, ProductManager>();
-builder.Services.AddScoped<IBasketService, BasketManager>();
-builder.Services.AddScoped<IOrderService, OrderManager>();
-builder.Services.AddScoped<ICategoryService, CategoryManager>();
-builder.Services.AddScoped<IAdminService, AdminManager>();
-builder.Services.AddScoped<IAuditLogService, AuditLogService>();
-builder.Services.AddScoped<ILoginHistoryService, LoginHistoryManager>();
-builder.Services.AddScoped<ICommentService, CommentManager>();
-builder.Services.AddScoped<IFavoriteService, FavoriteManager>();
+// service kayıtları, dependecy injection
+builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<SellerService>();
+builder.Services.AddScoped<ProductService>();
+builder.Services.AddScoped<BasketService>();
+builder.Services.AddScoped<OrderService>();
+builder.Services.AddScoped<CategoryService>();
+builder.Services.AddScoped<AdminService>();
+builder.Services.AddScoped<AuditLogService>();
+builder.Services.AddScoped<LoginHistoryService>();
+builder.Services.AddScoped<CommentService>();
+builder.Services.AddScoped<FavoriteService>();
 
 // automapper ve fluentvalidation kayıtları
-builder.Services.AddSingleton<IMapper>(provider =>
-{
-    var loggerFactory = provider.GetRequiredService<ILoggerFactory>();
-    var config = new AutoMapper.MapperConfiguration(cfg =>
-    {
-        cfg.AddProfile<SirenStore.Application.Mapping.MappingProfile>();
-    }, loggerFactory);
-    return new AutoMapper.Mapper(config);
-});
+builder.Services.AddAutoMapper(cfg => cfg.AddProfile<SirenStore.Application.Mapping.MappingProfile>());
 
 builder.Services.AddValidatorsFromAssemblyContaining<CreateProductDtoValidator>();
 

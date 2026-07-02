@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SirenStore.Application.DTOs;
-using SirenStore.Application.Interfaces;
+using SirenStore.Application.Services;
 using SirenStore.WebAPI.Extensions;
 
 namespace SirenStore.WebAPI.Controllers
@@ -10,9 +10,9 @@ namespace SirenStore.WebAPI.Controllers
     [Route("api/[controller]")]
     public class CategoriesController : ControllerBase
     {
-        private readonly ICategoryService _categoryService;
+        private readonly CategoryService _categoryService;
 
-        public CategoriesController(ICategoryService categoryService)
+        public CategoriesController(CategoryService categoryService)
         {
             _categoryService = categoryService;
         }

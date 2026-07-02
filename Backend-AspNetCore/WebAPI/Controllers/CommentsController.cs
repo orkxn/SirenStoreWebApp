@@ -1,5 +1,5 @@
 using Application.DTOs.Comment;
-using Application.Services;
+using SirenStore.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SirenStore.WebAPI.Extensions;
@@ -12,9 +12,9 @@ namespace WebAPI.Controllers
     [ApiController]
     public class CommentsController : ControllerBase
     {
-        private readonly ICommentService _commentService;
+        private readonly CommentService _commentService;
 
-        public CommentsController(ICommentService commentService)
+        public CommentsController(CommentService commentService)
         {
             _commentService = commentService;
         }

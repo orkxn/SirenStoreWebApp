@@ -3,30 +3,26 @@ using Entities.Models;
 using Microsoft.EntityFrameworkCore;
 using SirenStore.Application.DTOs;
 using SirenStore.Application.Exceptions;
-using SirenStore.Application.Interfaces;
 
 namespace SirenStore.Application.Services
 {
-    public class AdminManager : IAdminService
+    public class AdminService
     {
-        private readonly IRepository<User> _userRepository;
-        private readonly IRepository<Seller> _sellerRepository;
-        private readonly IAuditLogService _auditLogService;
+        private readonly DbContext _context;
+        private readonly AuditLogService _auditLogService;
 
-        public AdminManager(
-            IRepository<User> userRepository, 
-            IRepository<Seller> sellerRepository,
-            IAuditLogService auditLogService)
+        public AdminService(
+            DbContext context, 
+            AuditLogService auditLogService)
         {
-            _userRepository = userRepository;
-            _sellerRepository = sellerRepository;
+            _context = context;
             _auditLogService = auditLogService;
         }
 
         // sistemdeki tüm kullanıcıları DTO ile listeler
         public async Task<List<UserManagementDto>> GetAllUsersAsync()
         {
-            return await _userRepository.AsQueryable(includeDeleted: true)
+            return await _context.Set<User>()
                 .Select(u => new UserManagementDto
                 {
                     Id = u.Id,
@@ -43,7 +39,8 @@ namespace SirenStore.Application.Services
         // sistemdeki tüm satıcıları ve mağaza başvuru detaylarını listeler
         public async Task<List<SellerManagementDto>> GetAllSellersAsync()
         {
-            return await _sellerRepository.AsQueryable()
+            return await _context.Set<Seller>()
+                .Where(s => !s.IsDeleted)
                 .Include(s => s.User) // satıcı ile ilişkili kullanıcıyı dahil et
                 .Select(s => new SellerManagementDto
                 {
@@ -69,7 +66,7 @@ namespace SirenStore.Application.Services
             if (currentUserId == targetUserId)
                 throw new BusinessRuleException("Kendi kendinizi banlayamazsınız!");
 
-            var targetUser = await _userRepository.GetAsync(u => u.Id == targetUserId);
+            var targetUser = await _context.Set<User>().FirstOrDefaultAsync(u => u.Id == targetUserId && !u.IsDeleted);
             if (targetUser == null)
                 throw new NotFoundException("Kullanıcı bulunamadı.");
 
@@ -79,18 +76,16 @@ namespace SirenStore.Application.Services
 
             // soft delete ile kullanıcıyı banla
             targetUser.IsDeleted = true;
-            _userRepository.Update(targetUser);
 
             // eğer kullanıcının satıcı profili varsa onu da soft delete yap
-            var seller = await _sellerRepository.AsQueryable(includeDeleted: true)
+            var seller = await _context.Set<Seller>()
                 .FirstOrDefaultAsync(s => s.UserId == targetUserId);
             if (seller != null)
             {
                 seller.IsDeleted = true;
-                _sellerRepository.Update(seller);
             }
 
-            await _userRepository.SaveChangesAsync();
+            await _context.SaveChangesAsync();
 
             // audit log: kullanıcı banlandı
             await _auditLogService.LogAuditAsync(currentUserId, "USER_BANNED", "User", targetUserId, 
@@ -104,7 +99,7 @@ namespace SirenStore.Application.Services
             if (currentUserId == targetUserId)
                 throw new BusinessRuleException("Kendi kendinizi unbanlayamazsınız!");
 
-            var user = await _userRepository.AsQueryable(includeDeleted: true)
+            var user = await _context.Set<User>()
                 .FirstOrDefaultAsync(u => u.Id == targetUserId);
 
             if (user == null)
@@ -112,18 +107,16 @@ namespace SirenStore.Application.Services
 
             // kullanıcının banını aç
             user.IsDeleted = false;
-            _userRepository.Update(user);
 
             // eğer kullanıcının satıcı profili varsa onun da banını kaldır
-            var seller = await _sellerRepository.AsQueryable(includeDeleted: true)
+            var seller = await _context.Set<Seller>()
                 .FirstOrDefaultAsync(s => s.UserId == targetUserId);
             if (seller != null)
             {
                 seller.IsDeleted = false;
-                _sellerRepository.Update(seller);
             }
 
-            await _userRepository.SaveChangesAsync();
+            await _context.SaveChangesAsync();
 
             // audit: Log user unban
             await _auditLogService.LogAuditAsync(currentUserId, "USER_UNBANNED", "User", targetUserId, 

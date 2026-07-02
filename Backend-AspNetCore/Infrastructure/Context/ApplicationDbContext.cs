@@ -52,35 +52,11 @@ namespace SirenStore.Infrastructure.Context
             // postgre için snake_case dönüşümünü uygular
             foreach (var entity in modelBuilder.Model.GetEntityTypes())
             {
-                var tableName = entity.GetTableName();
-                if (tableName != null)
-                    entity.SetTableName(ToSnakeCase(tableName));
-
-                foreach (var property in entity.GetProperties())
-                {
-                    property.SetColumnName(ToSnakeCase(property.GetColumnName()));
-                }
-
-                foreach (var key in entity.GetKeys())
-                {
-                    var keyName = key.GetName();
-                    if (keyName != null)
-                        key.SetName(ToSnakeCase(keyName));
-                }
-
-                foreach (var fk in entity.GetForeignKeys())
-                {
-                    var fkName = fk.GetConstraintName();
-                    if (fkName != null)
-                        fk.SetConstraintName(ToSnakeCase(fkName));
-                }
-
-                foreach (var index in entity.GetIndexes())
-                {
-                    var indexName = index.GetDatabaseName();
-                    if (indexName != null)
-                        index.SetDatabaseName(ToSnakeCase(indexName));
-                }
+                if (entity.GetTableName() is { } t) entity.SetTableName(ToSnakeCase(t));
+                foreach (var prop in entity.GetProperties()) prop.SetColumnName(ToSnakeCase(prop.GetColumnName()));
+                foreach (var key in entity.GetKeys()) if (key.GetName() is { } k) key.SetName(ToSnakeCase(k));
+                foreach (var fk in entity.GetForeignKeys()) if (fk.GetConstraintName() is { } f) fk.SetConstraintName(ToSnakeCase(f));
+                foreach (var idx in entity.GetIndexes()) if (idx.GetDatabaseName() is { } i) idx.SetDatabaseName(ToSnakeCase(i));
             }
         }
 

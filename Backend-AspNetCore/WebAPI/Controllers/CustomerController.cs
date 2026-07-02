@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SirenStore.Application.DTOs;
-using SirenStore.Application.Interfaces;
+using SirenStore.Application.Services;
 using SirenStore.WebAPI.Extensions;
 using System.Security.Claims;
 
@@ -13,9 +13,9 @@ namespace SirenStore.WebAPI.Controllers
     // sadece giriş yapmış kullanıcılar erişebilir
     public class CustomerController : ControllerBase
     {
-        private readonly IUserService _userService;
+        private readonly UserService _userService;
 
-        public CustomerController(IUserService userService)
+        public CustomerController(UserService userService)
         {
             _userService = userService;
         }

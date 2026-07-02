@@ -5,26 +5,25 @@ using Entities.Enums;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using SirenStore.Application.Exceptions;
-using SirenStore.Application.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Application.Services
+namespace SirenStore.Application.Services
 {
-    public class CommentManager : ICommentService
+    public class CommentService
     {
         private readonly DbContext _context;
         private readonly IMapper _mapper;
-        private readonly IAuditLogService _auditLogService;
+        private readonly AuditLogService _auditLogService;
         private readonly IValidator<CommentCreateDto> _createValidator;
         private readonly IValidator<CommentUpdateDto> _updateValidator;
 
-        public CommentManager(
+        public CommentService(
             DbContext context, 
             IMapper mapper, 
-            IAuditLogService auditLogService,
+            AuditLogService auditLogService,
             IValidator<CommentCreateDto> createValidator,
             IValidator<CommentUpdateDto> updateValidator)
         {

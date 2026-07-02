@@ -4,22 +4,22 @@ using Entities.Models;
 using FluentValidation;
 using SirenStore.Application.DTOs;
 using SirenStore.Application.Exceptions;
-using SirenStore.Application.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace SirenStore.Application.Services
 {
-    public class UserManager : IUserService
+    public class UserService
     {
-        private readonly IRepository<User> _userRepository;
+        private readonly DbContext _context;
         private readonly IMapper _mapper;
         private readonly IValidator<UpdateProfileDto> _updateProfileValidator;
         private readonly IValidator<ChangePasswordDto> _changePasswordValidator;
-        private readonly IAuditLogService _auditLogService;
+        private readonly AuditLogService _auditLogService;
 
-        public UserManager(IRepository<User> userRepository, IMapper mapper, IValidator<UpdateProfileDto> updateProfileValidator,
-            IValidator<ChangePasswordDto> changePasswordValidator, IAuditLogService auditLogService)
+        public UserService(DbContext context, IMapper mapper, IValidator<UpdateProfileDto> updateProfileValidator,
+            IValidator<ChangePasswordDto> changePasswordValidator, AuditLogService auditLogService)
         {
-            _userRepository = userRepository;
+            _context = context;
             _mapper = mapper;
             _updateProfileValidator = updateProfileValidator;
             _changePasswordValidator = changePasswordValidator;
@@ -29,7 +29,7 @@ namespace SirenStore.Application.Services
         // profil bilgilerini getirme
         public async Task<UserProfileDto> GetProfileAsync(long userId)
         {
-            var user = await _userRepository.GetAsync(u => u.Id == userId && !u.IsDeleted);
+            var user = await _context.Set<User>().FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted);
 
             if (user == null)
                 throw new NotFoundException("Kullanıcı profili bulunamadı.");
@@ -40,10 +40,9 @@ namespace SirenStore.Application.Services
         // profil bilgilerini güncelleme
         public async Task UpdateProfileAsync(long userId, UpdateProfileDto dto)
         {
-
             await _updateProfileValidator.ValidateAndThrowAsync(dto);
 
-            var user = await _userRepository.GetAsync(u => u.Id == userId && !u.IsDeleted);
+            var user = await _context.Set<User>().FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted);
 
             if (user == null)
                 throw new NotFoundException("Güncellenecek kullanıcı bulunamadı.");
@@ -52,8 +51,7 @@ namespace SirenStore.Application.Services
             user.LastName = dto.LastName;
             user.PhoneNumber = dto.PhoneNumber;
 
-            _userRepository.Update(user);
-            await _userRepository.SaveChangesAsync();
+            await _context.SaveChangesAsync();
 
             // audit: Profil güncelleme logu
             await _auditLogService.LogAuditAsync(userId, "USER_PROFILE_UPDATED", "User", userId, $"Email: {user.Email}");
@@ -64,7 +62,7 @@ namespace SirenStore.Application.Services
         {
             await _changePasswordValidator.ValidateAndThrowAsync(dto);
 
-            var user = await _userRepository.GetAsync(u => u.Id == userId && !u.IsDeleted);
+            var user = await _context.Set<User>().FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted);
 
             if (user == null)
                 throw new NotFoundException("Kullanıcı bulunamadı.");
@@ -79,8 +77,7 @@ namespace SirenStore.Application.Services
 
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
 
-            _userRepository.Update(user);
-            await _userRepository.SaveChangesAsync();
+            await _context.SaveChangesAsync();
 
             // audit: Şifre değiştirme logu
             await _auditLogService.LogAuditAsync(userId, "USER_PASSWORD_CHANGED", "User", userId, $"Email: {user.Email}");

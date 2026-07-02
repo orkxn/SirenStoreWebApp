@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SirenStore.Application.Interfaces;
+using SirenStore.Application.Services;
 using SirenStore.WebAPI.Extensions;
 using System.Security.Claims;
 
@@ -11,9 +11,9 @@ namespace SirenStore.WebAPI.Controllers
     [Authorize]
     public class FavoritesController : ControllerBase
     {
-        private readonly IFavoriteService _favoriteService;
+        private readonly FavoriteService _favoriteService;
 
-        public FavoritesController(IFavoriteService favoriteService)
+        public FavoritesController(FavoriteService favoriteService)
         {
             _favoriteService = favoriteService;
         }

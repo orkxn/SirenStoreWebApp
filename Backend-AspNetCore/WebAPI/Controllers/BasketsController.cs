@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SirenStore.Application.DTOs;
-using SirenStore.Application.Interfaces;
+using SirenStore.Application.Services;
 using SirenStore.WebAPI.Extensions;
 using System.Security.Claims;
 
@@ -12,9 +12,9 @@ namespace WebAPI.Controllers
     [Authorize] 
     public class BasketsController : ControllerBase
     {
-        private readonly IBasketService _basketService;
+        private readonly BasketService _basketService;
 
-        public BasketsController(IBasketService basketService)
+        public BasketsController(BasketService basketService)
         {
             _basketService = basketService;
         }

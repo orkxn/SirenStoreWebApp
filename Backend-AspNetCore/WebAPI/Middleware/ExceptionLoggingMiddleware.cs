@@ -1,5 +1,5 @@
 using Entities.Models;
-using SirenStore.Application.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace SirenStore.WebAPI.Middleware
 {
@@ -30,7 +30,7 @@ namespace SirenStore.WebAPI.Middleware
                 // veritabanına kaydetmek için ExceptionLog nesnesi oluştur
                 try
                 {
-                    var exceptionLogRepository = serviceProvider.GetRequiredService<IRepository<ExceptionLog>>();
+                    var dbContext = serviceProvider.GetRequiredService<DbContext>();
 
                     var exceptionLog = new ExceptionLog
                     {
@@ -43,8 +43,8 @@ namespace SirenStore.WebAPI.Middleware
                         Source = ex.Source
                     };
 
-                    await exceptionLogRepository.AddAsync(exceptionLog);
-                    await exceptionLogRepository.SaveChangesAsync();
+                    await dbContext.Set<ExceptionLog>().AddAsync(exceptionLog);
+                    await dbContext.SaveChangesAsync();
                 }
                 catch (Exception dbEx)
                 {
