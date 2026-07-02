@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, Router } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { CartService } from '../../services/cart.service';
 import { ThemeToggleComponent } from '../theme-toggle/theme-toggle.component';
@@ -113,8 +113,7 @@ export class NavbarComponent {
 
   constructor(
     public authService: AuthService,
-    private cartService: CartService,
-    private router: Router
+    private cartService: CartService
   ) {}
 
   get cartCount(): number {
@@ -125,6 +124,6 @@ export class NavbarComponent {
   handleLogout() {
     this.authService.logout();
     this.dropdownOpen = false;
-    this.router.navigate(['/login']);
+    window.location.href = '/login';
   }
 }
