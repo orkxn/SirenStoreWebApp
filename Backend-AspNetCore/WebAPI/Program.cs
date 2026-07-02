@@ -67,6 +67,11 @@ builder.Services.AddCors(options =>
     options.AddPolicy("SirenStorePolicy", policy =>
     {
         policy.WithOrigins(allowedOrigins)
+              .SetIsOriginAllowed(origin =>
+              {
+                  return Uri.TryCreate(origin, UriKind.Absolute, out var uri) &&
+                         (uri.Host == "localhost" || uri.Host.EndsWith(".onrender.com"));
+              })
               .WithMethods(allowedMethods)
               .WithHeaders(allowedHeaders);
 
