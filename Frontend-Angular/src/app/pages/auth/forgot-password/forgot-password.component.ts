@@ -100,22 +100,13 @@ export class ForgotPasswordComponent {
 
   async onSubmit() {
     this.emailError = '';
-    if (!this.email) {
-      this.emailError = 'E-posta adresi boş bırakılamaz.';
-      return;
-    }
-    if (!this.email.includes('@')) {
-      this.emailError = 'Lütfen geçerli bir e-posta adresi giriniz.';
-      return;
-    }
-
     this.isLoading = true;
     try {
       await this.authService.forgotPassword(this.email);
       this.emailSent = true;
       this.toastService.showToast('Sıfırlama e-postası başarıyla gönderildi.', 'success');
     } catch (err: any) {
-      this.toastService.showToast(err.message || 'Bir hata oluştu.', 'error');
+      this.emailError = err.message || 'Bir hata oluştu.';
     } finally {
       this.isLoading = false;
     }

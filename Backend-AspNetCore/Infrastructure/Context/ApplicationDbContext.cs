@@ -21,7 +21,6 @@ namespace SirenStore.Infrastructure.Context
         public DbSet<Seller> Sellers { get; set; }
         public DbSet<SellerFinance> SellerFinances { get; set; }
         public DbSet<SellerAddress> SellerAddresses { get; set; }
-        public DbSet<VendorApplication> VendorApplications { get; set; }
 
         // ürün
         public DbSet<Category> Categories { get; set; }
@@ -36,14 +35,8 @@ namespace SirenStore.Infrastructure.Context
         public DbSet<Favorite> Favorites { get; set; }
 
         // içerik ve destek
-        public DbSet<CmsContent> CmsContents { get; set; }
-        public DbSet<Faq> Faqs { get; set; }
         public DbSet<ContactMessage> ContactMessages { get; set; }
         public DbSet<Comment> Comments { get; set; }
-
-        // moderasyon
-        public DbSet<BanRecord> BanRecords { get; set; }
-        public DbSet<WarningRecord> WarningRecords { get; set; }
 
         // loglama
         public DbSet<AuditLog> AuditLogs { get; set; }
