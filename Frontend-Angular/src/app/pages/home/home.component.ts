@@ -80,23 +80,6 @@ import { ProductGridSkeletonComponent } from '../../components/skeleton/skeleton
           <span class="text-sm font-bold uppercase tracking-widest mx-4 flex items-center gap-3">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275Z"/></svg> GÜVENLİ ALIŞVERİŞ
           </span>
-          
-          <!-- Cloned for Marquee loop -->
-          <span clone class="text-sm font-bold uppercase tracking-widest mx-4 flex items-center gap-3">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275Z"/><path d="m5 3 1 2.5L8.5 6 6 7 5 9.5 4 7 1.5 6 4 5.5Z"/><path d="m19 17 1 2.5 2.5.5-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1Z"/></svg> SIREN EXCLUSIVE
-          </span>
-          <span clone class="text-sm font-bold uppercase tracking-widest mx-4 flex items-center gap-3">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg> TREND ÜRÜNLER
-          </span>
-          <span clone class="text-sm font-bold uppercase tracking-widest mx-4 flex items-center gap-3">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> PREMIUM QUALITY
-          </span>
-          <span clone class="text-sm font-bold uppercase tracking-widest mx-4 flex items-center gap-3">
-            <svg xmlns="http://www.w3.org/205" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><rect width="16" height="13" x="2" y="6" rx="2"/><path d="M16 8h4l3 3v7a2 2 0 0 1-2 2h-1"/><path d="M3 18h1"/><path d="M18 18h1"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="14.5" cy="18.5" r="2.5"/></svg> FAST SHIPPING
-          </span>
-          <span clone class="text-sm font-bold uppercase tracking-widest mx-4 flex items-center gap-3">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275Z"/></svg> GÜVENLİ ALIŞVERİŞ
-          </span>
         </app-marquee>
       </section>
  
@@ -182,20 +165,6 @@ import { ProductGridSkeletonComponent } from '../../components/skeleton/skeleton
             KOLAY VE HIZLI İADE
           </span>
           <span class="text-sm font-bold tracking-widest mx-4 uppercase">
-            GÜVENLİ ÖDEME ALTYAPISI
-          </span>
-          
-          <!-- Cloned for Marquee loop -->
-          <span clone class="text-sm font-bold tracking-widest mx-4 uppercase">
-            ₺1.500 ÜZERİ SİPARİŞLERDE ÜCRETSİZ KARGO
-          </span>
-          <span clone class="text-sm font-bold tracking-widest mx-4 uppercase">
-            VADE FARKSIZ 3 TAKSİT İMKANI
-          </span>
-          <span clone class="text-sm font-bold tracking-widest mx-4 uppercase">
-            KOLAY VE HIZLI İADE
-          </span>
-          <span clone class="text-sm font-bold tracking-widest mx-4 uppercase">
             GÜVENLİ ÖDEME ALTYAPISI
           </span>
         </app-marquee>

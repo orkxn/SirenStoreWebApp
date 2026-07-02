@@ -25,11 +25,6 @@ export class ThemeService {
   }
 
   private applyTheme() {
-    const root = document.documentElement;
-    if (this._theme === 'dark') {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
-    }
+    document.documentElement.classList.toggle('dark', this._theme === 'dark');
   }
 }

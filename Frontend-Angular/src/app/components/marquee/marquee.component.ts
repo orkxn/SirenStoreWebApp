@@ -15,9 +15,6 @@ import { CommonModule } from '@angular/common';
         <div class="flex gap-16 items-center shrink-0">
           <ng-content></ng-content>
         </div>
-        <div class="flex gap-16 items-center shrink-0" aria-hidden="true">
-          <ng-content select="[clone]"></ng-content>
-        </div>
       </div>
     </div>
   `

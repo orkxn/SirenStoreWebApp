@@ -4,7 +4,6 @@ import { CommonModule } from '@angular/common';
 @Component({
   selector: 'app-skeleton',
   standalone: true,
-  imports: [CommonModule],
   template: `<div [class]="'animate-pulse bg-zinc-200 dark:bg-zinc-800 rounded ' + className"></div>`
 })
 export class SkeletonComponent {
@@ -14,7 +13,7 @@ export class SkeletonComponent {
 @Component({
   selector: 'app-product-card-skeleton',
   standalone: true,
-  imports: [CommonModule, SkeletonComponent],
+  imports: [SkeletonComponent],
   template: `
     <div class="flex flex-col border border-zinc-950/5 dark:border-white/10 rounded-2xl p-4 bg-zinc-950/[0.01] dark:bg-white/[0.01]">
       <app-skeleton className="aspect-square w-full rounded-xl mb-4"></app-skeleton>
@@ -52,7 +51,7 @@ export class ProductGridSkeletonComponent {
 @Component({
   selector: 'app-order-row-skeleton',
   standalone: true,
-  imports: [CommonModule, SkeletonComponent],
+  imports: [SkeletonComponent],
   template: `
     <div class="border border-zinc-950/5 dark:border-white/10 rounded-2xl p-6 bg-zinc-950/[0.01] dark:bg-white/[0.01]">
       <div class="flex flex-wrap justify-between items-center gap-4 mb-4 pb-4 border-b border-zinc-950/5 dark:border-white/5">
