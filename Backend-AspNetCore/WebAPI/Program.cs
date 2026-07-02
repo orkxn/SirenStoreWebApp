@@ -83,6 +83,12 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
+    var secretKey = builder.Configuration["JwtSettings:SecretKey"];
+    if (string.IsNullOrEmpty(secretKey) || secretKey.Length < 32)
+    {
+        throw new InvalidOperationException("JWT SecretKey is missing or too short. It must be at least 32 characters (256 bits). Please configure a strong key in appsettings.json or environment variables.");
+    }
+
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
@@ -91,7 +97,8 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
         ValidAudience = builder.Configuration["JwtSettings:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:SecretKey"]!))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
+        ClockSkew = TimeSpan.Zero // Token süresi dolduğu anda geçersiz kılınır (5 dakikalık varsayılan tolerans payını kapatır)
     };
 });
 

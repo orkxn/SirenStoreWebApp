@@ -1,7 +1,10 @@
 import { HttpInterceptorFn, HttpRequest, HttpHandlerFn, HttpErrorResponse } from '@angular/common/http';
 import { catchError, throwError, Observable, Subject, switchMap, filter, take } from 'rxjs';
 
-const API_BASE_URL = 'https://localhost:7009/api';
+const isProduction = !window.location.hostname.includes('localhost') && !window.location.hostname.includes('127.0.0.1');
+const API_BASE_URL = isProduction 
+  ? 'https://sirenstorewebapp.onrender.com/api'
+  : 'https://localhost:7009/api';
 
 let isRefreshing = false;
 const refreshDone$ = new Subject<string>();
