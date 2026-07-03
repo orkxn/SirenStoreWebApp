@@ -28,6 +28,15 @@ namespace WebAPI.Controllers
             return Ok(products);
         }
 
+        // tüm benzersiz etiketleri listeleme
+        // GET: api/products/tags
+        [HttpGet("tags")]
+        public async Task<IActionResult> GetAllTags()
+        {
+            var tags = await _productService.GetAllTagsAsync();
+            return Ok(tags);
+        }
+
         // id'ye göre ürün detayını getirme
         // GET: api/products/{id}
         [HttpGet("{id:long}")]

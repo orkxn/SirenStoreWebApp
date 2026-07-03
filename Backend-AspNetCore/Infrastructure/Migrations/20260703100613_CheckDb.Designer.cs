@@ -12,7 +12,7 @@ using SirenStore.Infrastructure.Context;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260703091816_CheckDb")]
+    [Migration("20260703100613_CheckDb")]
     partial class CheckDb
     {
         /// <inheritdoc />
@@ -978,10 +978,6 @@ namespace Infrastructure.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("name");
 
-                    b.Property<long>("ProductId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("product_id");
-
                     b.Property<DateTime?>("UpdatedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_date");
@@ -989,8 +985,9 @@ namespace Infrastructure.Migrations
                     b.HasKey("Id")
                         .HasName("pk_tags");
 
-                    b.HasIndex("ProductId")
-                        .HasDatabaseName("ix_tags_product_id");
+                    b.HasIndex("Name")
+                        .IsUnique()
+                        .HasDatabaseName("ix_tags_name");
 
                     b.ToTable("tags", (string)null);
                 });
@@ -1080,6 +1077,25 @@ namespace Infrastructure.Migrations
                         .HasName("pk_users");
 
                     b.ToTable("users");
+                });
+
+            modelBuilder.Entity("product_tags", b =>
+                {
+                    b.Property<long>("product_id")
+                        .HasColumnType("bigint")
+                        .HasColumnName("product_id");
+
+                    b.Property<long>("tag_id")
+                        .HasColumnType("bigint")
+                        .HasColumnName("tag_id");
+
+                    b.HasKey("product_id", "tag_id")
+                        .HasName("pk_product_tags");
+
+                    b.HasIndex("tag_id")
+                        .HasDatabaseName("ix_product_tags_tag_id");
+
+                    b.ToTable("product_tags");
                 });
 
             modelBuilder.Entity("Entities.Models.Address", b =>
@@ -1280,16 +1296,21 @@ namespace Infrastructure.Migrations
                     b.Navigation("Seller");
                 });
 
-            modelBuilder.Entity("Entities.Models.Tag", b =>
+            modelBuilder.Entity("product_tags", b =>
                 {
-                    b.HasOne("Entities.Models.Product", "Product")
-                        .WithMany("Tags")
-                        .HasForeignKey("ProductId")
+                    b.HasOne("Entities.Models.Product", null)
+                        .WithMany()
+                        .HasForeignKey("product_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_tags_products_product_id");
+                        .HasConstraintName("fk_product_tags_products_product_id");
 
-                    b.Navigation("Product");
+                    b.HasOne("Entities.Models.Tag", null)
+                        .WithMany()
+                        .HasForeignKey("tag_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_product_tags_tags_tag_id");
                 });
 
             modelBuilder.Entity("Entities.Models.Basket", b =>
@@ -1312,8 +1333,6 @@ namespace Infrastructure.Migrations
                     b.Navigation("Comments");
 
                     b.Navigation("ProductImages");
-
-                    b.Navigation("Tags");
                 });
 
             modelBuilder.Entity("Entities.Models.Seller", b =>

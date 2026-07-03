@@ -215,9 +215,23 @@ import { PaginationComponent } from '../../components/pagination/pagination.comp
                 type="text"
                 placeholder="Örn: kulaklık, masa, tişört"
                 [(ngModel)]="upsertData.tags"
+                (input)="onTagsInputChange()"
                 name="tags"
                 class="w-full bg-transparent border border-zinc-300 dark:border-zinc-800 rounded-xl px-4 py-3 outline-none transition text-zinc-900 dark:text-zinc-50 focus:border-zinc-950 dark:focus:border-white"
               />
+              <div *ngIf="filteredSuggestions && filteredSuggestions.length > 0" class="mt-2 space-y-1">
+                <span class="text-xs text-zinc-400 dark:text-zinc-500 font-medium">Mevcut Etiketler (Ekleme için tıklayın):</span>
+                <div class="flex flex-wrap gap-1.5">
+                  <button
+                    type="button"
+                    *ngFor="let tag of filteredSuggestions"
+                    (click)="addTagToInput(tag)"
+                    class="inline-flex items-center px-2.5 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 text-xs font-semibold cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors border border-zinc-950/5 dark:border-white/5"
+                  >
+                    #{{ tag }}
+                  </button>
+                </div>
+              </div>
             </div>
 
             <!-- Product Images links (up to 3 links) -->
@@ -351,6 +365,8 @@ export class SellerPanelComponent implements OnInit {
   products: ProductListDto[] = [];
   orders: OrderDto[] = [];
   categories: CategoryDto[] = [];
+  availableTags: string[] = [];
+  filteredSuggestions: string[] = [];
   isLoading = false;
   isSubmitLoading = false;
   editProduct: ProductListDto | null = null;
@@ -400,14 +416,17 @@ export class SellerPanelComponent implements OnInit {
   async loadSellerData() {
     this.isLoading = true;
     try {
-      const [prodData, orderData, catData] = await Promise.all([
+      const [prodData, orderData, catData, tagsData] = await Promise.all([
         this.productService.getMyProducts(),
         this.orderService.getSellerOrders(),
-        this.categoryService.getAll()
+        this.categoryService.getAll(),
+        this.productService.getAllTags()
       ]);
       this.products = prodData;
       this.orders = orderData;
       this.categories = catData;
+      this.availableTags = tagsData || [];
+      this.filteredSuggestions = [];
 
       this.productsPage = Math.min(this.productsPage, Math.ceil(this.products.length / 9) || 1);
       this.ordersPage = Math.min(this.ordersPage, Math.ceil(this.orders.length / 9) || 1);
@@ -462,6 +481,31 @@ export class SellerPanelComponent implements OnInit {
     this.resetUpsertErrors();
   }
 
+  onTagsInputChange() {
+    const rawVal = this.upsertData.tags || '';
+    const parts = rawVal.split(',');
+    const lastPart = parts[parts.length - 1].trim().toLowerCase();
+    const selected = parts.slice(0, -1).map(p => p.trim().toLowerCase()).filter(Boolean);
+
+    if (lastPart) {
+      this.filteredSuggestions = this.availableTags.filter(t => 
+        t.toLowerCase().startsWith(lastPart) && 
+        !selected.includes(t.toLowerCase())
+      );
+    } else {
+      this.filteredSuggestions = [];
+    }
+  }
+
+  addTagToInput(tag: string) {
+    const rawVal = this.upsertData.tags || '';
+    const parts = rawVal.split(',');
+    parts[parts.length - 1] = ' ' + tag;
+    const cleaned = parts.map(p => p.trim()).filter(Boolean);
+    this.upsertData.tags = cleaned.join(', ') + ', ';
+    this.onTagsInputChange();
+  }
+
   resetUpsertErrors() {
     this.upsertErrors = {
       name: '',
@@ -470,6 +514,7 @@ export class SellerPanelComponent implements OnInit {
       stock: '',
       mainImage: ''
     };
+    this.filteredSuggestions = [];
   }
 
   getFallbackImg(name: string): string {

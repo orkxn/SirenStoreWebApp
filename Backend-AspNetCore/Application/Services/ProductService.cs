@@ -174,6 +174,7 @@ namespace SirenStore.Application.Services
             await _context.Set<Product>().AddAsync(newProduct);
             await _context.SaveChangesAsync();
             _cache.Remove(CacheKeyAll);
+            _cache.Remove("Tags_All");
 
             // audit: Ürün oluşturma logu
             await _auditLogService.LogAuditAsync(userId, "PRODUCT_CREATED", "Product", newProduct.Id, $"Name: {newProduct.Name}");
@@ -248,6 +249,7 @@ namespace SirenStore.Application.Services
             await _context.SaveChangesAsync();
             _cache.Remove(CacheKeyAll);
             _cache.Remove(CacheKeyDetail(product.Id));
+            _cache.Remove("Tags_All");
 
             // audit: Ürün güncelleme logu
             await _auditLogService.LogAuditAsync(userId, "PRODUCT_UPDATED", "Product", product.Id, $"Name: {product.Name}");
@@ -282,6 +284,27 @@ namespace SirenStore.Application.Services
 
             // audit: Ürün silme logu
             await _auditLogService.LogAuditAsync(userId, "PRODUCT_DELETED", "Product", productId, $"ProductId: {productId}");
+        }
+
+        // tüm etiketleri listele
+        public async Task<IEnumerable<string>> GetAllTagsAsync()
+        {
+            const string cacheKey = "Tags_All";
+            if (!_cache.TryGetValue(cacheKey, out IEnumerable<string> tags))
+            {
+                tags = await _context.Set<Tag>()
+                    .Where(t => !t.IsDeleted)
+                    .Select(t => t.Name)
+                    .OrderBy(name => name)
+                    .ToListAsync();
+
+                var cacheEntryOptions = new MemoryCacheEntryOptions()
+                    .SetAbsoluteExpiration(TimeSpan.FromMinutes(10))
+                    .SetSlidingExpiration(TimeSpan.FromMinutes(2));
+
+                _cache.Set(cacheKey, tags, cacheEntryOptions);
+            }
+            return tags;
         }
     }
 }

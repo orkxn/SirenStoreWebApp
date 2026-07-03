@@ -12,6 +12,10 @@ export class ProductService {
     return firstValueFrom(this.http.get<ProductListDto[]>(`${API_BASE_URL}/products`));
   }
 
+  getAllTags(): Promise<string[]> {
+    return firstValueFrom(this.http.get<string[]>(`${API_BASE_URL}/products/tags`));
+  }
+
   getById(id: number): Promise<ProductListDto> {
     return firstValueFrom(this.http.get<ProductListDto>(`${API_BASE_URL}/products/${id}`));
   }
