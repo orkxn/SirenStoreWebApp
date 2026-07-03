@@ -52,23 +52,8 @@ export class PaginationComponent {
   }
 
   get pages(): number[] {
-    const total = this.totalPages;
-    const current = this.currentPage;
-    
-    if (total <= 5) {
-      return Array.from({ length: total }, (_, i) => i + 1);
-    }
-    
-    let start = Math.max(1, current - 2);
-    let end = Math.min(total, current + 2);
-    
-    if (start === 1) {
-      end = 5;
-    } else if (end === total) {
-      start = total - 4;
-    }
-    
-    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+    const start = Math.max(1, Math.min(this.currentPage - 2, this.totalPages - 4));
+    return Array.from({ length: Math.min(5, this.totalPages) }, (_, i) => start + i);
   }
 
   changePage(page: number) {

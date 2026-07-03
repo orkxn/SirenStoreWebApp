@@ -9,5 +9,6 @@ namespace SirenStore.Application.DTOs
         public long CategoryId { get; set; }
 
         public List<string> ImageUrls { get; set; } = new List<string>();
+        public List<string> Tags { get; set; } = new List<string>();
     }
 }

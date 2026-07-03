@@ -94,6 +94,8 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+builder.Services.AddMemoryCache();
+
 // controller ekleme ayarları
 builder.Services.AddControllers()
     .AddJsonOptions(options =>

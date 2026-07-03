@@ -293,7 +293,8 @@ export class ProductsComponent implements OnInit {
         const matchesSearch = !this.searchTerm ||
           p.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
           p.description.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-          p.storeName.toLowerCase().includes(this.searchTerm.toLowerCase());
+          p.storeName.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+          (p.tags && p.tags.some(t => t.toLowerCase().includes(this.searchTerm.toLowerCase())));
 
         // 2. Category match
         const matchesCategory = this.selectedCategory ? p.categoryId === this.selectedCategory : true;

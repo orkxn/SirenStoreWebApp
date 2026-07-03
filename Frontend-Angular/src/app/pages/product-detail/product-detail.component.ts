@@ -540,10 +540,7 @@ export class ProductDetailComponent implements OnInit {
     try {
       this.comments = await this.commentService.getByProductId(prodId);
       this.calculateAverageRating();
-      const maxPage = Math.ceil(this.comments.length / 9);
-      if (this.commentsPage > maxPage && maxPage > 0) {
-        this.commentsPage = maxPage;
-      }
+      this.commentsPage = Math.min(this.commentsPage, Math.ceil(this.comments.length / 9) || 1);
     } catch (err: any) {
       this.toastService.showToast(err.message || 'Yorumlar yüklenirken bir hata oluştu.', 'error');
     } finally {

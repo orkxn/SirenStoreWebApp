@@ -1,5 +1,6 @@
 using Entities.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using SirenStore.Application.DTOs;
 using SirenStore.Application.Exceptions;
 
@@ -9,24 +10,37 @@ namespace SirenStore.Application.Services
     {
         private readonly DbContext _context;
         private readonly AuditLogService _auditLogService;
+        private readonly IMemoryCache _cache;
+        private const string CacheKey = "Categories_All";
 
-        public CategoryService(DbContext context, AuditLogService auditLogService)
+        public CategoryService(DbContext context, AuditLogService auditLogService, IMemoryCache cache)
         {
             _context = context;
             _auditLogService = auditLogService;
+            _cache = cache;
         }
 
         // tüm kategorileri getir
         public async Task<List<CategoryDto>> GetAllCategoriesAsync()
         {
-            return await _context.Set<Category>()
-                .Where(c => !c.IsDeleted)
-                .Select(c => new CategoryDto
-                {
-                    Id = c.Id,
-                    Name = c.Name
-                })
-                .ToListAsync();
+            if (!_cache.TryGetValue(CacheKey, out List<CategoryDto> categories))
+            {
+                categories = await _context.Set<Category>()
+                    .Where(c => !c.IsDeleted)
+                    .Select(c => new CategoryDto
+                    {
+                        Id = c.Id,
+                        Name = c.Name
+                    })
+                    .ToListAsync();
+
+                var cacheEntryOptions = new MemoryCacheEntryOptions()
+                    .SetAbsoluteExpiration(TimeSpan.FromHours(1))
+                    .SetSlidingExpiration(TimeSpan.FromMinutes(10));
+
+                _cache.Set(CacheKey, categories, cacheEntryOptions);
+            }
+            return categories;
         }
 
         // id ile kategori getir
@@ -56,6 +70,7 @@ namespace SirenStore.Application.Services
             var category = new Category { Name = dto.Name };
             await _context.Set<Category>().AddAsync(category);
             await _context.SaveChangesAsync();
+            _cache.Remove(CacheKey);
 
             // audit: Kategori oluşturma logu
             await _auditLogService.LogAuditAsync(userId, "CATEGORY_CREATED", "Category", category.Id, $"Name: {category.Name}");
@@ -71,6 +86,7 @@ namespace SirenStore.Application.Services
 
             category.Name = dto.Name;
             await _context.SaveChangesAsync();
+            _cache.Remove(CacheKey);
 
             // audit: Kategori güncelleme logu
             await _auditLogService.LogAuditAsync(userId, "CATEGORY_UPDATED", "Category", category.Id, $"NewName: {category.Name}");
@@ -86,6 +102,7 @@ namespace SirenStore.Application.Services
 
             category.IsDeleted = true;
             await _context.SaveChangesAsync();
+            _cache.Remove(CacheKey);
 
             // audit: Kategori silme logu
             await _auditLogService.LogAuditAsync(userId, "CATEGORY_DELETED", "Category", id, $"Name: {category.Name}");

@@ -16,5 +16,6 @@ namespace SirenStore.Application.DTOs
 
         public string? MainImageUrl { get; set; }
         public List<string> ImageUrls { get; set; } = new List<string>();
+        public List<string> Tags { get; set; } = new List<string>();
     }
 }

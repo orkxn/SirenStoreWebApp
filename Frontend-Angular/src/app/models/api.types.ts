@@ -81,6 +81,7 @@ export interface ProductListDto {
   storeName: string;
   mainImageUrl: string | null;
   imageUrls: string[];
+  tags?: string[];
 }
 
 export interface OrderItemDto {

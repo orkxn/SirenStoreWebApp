@@ -24,11 +24,11 @@ export class ProductService {
     return firstValueFrom(this.http.get<ProductListDto[]>(`${API_BASE_URL}/products/my-products`));
   }
 
-  create(dto: { name: string; description: string; price: number; stock: number; categoryId: number; imageUrls: string[] }): Promise<any> {
+  create(dto: { name: string; description: string; price: number; stock: number; categoryId: number; imageUrls: string[]; tags?: string[] }): Promise<any> {
     return firstValueFrom(this.http.post(`${API_BASE_URL}/products`, dto));
   }
 
-  update(dto: { id: number; name: string; description: string; price: number; stock: number; categoryId: number; imageUrls: string[] }): Promise<any> {
+  update(dto: { id: number; name: string; description: string; price: number; stock: number; categoryId: number; imageUrls: string[]; tags?: string[] }): Promise<any> {
     return firstValueFrom(this.http.put(`${API_BASE_URL}/products`, dto));
   }
 

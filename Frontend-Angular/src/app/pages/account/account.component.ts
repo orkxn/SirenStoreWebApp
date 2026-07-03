@@ -506,10 +506,7 @@ export class AccountComponent implements OnInit {
     this.loadingComments = true;
     try {
       this.myComments = await this.commentService.getMyComments();
-      const maxPage = Math.ceil(this.myComments.length / 9);
-      if (this.commentsPage > maxPage && maxPage > 0) {
-        this.commentsPage = maxPage;
-      }
+      this.commentsPage = Math.min(this.commentsPage, Math.ceil(this.myComments.length / 9) || 1);
     } catch (err: any) {
       this.toastService.showToast('Değerlendirmeleriniz yüklenemedi.', 'error');
       console.error(err);

@@ -88,10 +88,7 @@ export class FavoritesComponent implements OnInit, OnDestroy {
       // Favori ID'lerindeki değişimleri dinleyip arayüzü anlık güncelle (silindiğinde anında kalkması için)
       this.sub = this.favoriteService.favoriteIds$.subscribe(favIds => {
         this.favorites = this.favorites.filter(f => favIds.has(f.id));
-        const maxPage = Math.ceil(this.favorites.length / 9);
-        if (this.currentPage > maxPage && maxPage > 0) {
-          this.currentPage = maxPage;
-        }
+        this.currentPage = Math.min(this.currentPage, Math.ceil(this.favorites.length / 9) || 1);
       });
     } catch (err: any) {
       this.toastService.showToast('Favoriler yüklenirken hata oluştu.', 'error');

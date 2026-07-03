@@ -26,6 +26,7 @@ namespace SirenStore.Infrastructure.Context
         public DbSet<Category> Categories { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<ProductImage> ProductImages { get; set; }
+        public DbSet<Tag> Tags { get; set; }
 
         // sipariş ve sepet
         public DbSet<Order> Orders { get; set; }

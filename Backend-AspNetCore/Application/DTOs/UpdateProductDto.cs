@@ -1,4 +1,4 @@
-﻿namespace SirenStore.Application.DTOs
+namespace SirenStore.Application.DTOs
 {
     public class UpdateProductDto
     {
@@ -9,5 +9,6 @@
         public int Stock { get; set; }
         public long CategoryId { get; set; }
         public List<string> ImageUrls { get; set; } = new List<string>();
+        public List<string> Tags { get; set; } = new List<string>();
     }
 }

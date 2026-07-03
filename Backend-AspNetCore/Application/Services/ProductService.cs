@@ -1,6 +1,7 @@
 using Entities.Models;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using SirenStore.Application.DTOs;
 using SirenStore.Application.Exceptions;
 
@@ -12,17 +13,22 @@ namespace SirenStore.Application.Services
         private readonly IValidator<CreateProductDto> _createValidator;
         private readonly IValidator<UpdateProductDto> _updateValidator;
         private readonly AuditLogService _auditLogService;
+        private readonly IMemoryCache _cache;
+        private const string CacheKeyAll = "Products_All";
+        private static string CacheKeyDetail(long id) => $"Product_Detail_{id}";
 
         public ProductService(
             DbContext context,
             IValidator<CreateProductDto> createValidator,
             IValidator<UpdateProductDto> updateValidator,
-            AuditLogService auditLogService)
+            AuditLogService auditLogService,
+            IMemoryCache cache)
         {
             _context = context;
             _createValidator = createValidator;
             _updateValidator = updateValidator;
             _auditLogService = auditLogService;
+            _cache = cache;
         }
 
         /// <summary>
@@ -35,6 +41,7 @@ namespace SirenStore.Application.Services
                 .Include(p => p.Category)
                 .Include(p => p.Seller)
                 .Include(p => p.ProductImages)
+                .Include(p => p.Tags)
                 .Select(p => new ProductListDto
                 {
                     Id = p.Id,
@@ -48,14 +55,25 @@ namespace SirenStore.Application.Services
                     StoreName = p.Seller.StoreName,
                     MainImageUrl = p.ProductImages.Where(img => img.IsMain).Select(img => img.ImageUrl).FirstOrDefault()
                                    ?? p.ProductImages.Select(img => img.ImageUrl).FirstOrDefault(),
-                    ImageUrls = p.ProductImages.Select(img => img.ImageUrl).ToList()
+                    ImageUrls = p.ProductImages.Select(img => img.ImageUrl).ToList(),
+                    Tags = p.Tags.Where(t => !t.IsDeleted).Select(t => t.Name).ToList()
                 });
         }
 
         // tüm ürünleri listele
         public async Task<IEnumerable<ProductListDto>> GetAllAsync()
         {
-            return await GetProductDtoQueryable(_context.Set<Product>().Where(p => !p.IsDeleted)).ToListAsync();
+            if (!_cache.TryGetValue(CacheKeyAll, out IEnumerable<ProductListDto> products))
+            {
+                products = await GetProductDtoQueryable(_context.Set<Product>().Where(p => !p.IsDeleted)).ToListAsync();
+
+                var cacheEntryOptions = new MemoryCacheEntryOptions()
+                    .SetAbsoluteExpiration(TimeSpan.FromMinutes(10))
+                    .SetSlidingExpiration(TimeSpan.FromMinutes(2));
+
+                _cache.Set(CacheKeyAll, products, cacheEntryOptions);
+            }
+            return products;
         }
 
         // satıcının ürünlerini listele
@@ -82,11 +100,20 @@ namespace SirenStore.Application.Services
         // ürün detaylarını getir
         public async Task<ProductListDto> GetByIdAsync(long id)
         {
-            var productDto = await GetProductDtoQueryable(_context.Set<Product>().Where(p => p.Id == id && !p.IsDeleted)).FirstOrDefaultAsync();
+            var key = CacheKeyDetail(id);
+            if (!_cache.TryGetValue(key, out ProductListDto productDto))
+            {
+                productDto = await GetProductDtoQueryable(_context.Set<Product>().Where(p => p.Id == id && !p.IsDeleted)).FirstOrDefaultAsync();
 
-            if (productDto == null)
-                throw new NotFoundException("Ürün bulunamadı.");
+                if (productDto == null)
+                    throw new NotFoundException("Ürün bulunamadı.");
 
+                var cacheEntryOptions = new MemoryCacheEntryOptions()
+                    .SetAbsoluteExpiration(TimeSpan.FromMinutes(30))
+                    .SetSlidingExpiration(TimeSpan.FromMinutes(5));
+
+                _cache.Set(key, productDto, cacheEntryOptions);
+            }
             return productDto;
         }
 
@@ -128,8 +155,17 @@ namespace SirenStore.Application.Services
                 }
             }
 
+            if (dto.Tags != null && dto.Tags.Any())
+            {
+                foreach (var tag in dto.Tags)
+                {
+                    newProduct.Tags.Add(new Tag { Name = tag });
+                }
+            }
+
             await _context.Set<Product>().AddAsync(newProduct);
             await _context.SaveChangesAsync();
+            _cache.Remove(CacheKeyAll);
 
             // audit: Ürün oluşturma logu
             await _auditLogService.LogAuditAsync(userId, "PRODUCT_CREATED", "Product", newProduct.Id, $"Name: {newProduct.Name}");
@@ -148,6 +184,7 @@ namespace SirenStore.Application.Services
             // güncellenecek ürünü bul
             var product = await _context.Set<Product>()
                 .Include(p => p.ProductImages)
+                .Include(p => p.Tags)
                 .FirstOrDefaultAsync(p => p.Id == dto.Id && !p.IsDeleted);
 
             if (product == null)
@@ -170,6 +207,7 @@ namespace SirenStore.Application.Services
             product.CategoryId = dto.CategoryId;
 
             product.ProductImages.Clear();
+            product.Tags.Clear();
 
             if (dto.ImageUrls != null && dto.ImageUrls.Any())
             {
@@ -183,7 +221,17 @@ namespace SirenStore.Application.Services
                 }
             }
 
+            if (dto.Tags != null && dto.Tags.Any())
+            {
+                foreach (var tag in dto.Tags)
+                {
+                    product.Tags.Add(new Tag { Name = tag });
+                }
+            }
+
             await _context.SaveChangesAsync();
+            _cache.Remove(CacheKeyAll);
+            _cache.Remove(CacheKeyDetail(product.Id));
 
             // audit: Ürün güncelleme logu
             await _auditLogService.LogAuditAsync(userId, "PRODUCT_UPDATED", "Product", product.Id, $"Name: {product.Name}");
@@ -213,6 +261,8 @@ namespace SirenStore.Application.Services
             }
 
             await _context.SaveChangesAsync();
+            _cache.Remove(CacheKeyAll);
+            _cache.Remove(CacheKeyDetail(productId));
 
             // audit: Ürün silme logu
             await _auditLogService.LogAuditAsync(userId, "PRODUCT_DELETED", "Product", productId, $"ProductId: {productId}");

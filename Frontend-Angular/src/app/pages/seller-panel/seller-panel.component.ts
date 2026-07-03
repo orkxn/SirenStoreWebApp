@@ -209,6 +209,17 @@ import { PaginationComponent } from '../../components/pagination/pagination.comp
               </select>
             </div>
 
+            <div class="flex flex-col gap-1.5 text-left">
+              <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">Etiketler (Virgülle ayırın)</label>
+              <input
+                type="text"
+                placeholder="Örn: kulaklık, mouse, laptop"
+                [(ngModel)]="upsertData.tags"
+                name="tags"
+                class="w-full bg-transparent border border-zinc-300 dark:border-zinc-800 rounded-xl px-4 py-3 outline-none transition text-zinc-900 dark:text-zinc-50 focus:border-zinc-950 dark:focus:border-white"
+              />
+            </div>
+
             <!-- Product Images links (up to 3 links) -->
             <div class="space-y-4">
               <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300 block">Ürün Görsel Linkleri</label>
@@ -363,7 +374,8 @@ export class SellerPanelComponent implements OnInit {
     categoryId: 1,
     mainImage: '',
     image2: '',
-    image3: ''
+    image3: '',
+    tags: ''
   };
 
   upsertErrors = {
@@ -397,14 +409,8 @@ export class SellerPanelComponent implements OnInit {
       this.orders = orderData;
       this.categories = catData;
 
-      const maxProductsPage = Math.ceil(this.products.length / 9);
-      if (this.productsPage > maxProductsPage && maxProductsPage > 0) {
-        this.productsPage = maxProductsPage;
-      }
-      const maxOrdersPage = Math.ceil(this.orders.length / 9);
-      if (this.ordersPage > maxOrdersPage && maxOrdersPage > 0) {
-        this.ordersPage = maxOrdersPage;
-      }
+      this.productsPage = Math.min(this.productsPage, Math.ceil(this.products.length / 9) || 1);
+      this.ordersPage = Math.min(this.ordersPage, Math.ceil(this.orders.length / 9) || 1);
 
       if (catData.length > 0 && !this.upsertData.categoryId) {
         this.upsertData.categoryId = 1;
@@ -427,7 +433,8 @@ export class SellerPanelComponent implements OnInit {
       categoryId: prod.categoryId,
       mainImage: prod.mainImageUrl || '',
       image2: prod.imageUrls[1] || '',
-      image3: prod.imageUrls[2] || ''
+      image3: prod.imageUrls[2] || '',
+      tags: prod.tags ? prod.tags.join(', ') : ''
     };
     this.resetUpsertErrors();
   }
@@ -443,7 +450,8 @@ export class SellerPanelComponent implements OnInit {
       categoryId: 1,
       mainImage: '',
       image2: '',
-      image3: ''
+      image3: '',
+      tags: ''
     };
     this.resetUpsertErrors();
   }
@@ -522,6 +530,9 @@ export class SellerPanelComponent implements OnInit {
 
     this.isSubmitLoading = true;
     const imageUrlsList = [this.upsertData.mainImage, this.upsertData.image2, this.upsertData.image3].filter(Boolean) as string[];
+    const tagsList = this.upsertData.tags
+      ? this.upsertData.tags.split(',').map(t => t.trim()).filter(Boolean)
+      : [];
 
     try {
       if (this.editProduct) {
@@ -533,7 +544,8 @@ export class SellerPanelComponent implements OnInit {
           price: Number(this.upsertData.price),
           stock: Number(this.upsertData.stock),
           categoryId: Number(this.upsertData.categoryId),
-          imageUrls: imageUrlsList
+          imageUrls: imageUrlsList,
+          tags: tagsList
         });
         this.toastService.showToast('Ürün başarıyla güncellendi.', 'success');
       } else {
@@ -544,7 +556,8 @@ export class SellerPanelComponent implements OnInit {
           price: Number(this.upsertData.price),
           stock: Number(this.upsertData.stock),
           categoryId: Number(this.upsertData.categoryId),
-          imageUrls: imageUrlsList
+          imageUrls: imageUrlsList,
+          tags: tagsList
         });
         this.toastService.showToast('Yeni ürün kataloğa başarıyla eklendi.', 'success');
       }
