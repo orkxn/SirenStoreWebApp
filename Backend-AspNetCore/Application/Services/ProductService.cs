@@ -157,9 +157,17 @@ namespace SirenStore.Application.Services
 
             if (dto.Tags != null && dto.Tags.Any())
             {
-                foreach (var tag in dto.Tags)
+                foreach (var tagName in dto.Tags.Select(t => t.Trim().ToLower()).Distinct())
                 {
-                    newProduct.Tags.Add(new Tag { Name = tag });
+                    if (string.IsNullOrWhiteSpace(tagName)) continue;
+
+                    var tag = await _context.Set<Tag>().FirstOrDefaultAsync(t => t.Name.ToLower() == tagName && !t.IsDeleted);
+                    if (tag == null)
+                    {
+                        tag = new Tag { Name = tagName };
+                        await _context.Set<Tag>().AddAsync(tag);
+                    }
+                    newProduct.Tags.Add(tag);
                 }
             }
 
@@ -223,9 +231,17 @@ namespace SirenStore.Application.Services
 
             if (dto.Tags != null && dto.Tags.Any())
             {
-                foreach (var tag in dto.Tags)
+                foreach (var tagName in dto.Tags.Select(t => t.Trim().ToLower()).Distinct())
                 {
-                    product.Tags.Add(new Tag { Name = tag });
+                    if (string.IsNullOrWhiteSpace(tagName)) continue;
+
+                    var tag = await _context.Set<Tag>().FirstOrDefaultAsync(t => t.Name.ToLower() == tagName && !t.IsDeleted);
+                    if (tag == null)
+                    {
+                        tag = new Tag { Name = tagName };
+                        await _context.Set<Tag>().AddAsync(tag);
+                    }
+                    product.Tags.Add(tag);
                 }
             }
 

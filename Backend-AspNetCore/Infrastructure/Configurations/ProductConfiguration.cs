@@ -37,6 +37,15 @@ namespace Infrastructure.Configurations
                 .WithMany(s => s.Products)
                 .HasForeignKey(p => p.SellerId)
                 .OnDelete(DeleteBehavior.Cascade); // satıcı silinirse ürünlerin tamamı da silinsin
+
+            // Çoktan çoğa ilişki: Ürünler ve Etiketler arasında (product_tags ara tablosu)
+            builder.HasMany(p => p.Tags)
+                .WithMany(t => t.Products)
+                .UsingEntity<Dictionary<string, object>>(
+                    "product_tags",
+                    j => j.HasOne<Tag>().WithMany().HasForeignKey("tag_id").OnDelete(DeleteBehavior.Cascade),
+                    j => j.HasOne<Product>().WithMany().HasForeignKey("product_id").OnDelete(DeleteBehavior.Cascade)
+                );
         }
     }
 }

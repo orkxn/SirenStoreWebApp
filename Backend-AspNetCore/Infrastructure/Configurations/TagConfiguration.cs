@@ -16,14 +16,10 @@ namespace Infrastructure.Configurations
                 .IsRequired()
                 .HasMaxLength(100);
 
-            // Global Query Filter: matching product's query filter to prevent unexpected results
-            builder.HasQueryFilter(t => !t.IsDeleted && !t.Product.IsDeleted && !t.Product.Seller.IsDeleted);
+            builder.HasIndex(t => t.Name)
+                .IsUnique();
 
-            // Bire çok ilişki: Ürün ile etiketler arasında
-            builder.HasOne(t => t.Product)
-                .WithMany(p => p.Tags)
-                .HasForeignKey(t => t.ProductId)
-                .OnDelete(DeleteBehavior.Cascade);
+            builder.HasQueryFilter(t => !t.IsDeleted);
         }
     }
 }
