@@ -7,6 +7,7 @@ import { ToastService } from '../../services/toast.service';
 import { ButtonComponent } from '../../components/button/button.component';
 import { OrderRowSkeletonComponent } from '../../components/skeleton/skeleton.component';
 import { FormatPricePipe } from '../../pipes/format-price.pipe';
+import { PaginationComponent } from '../../components/pagination/pagination.component';
 
 @Component({
   selector: 'app-orders',
@@ -16,7 +17,8 @@ import { FormatPricePipe } from '../../pipes/format-price.pipe';
     RouterLink,
     ButtonComponent,
     OrderRowSkeletonComponent,
-    FormatPricePipe
+    FormatPricePipe,
+    PaginationComponent
   ],
   template: `
     <div class="max-w-4xl mx-auto px-6 py-10 space-y-8 text-left">
@@ -48,7 +50,7 @@ import { FormatPricePipe } from '../../pipes/format-price.pipe';
         <ng-template #ordersList>
           <div class="space-y-4">
             <div
-              *ngFor="let order of orders"
+              *ngFor="let order of paginatedOrders"
               class="border border-zinc-950/5 dark:border-white/10 rounded-2xl overflow-hidden glass-surface bg-zinc-950/[0.01] dark:bg-white/[0.02]"
             >
               <!-- Header Row -->
@@ -127,6 +129,12 @@ import { FormatPricePipe } from '../../pipes/format-price.pipe';
               </div>
 
             </div>
+            <app-pagination
+              [currentPage]="currentPage"
+              [totalItems]="orders.length"
+              [pageSize]="9"
+              (pageChange)="currentPage = $event"
+            ></app-pagination>
           </div>
         </ng-template>
       </ng-template>
@@ -138,6 +146,11 @@ export class OrdersComponent implements OnInit {
   orders: OrderDto[] = [];
   isLoading = true;
   expandedOrderId: number | null = null;
+  currentPage = 1;
+
+  get paginatedOrders(): OrderDto[] {
+    return this.orders.slice((this.currentPage - 1) * 9, this.currentPage * 9);
+  }
 
   constructor(
     private orderService: OrderService,

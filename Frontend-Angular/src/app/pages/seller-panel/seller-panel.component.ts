@@ -9,6 +9,7 @@ import { ToastService } from '../../services/toast.service';
 import { InputComponent } from '../../components/input/input.component';
 import { ButtonComponent } from '../../components/button/button.component';
 import { FormatPricePipe } from '../../pipes/format-price.pipe';
+import { PaginationComponent } from '../../components/pagination/pagination.component';
 
 @Component({
   selector: 'app-seller-panel',
@@ -18,7 +19,8 @@ import { FormatPricePipe } from '../../pipes/format-price.pipe';
     FormsModule,
     InputComponent,
     ButtonComponent,
-    FormatPricePipe
+    FormatPricePipe,
+    PaginationComponent
   ],
   template: `
     <div class="max-w-6xl mx-auto px-6 py-10 space-y-8 text-left">
@@ -95,7 +97,7 @@ import { FormatPricePipe } from '../../pipes/format-price.pipe';
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-zinc-950/5 dark:divide-white/5">
-                  <tr *ngFor="let prod of products" class="hover:bg-zinc-950/[0.01] dark:hover:bg-white/[0.01] transition-all">
+                  <tr *ngFor="let prod of paginatedProducts" class="hover:bg-zinc-950/[0.01] dark:hover:bg-white/[0.01] transition-all">
                     <td class="py-4 pr-4 flex items-center gap-3">
                       <div class="w-12 h-12 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-950/5 shrink-0 overflow-hidden">
                         <img [src]="prod.mainImageUrl || getFallbackImg(prod.name)" [alt]="prod.name" class="w-full h-full object-cover" />
@@ -133,6 +135,12 @@ import { FormatPricePipe } from '../../pipes/format-price.pipe';
                 </tbody>
               </table>
             </div>
+            <app-pagination
+              [currentPage]="productsPage"
+              [totalItems]="products.length"
+              [pageSize]="9"
+              (pageChange)="productsPage = $event"
+            ></app-pagination>
           </ng-template>
         </div>
 
@@ -251,7 +259,7 @@ import { FormatPricePipe } from '../../pipes/format-price.pipe';
           <ng-template #ordersList>
             <div class="space-y-6">
               <div
-                *ngFor="let ord of orders"
+                *ngFor="let ord of paginatedOrders"
                 class="border border-zinc-950/5 dark:border-white/5 rounded-2xl p-5 bg-zinc-950/[0.01] dark:bg-white/[0.01] text-xs space-y-4"
               >
                 <!-- Top Row Order Info -->
@@ -312,6 +320,12 @@ import { FormatPricePipe } from '../../pipes/format-price.pipe';
                 </div>
 
               </div>
+              <app-pagination
+                [currentPage]="ordersPage"
+                [totalItems]="orders.length"
+                [pageSize]="9"
+                (pageChange)="ordersPage = $event"
+              ></app-pagination>
             </div>
           </ng-template>
         </div>
@@ -329,6 +343,17 @@ export class SellerPanelComponent implements OnInit {
   isLoading = false;
   isSubmitLoading = false;
   editProduct: ProductListDto | null = null;
+
+  productsPage = 1;
+  ordersPage = 1;
+
+  get paginatedProducts(): ProductListDto[] {
+    return this.products.slice((this.productsPage - 1) * 9, this.productsPage * 9);
+  }
+
+  get paginatedOrders(): OrderDto[] {
+    return this.orders.slice((this.ordersPage - 1) * 9, this.ordersPage * 9);
+  }
 
   upsertData = {
     name: '',
@@ -371,6 +396,16 @@ export class SellerPanelComponent implements OnInit {
       this.products = prodData;
       this.orders = orderData;
       this.categories = catData;
+
+      const maxProductsPage = Math.ceil(this.products.length / 9);
+      if (this.productsPage > maxProductsPage && maxProductsPage > 0) {
+        this.productsPage = maxProductsPage;
+      }
+      const maxOrdersPage = Math.ceil(this.orders.length / 9);
+      if (this.ordersPage > maxOrdersPage && maxOrdersPage > 0) {
+        this.ordersPage = maxOrdersPage;
+      }
+
       if (catData.length > 0 && !this.upsertData.categoryId) {
         this.upsertData.categoryId = 1;
       }

@@ -7,11 +7,12 @@ import { FavoriteService } from '../../services/favorite.service';
 import { ToastService } from '../../services/toast.service';
 import { ProductCardComponent } from '../../components/product-card/product-card.component';
 import { ButtonComponent } from '../../components/button/button.component';
+import { PaginationComponent } from '../../components/pagination/pagination.component';
 
 @Component({
   selector: 'app-favorites',
   standalone: true,
-  imports: [CommonModule, RouterLink, ProductCardComponent, ButtonComponent],
+  imports: [CommonModule, RouterLink, ProductCardComponent, ButtonComponent, PaginationComponent],
   template: `
     <div class="max-w-7xl mx-auto px-6 py-10 space-y-8 text-left">
       <!-- Header -->
@@ -45,12 +46,20 @@ import { ButtonComponent } from '../../components/button/button.component';
           </a>
         </div>
 
-        <div *ngIf="favorites.length > 0" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          <app-product-card
-            *ngFor="let product of favorites"
-            [product]="product"
-            (error)="handleError($event)"
-          ></app-product-card>
+        <div *ngIf="favorites.length > 0" class="space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <app-product-card
+              *ngFor="let product of paginatedFavorites"
+              [product]="product"
+              (error)="handleError($event)"
+            ></app-product-card>
+          </div>
+          <app-pagination
+            [currentPage]="currentPage"
+            [totalItems]="favorites.length"
+            [pageSize]="9"
+            (pageChange)="currentPage = $event"
+          ></app-pagination>
         </div>
       </ng-container>
     </div>
@@ -59,7 +68,12 @@ import { ButtonComponent } from '../../components/button/button.component';
 export class FavoritesComponent implements OnInit, OnDestroy {
   favorites: ProductListDto[] = [];
   isLoading = true;
+  currentPage = 1;
   private sub?: Subscription;
+
+  get paginatedFavorites(): ProductListDto[] {
+    return this.favorites.slice((this.currentPage - 1) * 9, this.currentPage * 9);
+  }
 
   constructor(
     private favoriteService: FavoriteService,
@@ -74,6 +88,10 @@ export class FavoritesComponent implements OnInit, OnDestroy {
       // Favori ID'lerindeki değişimleri dinleyip arayüzü anlık güncelle (silindiğinde anında kalkması için)
       this.sub = this.favoriteService.favoriteIds$.subscribe(favIds => {
         this.favorites = this.favorites.filter(f => favIds.has(f.id));
+        const maxPage = Math.ceil(this.favorites.length / 9);
+        if (this.currentPage > maxPage && maxPage > 0) {
+          this.currentPage = maxPage;
+        }
       });
     } catch (err: any) {
       this.toastService.showToast('Favoriler yüklenirken hata oluştu.', 'error');

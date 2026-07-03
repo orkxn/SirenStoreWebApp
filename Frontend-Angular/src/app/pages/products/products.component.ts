@@ -8,6 +8,7 @@ import { CategoryService } from '../../services/category.service';
 import { ToastService } from '../../services/toast.service';
 import { ProductCardComponent } from '../../components/product-card/product-card.component';
 import { ProductGridSkeletonComponent } from '../../components/skeleton/skeleton.component';
+import { PaginationComponent } from '../../components/pagination/pagination.component';
 
 @Component({
   selector: 'app-products',
@@ -16,7 +17,8 @@ import { ProductGridSkeletonComponent } from '../../components/skeleton/skeleton
     CommonModule,
     FormsModule,
     ProductCardComponent,
-    ProductGridSkeletonComponent
+    ProductGridSkeletonComponent,
+    PaginationComponent
   ],
   template: `
     <div class="max-w-7xl mx-auto px-6 py-10 space-y-8">
@@ -57,6 +59,7 @@ import { ProductGridSkeletonComponent } from '../../components/skeleton/skeleton
                 type="text"
                 placeholder="İsim, açıklama veya mağaza..."
                 [(ngModel)]="searchTerm"
+                (ngModelChange)="currentPage = 1"
                 class="w-full text-xs bg-transparent border border-zinc-300 dark:border-zinc-800 rounded-xl pl-9 pr-4 py-2.5 text-zinc-900 dark:text-white outline-none focus:border-zinc-950 dark:focus:border-white transition-all"
               />
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-zinc-400 absolute left-3 top-3"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
@@ -97,6 +100,7 @@ import { ProductGridSkeletonComponent } from '../../components/skeleton/skeleton
                 type="number"
                 placeholder="Min ₺"
                 [(ngModel)]="minPrice"
+                (ngModelChange)="currentPage = 1"
                 class="w-full text-xs bg-transparent border border-zinc-300 dark:border-zinc-800 rounded-xl px-3 py-2 text-zinc-900 dark:text-white outline-none focus:border-zinc-950 dark:focus:border-white"
               />
               <span class="text-zinc-400 text-xs">-</span>
@@ -104,6 +108,7 @@ import { ProductGridSkeletonComponent } from '../../components/skeleton/skeleton
                 type="number"
                 placeholder="Max ₺"
                 [(ngModel)]="maxPrice"
+                (ngModelChange)="currentPage = 1"
                 class="w-full text-xs bg-transparent border border-zinc-300 dark:border-zinc-800 rounded-xl px-3 py-2 text-zinc-900 dark:text-white outline-none focus:border-zinc-950 dark:focus:border-white"
               />
             </div>
@@ -116,6 +121,7 @@ import { ProductGridSkeletonComponent } from '../../components/skeleton/skeleton
               <input
                 type="checkbox"
                 [(ngModel)]="onlyInStock"
+                (ngModelChange)="currentPage = 1"
                 class="sr-only peer"
               />
               <div class="w-9 h-5 bg-zinc-200 dark:bg-zinc-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white dark:after:bg-zinc-900 after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-zinc-950 dark:peer-checked:bg-white"></div>
@@ -138,6 +144,7 @@ import { ProductGridSkeletonComponent } from '../../components/skeleton/skeleton
               <span>Sıralama:</span>
               <select
                 [(ngModel)]="sortBy"
+                (ngModelChange)="currentPage = 1"
                 class="bg-transparent border-none text-zinc-900 dark:text-white font-bold cursor-pointer outline-none focus:ring-0"
               >
                 <option value="default" class="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-zinc-100">Önerilen</option>
@@ -154,12 +161,18 @@ import { ProductGridSkeletonComponent } from '../../components/skeleton/skeleton
           <ng-template #productsLoaded>
             <div *ngIf="filteredProducts.length > 0; else noProducts" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
               <app-product-card
-                *ngFor="let product of filteredProducts"
+                *ngFor="let product of paginatedProducts"
                 [product]="product"
                 (added)="onProductAdded(product.name)"
                 (error)="onProductError($event)"
               ></app-product-card>
             </div>
+            <app-pagination
+              [currentPage]="currentPage"
+              [totalItems]="filteredProducts.length"
+              [pageSize]="9"
+              (pageChange)="onPageChange($event)"
+            ></app-pagination>
             <ng-template #noProducts>
               <div class="text-center py-20 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-3xl">
                 <p class="text-zinc-500 font-medium">Aramanıza uygun ürün bulunamadı.</p>
@@ -191,6 +204,16 @@ export class ProductsComponent implements OnInit {
   maxPrice: number | '' = '';
   onlyInStock = false;
   sortBy = 'default';
+  currentPage = 1;
+
+  get paginatedProducts(): ProductListDto[] {
+    return this.filteredProducts.slice((this.currentPage - 1) * 9, this.currentPage * 9);
+  }
+
+  onPageChange(page: number) {
+    this.currentPage = page;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 
   constructor(
     private route: ActivatedRoute,
@@ -232,6 +255,7 @@ export class ProductsComponent implements OnInit {
 
   handleCategorySelect(categoryId: number | null) {
     this.selectedCategory = categoryId;
+    this.currentPage = 1;
     if (categoryId) {
       this.router.navigate([], {
         relativeTo: this.route,
@@ -254,6 +278,7 @@ export class ProductsComponent implements OnInit {
     this.maxPrice = '';
     this.onlyInStock = false;
     this.sortBy = 'default';
+    this.currentPage = 1;
     this.router.navigate([], {
       relativeTo: this.route,
       queryParams: { category: null },

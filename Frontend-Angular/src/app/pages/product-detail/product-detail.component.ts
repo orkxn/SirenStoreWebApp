@@ -13,6 +13,7 @@ import { ButtonComponent } from '../../components/button/button.component';
 import { ProductCardComponent } from '../../components/product-card/product-card.component';
 import { SkeletonComponent } from '../../components/skeleton/skeleton.component';
 import { FormatPricePipe } from '../../pipes/format-price.pipe';
+import { PaginationComponent } from '../../components/pagination/pagination.component';
 
 @Component({
   selector: 'app-product-detail',
@@ -24,7 +25,8 @@ import { FormatPricePipe } from '../../pipes/format-price.pipe';
     ButtonComponent,
     ProductCardComponent,
     SkeletonComponent,
-    FormatPricePipe
+    FormatPricePipe,
+    PaginationComponent
   ],
   template: `
     <div class="max-w-7xl mx-auto px-6 py-10 space-y-16 text-left">
@@ -297,7 +299,7 @@ import { FormatPricePipe } from '../../pipes/format-price.pipe';
 
           <div *ngIf="!commentsLoading && comments.length > 0" class="space-y-4">
             <div 
-              *ngFor="let comment of comments" 
+              *ngFor="let comment of paginatedComments" 
               class="border-b border-zinc-950/5 dark:border-white/5 pb-4 last:border-b-0 space-y-2 text-left"
             >
               <div class="flex items-start justify-between gap-4">
@@ -388,6 +390,12 @@ import { FormatPricePipe } from '../../pipes/format-price.pipe';
                 {{ comment.text }}
               </p>
             </div>
+            <app-pagination
+              [currentPage]="commentsPage"
+              [totalItems]="comments.length"
+              [pageSize]="9"
+              (pageChange)="commentsPage = $event"
+            ></app-pagination>
           </div>
 
         </div>
@@ -435,6 +443,12 @@ export class ProductDetailComponent implements OnInit {
   // Comments state
   comments: CommentDto[] = [];
   commentsLoading = false;
+  commentsPage = 1;
+
+  get paginatedComments(): CommentDto[] {
+    return this.comments.slice((this.commentsPage - 1) * 9, this.commentsPage * 9);
+  }
+
   newCommentText = '';
   newCommentRating = 5;
   isSubmittingComment = false;
@@ -526,6 +540,10 @@ export class ProductDetailComponent implements OnInit {
     try {
       this.comments = await this.commentService.getByProductId(prodId);
       this.calculateAverageRating();
+      const maxPage = Math.ceil(this.comments.length / 9);
+      if (this.commentsPage > maxPage && maxPage > 0) {
+        this.commentsPage = maxPage;
+      }
     } catch (err: any) {
       this.toastService.showToast(err.message || 'Yorumlar yüklenirken bir hata oluştu.', 'error');
     } finally {
