@@ -213,7 +213,7 @@ import { PaginationComponent } from '../../components/pagination/pagination.comp
               <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">Etiketler (Virgülle ayırın)</label>
               <input
                 type="text"
-                placeholder="Örn: kulaklık, mouse, laptop"
+                placeholder="Örn: kulaklık, masa, tişört"
                 [(ngModel)]="upsertData.tags"
                 name="tags"
                 class="w-full bg-transparent border border-zinc-300 dark:border-zinc-800 rounded-xl px-4 py-3 outline-none transition text-zinc-900 dark:text-zinc-50 focus:border-zinc-950 dark:focus:border-white"
@@ -391,7 +391,7 @@ export class SellerPanelComponent implements OnInit {
     private orderService: OrderService,
     private categoryService: CategoryService,
     private toastService: ToastService
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.loadSellerData();
