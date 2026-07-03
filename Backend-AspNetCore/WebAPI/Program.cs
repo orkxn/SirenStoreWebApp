@@ -20,7 +20,7 @@ var builder = WebApplication.CreateBuilder(args);
 // veri tabanı connection string bağlantısı
 var connectionString = builder.Configuration.GetConnectionString("PostgreSQLConnection");
 builder.Services.AddDbContextPool<DbContext, ApplicationDbContext>(options =>
-    options.UseNpgsql(connectionString));
+    options.UseNpgsql(connectionString, o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
 
 // service kayıtları, dependecy injection
 builder.Services.AddScoped<EmailService>();

@@ -44,7 +44,7 @@ namespace SirenStore.Infrastructure
                 throw new InvalidOperationException($"Connection string 'PostgreSQLConnection' is missing in {webApiPath}.");
             }
 
-            optionsBuilder.UseNpgsql(connectionString);
+            optionsBuilder.UseNpgsql(connectionString, o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery));
 
             return new ApplicationDbContext(optionsBuilder.Options);
         }

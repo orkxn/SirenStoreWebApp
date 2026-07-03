@@ -16,6 +16,9 @@ namespace Infrastructure.Configurations
                 .IsRequired()
                 .HasMaxLength(100);
 
+            // Global Query Filter: matching product's query filter to prevent unexpected results
+            builder.HasQueryFilter(t => !t.IsDeleted && !t.Product.IsDeleted && !t.Product.Seller.IsDeleted);
+
             // Bire çok ilişki: Ürün ile etiketler arasında
             builder.HasOne(t => t.Product)
                 .WithMany(p => p.Tags)
