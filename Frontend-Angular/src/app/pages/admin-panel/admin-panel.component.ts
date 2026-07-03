@@ -8,6 +8,7 @@ import { CategoryService } from '../../services/category.service';
 import { ToastService } from '../../services/toast.service';
 import { InputComponent } from '../../components/input/input.component';
 import { ButtonComponent } from '../../components/button/button.component';
+import { PaginationComponent } from '../../components/pagination/pagination.component';
 
 @Component({
   selector: 'app-admin-panel',
@@ -16,7 +17,8 @@ import { ButtonComponent } from '../../components/button/button.component';
     CommonModule,
     FormsModule,
     InputComponent,
-    ButtonComponent
+    ButtonComponent,
+    PaginationComponent
   ],
   template: `
     <div class="max-w-6xl mx-auto px-6 py-10 space-y-8 text-left">
@@ -100,7 +102,7 @@ import { ButtonComponent } from '../../components/button/button.component';
                 </tr>
               </thead>
               <tbody class="divide-y divide-zinc-950/5 dark:divide-white/5">
-                <tr *ngFor="let u of users" [class.opacity-60]="u.isDeleted" class="hover:bg-zinc-950/[0.01] dark:hover:bg-white/[0.01] transition-all">
+                <tr *ngFor="let u of paginatedUsers" [class.opacity-60]="u.isDeleted" class="hover:bg-zinc-950/[0.01] dark:hover:bg-white/[0.01] transition-all">
                   <td class="py-4 pr-4 font-bold text-zinc-900 dark:text-white">
                     {{ u.firstName }} {{ u.lastName }}
                   </td>
@@ -145,6 +147,12 @@ import { ButtonComponent } from '../../components/button/button.component';
               </tbody>
             </table>
           </div>
+          <app-pagination
+            [currentPage]="usersPage"
+            [totalItems]="users.length"
+            [pageSize]="9"
+            (pageChange)="usersPage = $event"
+          ></app-pagination>
         </div>
 
         <!-- Tab 2: Seller applications -->
@@ -265,7 +273,7 @@ import { ButtonComponent } from '../../components/button/button.component';
                 </tr>
               </thead>
               <tbody class="divide-y divide-zinc-950/5 dark:divide-white/5">
-                <tr *ngFor="let log of auditLogs" class="hover:bg-zinc-950/[0.01] dark:hover:bg-white/[0.01] transition-all">
+                <tr *ngFor="let log of paginatedAuditLogs" class="hover:bg-zinc-950/[0.01] dark:hover:bg-white/[0.01] transition-all">
                   <td class="py-3.5 pr-4 text-zinc-500 text-xs font-mono whitespace-nowrap">
                     {{ formatDate(log.creationDate) }}
                   </td>
@@ -288,6 +296,12 @@ import { ButtonComponent } from '../../components/button/button.component';
               </tbody>
             </table>
           </div>
+          <app-pagination
+            [currentPage]="logsPage"
+            [totalItems]="auditLogs.length"
+            [pageSize]="9"
+            (pageChange)="logsPage = $event"
+          ></app-pagination>
         </div>
 
         <!-- Tab 5: Login Histories (Giriş Geçmişi) -->
@@ -307,7 +321,7 @@ import { ButtonComponent } from '../../components/button/button.component';
                 </tr>
               </thead>
               <tbody class="divide-y divide-zinc-950/5 dark:divide-white/5">
-                <tr *ngFor="let h of loginHistories" class="hover:bg-zinc-950/[0.01] dark:hover:bg-white/[0.01] transition-all">
+                <tr *ngFor="let h of paginatedLoginHistories" class="hover:bg-zinc-950/[0.01] dark:hover:bg-white/[0.01] transition-all">
                   <td class="py-3.5 pr-4 text-zinc-500 text-xs font-mono whitespace-nowrap">
                     {{ formatDate(h.creationDate) }}
                   </td>
@@ -331,6 +345,12 @@ import { ButtonComponent } from '../../components/button/button.component';
               </tbody>
             </table>
           </div>
+          <app-pagination
+            [currentPage]="loginPage"
+            [totalItems]="loginHistories.length"
+            [pageSize]="9"
+            (pageChange)="loginPage = $event"
+          ></app-pagination>
         </div>
 
       </main>
@@ -348,6 +368,22 @@ export class AdminPanelComponent implements OnInit {
   isLoading = false;
   isSubmitLoading = false;
   editCategory: CategoryDto | null = null;
+
+  usersPage = 1;
+  logsPage = 1;
+  loginPage = 1;
+
+  get paginatedUsers(): UserManagementDto[] {
+    return this.users.slice((this.usersPage - 1) * 9, this.usersPage * 9);
+  }
+
+  get paginatedAuditLogs(): AuditLogDto[] {
+    return this.auditLogs.slice((this.logsPage - 1) * 9, this.logsPage * 9);
+  }
+
+  get paginatedLoginHistories(): LoginHistoryDto[] {
+    return this.loginHistories.slice((this.loginPage - 1) * 9, this.loginPage * 9);
+  }
 
   categoryName = '';
   categoryError = '';

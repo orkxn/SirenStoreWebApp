@@ -1,0 +1,79 @@
+import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { CommonModule } from '@angular/common';
+
+@Component({
+  selector: 'app-pagination',
+  standalone: true,
+  imports: [CommonModule],
+  template: `
+    <div *ngIf="totalPages > 1" class="flex items-center justify-center gap-2 mt-8 select-none">
+      <!-- Previous Button -->
+      <button
+        [disabled]="currentPage === 1"
+        (click)="changePage(currentPage - 1)"
+        class="w-10 h-10 rounded-xl border border-zinc-950/10 dark:border-white/10 flex items-center justify-center hover:bg-zinc-950/5 dark:hover:bg-white/5 transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+        aria-label="Önceki Sayfa"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-zinc-900 dark:text-zinc-100"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+
+      <!-- Page Numbers -->
+      <button
+        *ngFor="let page of pages"
+        (click)="changePage(page)"
+        [class]="'w-10 h-10 rounded-xl border flex items-center justify-center font-semibold text-sm transition-all cursor-pointer ' + 
+          (page === currentPage
+            ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-white dark:text-zinc-950 dark:border-white shadow-md'
+            : 'border-zinc-950/10 dark:border-white/10 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-950/5 dark:hover:bg-white/5')"
+      >
+        {{ page }}
+      </button>
+
+      <!-- Next Button -->
+      <button
+        [disabled]="currentPage === totalPages"
+        (click)="changePage(currentPage + 1)"
+        class="w-10 h-10 rounded-xl border border-zinc-950/10 dark:border-white/10 flex items-center justify-center hover:bg-zinc-950/5 dark:hover:bg-white/5 transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+        aria-label="Sonraki Sayfa"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-zinc-900 dark:text-zinc-100"><path d="m9 18 6-6-6-6"/></svg>
+      </button>
+    </div>
+  `
+})
+export class PaginationComponent {
+  @Input() currentPage = 1;
+  @Input() totalItems = 0;
+  @Input() pageSize = 9;
+  @Output() pageChange = new EventEmitter<number>();
+
+  get totalPages(): number {
+    return Math.ceil(this.totalItems / this.pageSize);
+  }
+
+  get pages(): number[] {
+    const total = this.totalPages;
+    const current = this.currentPage;
+    
+    if (total <= 5) {
+      return Array.from({ length: total }, (_, i) => i + 1);
+    }
+    
+    let start = Math.max(1, current - 2);
+    let end = Math.min(total, current + 2);
+    
+    if (start === 1) {
+      end = 5;
+    } else if (end === total) {
+      start = total - 4;
+    }
+    
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  }
+
+  changePage(page: number) {
+    if (page >= 1 && page <= this.totalPages) {
+      this.pageChange.emit(page);
+    }
+  }
+}

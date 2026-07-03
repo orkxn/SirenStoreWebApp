@@ -10,6 +10,7 @@ import { CommentService } from '../../services/comment.service';
 import { CommentDto } from '../../models/api.types';
 import { InputComponent } from '../../components/input/input.component';
 import { ButtonComponent } from '../../components/button/button.component';
+import { PaginationComponent } from '../../components/pagination/pagination.component';
 
 @Component({
   selector: 'app-account',
@@ -19,7 +20,8 @@ import { ButtonComponent } from '../../components/button/button.component';
     FormsModule,
     RouterLink,
     InputComponent,
-    ButtonComponent
+    ButtonComponent,
+    PaginationComponent
   ],
   template: `
     <div class="max-w-4xl mx-auto px-6 py-10 space-y-8 text-left">
@@ -335,7 +337,7 @@ import { ButtonComponent } from '../../components/button/button.component';
 
               <!-- Comments List -->
               <div *ngIf="myComments.length > 0" class="space-y-4">
-                <div *ngFor="let comment of myComments" class="flex gap-4 p-5 rounded-2xl bg-zinc-950/[0.01] dark:bg-white/[0.02] border border-zinc-950/5 dark:border-white/10 text-left">
+                <div *ngFor="let comment of paginatedComments" class="flex gap-4 p-5 rounded-2xl bg-zinc-950/[0.01] dark:bg-white/[0.02] border border-zinc-950/5 dark:border-white/10 text-left">
                   <!-- Product Image -->
                   <a [routerLink]="'/product/' + comment.productId" class="shrink-0">
                     <img 
@@ -396,6 +398,12 @@ import { ButtonComponent } from '../../components/button/button.component';
                     </div>
                   </div>
                 </div>
+                <app-pagination
+                  [currentPage]="commentsPage"
+                  [totalItems]="myComments.length"
+                  [pageSize]="9"
+                  (pageChange)="commentsPage = $event"
+                ></app-pagination>
               </div>
             </div>
           </div>
@@ -412,6 +420,11 @@ export class AccountComponent implements OnInit {
   loadingStatus = false;
   loadingComments = false;
   myComments: CommentDto[] = [];
+  commentsPage = 1;
+
+  get paginatedComments(): CommentDto[] {
+    return this.myComments.slice((this.commentsPage - 1) * 9, this.commentsPage * 9);
+  }
 
   // Profile data
   profileData = {
@@ -493,6 +506,10 @@ export class AccountComponent implements OnInit {
     this.loadingComments = true;
     try {
       this.myComments = await this.commentService.getMyComments();
+      const maxPage = Math.ceil(this.myComments.length / 9);
+      if (this.commentsPage > maxPage && maxPage > 0) {
+        this.commentsPage = maxPage;
+      }
     } catch (err: any) {
       this.toastService.showToast('Değerlendirmeleriniz yüklenemedi.', 'error');
       console.error(err);
