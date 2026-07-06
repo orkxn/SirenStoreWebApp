@@ -108,6 +108,31 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
+// ponytail: startup migration blocks the thread, which is fine for container restarts. Upgrade to an out-of-band migration step (like a migrations bundle or init container) in production if startup time budgets are strict.
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<DbContext>();
+    int retries = 5;
+    while (retries > 0)
+    {
+        try
+        {
+            dbContext.Database.Migrate();
+            break;
+        }
+        catch (Exception ex)
+        {
+            retries--;
+            Console.WriteLine($"Veritabanına bağlanılamadı, yeniden deneniyor... Kalan deneme: {retries}. Hata: {ex.Message}");
+            if (retries == 0)
+            {
+                throw;
+            }
+            System.Threading.Thread.Sleep(3000);
+        }
+    }
+}
+
 // exception loglama
 app.UseMiddleware<ExceptionLoggingMiddleware>();
 
