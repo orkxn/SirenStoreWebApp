@@ -57,7 +57,7 @@ builder.Services.AddCors(options =>
               .SetIsOriginAllowed(origin =>
               {
                   return Uri.TryCreate(origin, UriKind.Absolute, out var uri) &&
-                         (uri.Host == "localhost" || uri.Host.EndsWith(".onrender.com"));
+                         uri.Host == "localhost";
               })
               .WithMethods(allowedMethods)
               .WithHeaders(allowedHeaders);
@@ -192,7 +192,10 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 // cors policy uygulamaya geçirme
 app.UseCors("SirenStorePolicy");

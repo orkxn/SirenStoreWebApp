@@ -2,10 +2,9 @@ import { HttpInterceptorFn, HttpRequest, HttpHandlerFn, HttpErrorResponse } from
 import { catchError, throwError, Observable, Subject, switchMap, filter, take } from 'rxjs';
 
 const isProduction = !window.location.hostname.includes('localhost') && !window.location.hostname.includes('127.0.0.1');
-// ponytail: dynamic protocol fallback for local dev. Port 5063 is HTTP, port 7009 is HTTPS.
 const API_BASE_URL = isProduction 
-  ? 'https://sirenstorewebapp.onrender.com/api'
-  : (window.location.protocol === 'https:' ? 'https://localhost:7009/api' : 'http://localhost:5063/api');
+  ? '/api' // TODO: Replace with your production API URL if frontend and backend are hosted on different domains
+  : 'http://localhost:5063/api';
 
 let isRefreshing = false;
 const refreshDone$ = new Subject<string>();
