@@ -1,0 +1,44 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: sirenstore-db
+    environment:
+      POSTGRES_DB: SirenStoreDb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: yoursecurepassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+
+  backend:
+    build:
+      context: ./Backend-AspNetCore
+      dockerfile: Dockerfile
+    container_name: sirenstore-backend
+    env_file:
+      - ./Backend-AspNetCore/WebAPI/.env
+    ports:
+      - "5063:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__PostgreSQLConnection=Host=db;Port=5432;Database=SirenStoreDb;Username=postgres;Password=yoursecurepassword
+      - AppSettings__ClientUrl=http://localhost:4200
+    depends_on:
+      - db
+    restart: always
+
+  frontend:
+    build:
+      context: ./Frontend-Angular
+      dockerfile: Dockerfile
+    container_name: sirenstore-frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+    restart: always
+
+volumes:
+  postgres_data:
