@@ -11,6 +11,8 @@ using SirenStore.Application.Validators;
 using SirenStore.Infrastructure.Context;
 using SirenStore.WebAPI.Middleware;
 using System.Text;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
 
 // .env dosyasını program.cs içine yükler
 DotEnv.Load();
@@ -106,6 +108,34 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
 
+// ponytail: fixed-window rate limit, 100 req/min per IP. Upgrade to sliding window or token bucket if traffic patterns need smoother throttling.
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.ContentType = "application/json";
+        await context.HttpContext.Response.WriteAsJsonAsync(
+            new { Type = "RateLimitExceeded", Message = "Çok fazla istek gönderildi. Lütfen biraz bekleyip tekrar deneyin." },
+            cancellationToken);
+    };
+    options.AddFixedWindowLimiter("fixed", opt =>
+    {
+        opt.PermitLimit = 100;
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.QueueLimit = 0;
+    });
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 100,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0
+            }));
+});
+
 var app = builder.Build();
 
 // ponytail: startup migration blocks the thread, which is fine for container restarts. Upgrade to an out-of-band migration step (like a migrations bundle or init container) in production if startup time budgets are strict.
@@ -199,6 +229,8 @@ if (!app.Environment.IsDevelopment())
 
 // cors policy uygulamaya geçirme
 app.UseCors("SirenStorePolicy");
+
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();
