@@ -35,10 +35,10 @@ import { RouterLink } from '@angular/router';
         <div>
           <h4 class="font-semibold text-zinc-950 dark:text-white mb-4 uppercase tracking-wider text-xs">Kurumsal</h4>
           <ul class="space-y-2.5 text-xs">
-            <li><span class="hover:text-zinc-950 dark:hover:text-white transition-colors cursor-pointer">Hakkımızda</span></li>
-            <li><span class="hover:text-zinc-950 dark:hover:text-white transition-colors cursor-pointer">Kullanım Koşulları</span></li>
-            <li><span class="hover:text-zinc-950 dark:hover:text-white transition-colors cursor-pointer">Gizlilik Sözleşmesi</span></li>
-            <li><span class="hover:text-zinc-950 dark:hover:text-white transition-colors cursor-pointer">Satıcı Olmak İstiyorum</span></li>
+            <li><a routerLink="/about" class="hover:text-zinc-950 dark:hover:text-white transition-colors">Hakkımızda</a></li>
+            <li><a routerLink="/terms" class="hover:text-zinc-950 dark:hover:text-white transition-colors">Kullanım Koşulları</a></li>
+            <li><a routerLink="/privacy" class="hover:text-zinc-950 dark:hover:text-white transition-colors">Gizlilik Sözleşmesi</a></li>
+            <li><a routerLink="/become-seller" class="hover:text-zinc-950 dark:hover:text-white transition-colors">Satıcı Olmak İstiyorum</a></li>
           </ul>
         </div>
 
