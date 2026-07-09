@@ -33,16 +33,34 @@ The project is divided into two main parts:
 - Saved address selection and address deletion from past orders.
 - Product favorites (toggle likes and list favorites).
 - Audit logging of all critical system actions.
+- Built-in rate limiting on the backend API.
+- Static corporate pages (About Us, Terms of Use, Privacy Policy, Become a Seller).
 
 ### Prerequisites
 
-- .NET 10.0 SDK
-- Node.js (v18 or higher) and npm
-- PostgreSQL database
+- .NET 10.0 SDK (for local development)
+- Node.js (v18 or higher) and npm (for local development)
+- PostgreSQL database (for local development)
+- **Docker & Docker Compose** (recommended for quick local setup)
 
 ### Installation and Running
 
-#### 1. Backend Setup
+#### Option A: Running with Docker (Recommended & Easiest)
+
+You can launch the entire stack (Database, Backend, and Frontend) in one command:
+
+1. Terminate any locally running processes on ports `4200` or `5063`.
+2. Run the following command at the root directory:
+   ```bash
+   docker-compose up --build
+   ```
+3. Open your browser and navigate to:
+   - **Frontend**: http://localhost:4200
+   - **Backend API**: http://localhost:5063/api
+
+#### Option B: Running Locally
+
+##### 1. Backend Setup
 
 Navigate to the backend directory:
 ```bash
@@ -114,16 +132,34 @@ Proje iki ana bölümden oluşmaktadır:
 - Kayıtlı adres seçimi ve geçmiş siparişlerden adres silme özelliği.
 - Ürün favorileme (beğenme ve favorileri listeleme).
 - Kritik sistem işlemlerinin audit logları ile izlenmesi.
+- Backend API tarafında yerleşik istek limitleme (Rate Limiting).
+- Kurumsal statik sayfalar (Hakkımızda, Kullanım Koşulları, Gizlilik Sözleşmesi, Satıcı Olmak İstiyorum).
 
 ### Gereksinimler
 
-- .NET 10.0 SDK
-- Node.js (v18 veya üzeri) ve npm
-- PostgreSQL veritabanı
+- .NET 10.0 SDK (yerel geliştirme için)
+- Node.js (v18 veya üzeri) ve npm (yerel geliştirme için)
+- PostgreSQL veritabanı (yerel geliştirme için)
+- **Docker ve Docker Compose** (tavsiye edilen hızlı kurulum)
 
 ### Kurulum ve Çalıştırma
 
-#### 1. Backend Kurulumu
+#### Seçenek A: Docker ile Çalıştırma (Tavsiye Edilen & En Kolayı)
+
+Tüm sistemi (Veritabanı, Backend ve Frontend) tek bir komutla ayağa kaldırabilirsiniz:
+
+1. `4200` veya `5063` portlarını kullanan yerel işlemlerinizi sonlandırın.
+2. Proje ana dizininde şu komutu çalıştırın:
+   ```bash
+   docker-compose up --build
+   ```
+3. Tarayıcınızı açıp şu adreslere gidin:
+   - **Frontend**: http://localhost:4200
+   - **Backend API**: http://localhost:5063/api
+
+#### Seçenek B: Yerel Kurulum
+
+##### 1. Backend Kurulumu
 
 Backend dizinine geçiş yapın:
 ```bash
