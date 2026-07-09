@@ -10,7 +10,6 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    restart: always
 
   backend:
     build:
@@ -27,7 +26,6 @@ services:
       - AppSettings__ClientUrl=http://localhost:4200
     depends_on:
       - db
-    restart: always
 
   frontend:
     build:
@@ -38,7 +36,6 @@ services:
       - "4200:80"
     depends_on:
       - backend
-    restart: always
 
 volumes:
   postgres_data:
