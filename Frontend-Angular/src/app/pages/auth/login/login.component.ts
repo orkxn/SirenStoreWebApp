@@ -127,7 +127,7 @@ import { ButtonComponent } from '../../../components/button/button.component';
                 (click)="onSendCode()"
                 className="text-xs py-2.5"
               >
-                <span>{{ isCodeSending ? 'Kod Gönderiliyor...' : 'Doğrulama Kodu Gönder' }}</span>
+                <span>{{ isCodeSending ? 'Kod Gönderiliyor...' : (hasCodeBeenSent ? 'Doğrulama Kodunu Yeniden Gönder' : 'Doğrulama Kodu Gönder') }}</span>
               </app-button>
             </div>
 
@@ -187,6 +187,7 @@ export class LoginComponent {
   verificationCode = '';
   isCodeSending = false;
   isVerifying = false;
+  hasCodeBeenSent = false;
   codeError = '';
 
   constructor(
@@ -257,7 +258,12 @@ export class LoginComponent {
     this.isCodeSending = true;
     this.codeError = '';
     try {
-      await this.authService.resendVerificationEmail({ email: this.verificationEmail });
+      if (this.hasCodeBeenSent) {
+        await this.authService.resendVerificationEmail({ email: this.verificationEmail });
+      } else {
+        await this.authService.sendVerificationEmail({ email: this.verificationEmail });
+      }
+      this.hasCodeBeenSent = true;
       this.toastService.showToast('Doğrulama kodu e-postanıza gönderildi!', 'success');
     } catch (err: any) {
       this.toastService.showToast(err.error?.message || err.message || 'Kod gönderilemedi.', 'error');
