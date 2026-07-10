@@ -51,7 +51,7 @@ namespace SirenStore.WebAPI.Controllers
         // PUT: api/categories/{id}
         [HttpPut("{id:long}")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Update(long id, [FromBody] UpdateCategoryDto dto)
+        public async Task<IActionResult> Update(long id, [FromBody] CreateCategoryDto dto)
         {
             var userId = User.GetUserId();
             var result = await _categoryService.UpdateCategoryAsync(userId, id, dto);

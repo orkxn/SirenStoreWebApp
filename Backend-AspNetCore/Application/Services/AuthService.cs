@@ -208,12 +208,9 @@ namespace SirenStore.Application.Services
             return tokenDto;
         }
 
-        // ilk doğrulama e-postası gönderme
-        public async Task SendVerificationEmailAsync(ResendVerificationEmailDto dto)
+        private async Task SendVerificationEmailInternalAsync(string email, string subject, Func<User, string> bodyFactory, string auditAction)
         {
-            await _serviceProvider.GetRequiredService<IValidator<ResendVerificationEmailDto>>().ValidateAndThrowAsync(dto);
-
-            var user = await _context.Set<User>().FirstOrDefaultAsync(u => u.Email == dto.Email && !u.IsDeleted);
+            var user = await _context.Set<User>().FirstOrDefaultAsync(u => u.Email == email && !u.IsDeleted);
 
             if (user == null)
                 throw new BusinessRuleException("Kullanıcı bulunamadı.");
@@ -226,8 +223,22 @@ namespace SirenStore.Application.Services
 
             await _context.SaveChangesAsync();
 
-            var subject = "SirenStore - E-posta Doğrulama Kodu";
-            var body = $@"
+            var body = bodyFactory(user);
+            await _emailService.SendEmailAsync(user.Email, subject, body);
+
+            // audit log
+            await _auditLogService.LogAuditAsync(user.Id, auditAction, "User", user.Id, $"Email: {user.Email}");
+        }
+
+        // ilk doğrulama e-postası gönderme
+        public async Task SendVerificationEmailAsync(ResendVerificationEmailDto dto)
+        {
+            await _serviceProvider.GetRequiredService<IValidator<ResendVerificationEmailDto>>().ValidateAndThrowAsync(dto);
+
+            await SendVerificationEmailInternalAsync(
+                dto.Email,
+                "SirenStore - E-posta Doğrulama Kodu",
+                user => $@"
 <div style=""font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff; color: #1a202c;"">
     <div style=""text-align: center; margin-bottom: 25px; user-select: none;"">
         <span style=""font-size: 26px; font-weight: 800; color: #09090b; letter-spacing: -1.5px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;"">SIREN</span><span style=""font-size: 26px; font-weight: 800; color: #ffffff; background-color: #09090b; padding: 2px 14px; border-radius: 9999px; margin-left: 5px; display: inline-block; letter-spacing: -1.5px; text-transform: uppercase; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;"">STORE</span>
@@ -245,12 +256,9 @@ namespace SirenStore.Application.Services
             Eğer bu hesabı siz oluşturmadıysanız, bu e-postayı yok sayabilirsiniz.
         </p>
     </div>
-</div>";
-
-            await _emailService.SendEmailAsync(user.Email, subject, body);
-
-            // audit: Log initial verification email sent
-            await _auditLogService.LogAuditAsync(user.Id, "USER_VERIFICATION_SENT", "User", user.Id, $"Email: {user.Email}");
+</div>",
+                "USER_VERIFICATION_SENT"
+            );
         }
 
         // doğrulama e-postasını tekrar gönderme
@@ -258,23 +266,10 @@ namespace SirenStore.Application.Services
         {
             await _serviceProvider.GetRequiredService<IValidator<ResendVerificationEmailDto>>().ValidateAndThrowAsync(dto);
 
-            var user = await _context.Set<User>().FirstOrDefaultAsync(u => u.Email == dto.Email && !u.IsDeleted);
-
-            if (user == null)
-                throw new BusinessRuleException("Kullanıcı bulunamadı.");
-
-            if (user.IsEmailConfirmed)
-                throw new BusinessRuleException("E-posta adresi zaten doğrulanmış.");
-
-            user.EmailVerificationToken = Random.Shared.Next(100000, 1000000).ToString();
-            user.EmailVerificationTokenExpiry = DateTime.UtcNow.AddHours(24);
-
-            await _context.SaveChangesAsync();
-
-            var clientUrl = _configuration["AppSettings:ClientUrl"] ?? "http://localhost:4200";
-            var verificationLink = $"{clientUrl}/verify-email?token={user.EmailVerificationToken}";
-            var subject = "SirenStore - Yeni Doğrulama Kodu";
-            var body = $@"
+            await SendVerificationEmailInternalAsync(
+                dto.Email,
+                "SirenStore - Yeni Doğrulama Kodu",
+                user => $@"
 <div style=""font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff; color: #1a202c;"">
     <div style=""text-align: center; margin-bottom: 25px; user-select: none;"">
         <span style=""font-size: 26px; font-weight: 800; color: #09090b; letter-spacing: -1.5px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;"">SIREN</span><span style=""font-size: 26px; font-weight: 800; color: #ffffff; background-color: #09090b; padding: 2px 14px; border-radius: 9999px; margin-left: 5px; display: inline-block; letter-spacing: -1.5px; text-transform: uppercase; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;"">STORE</span>
@@ -292,12 +287,9 @@ namespace SirenStore.Application.Services
             Eğer bu talebi siz gerçekleştirmediyseniz, hesabınız güvendedir ve bu e-postayı yok sayabilirsiniz.
         </p>
     </div>
-</div>";
-
-            await _emailService.SendEmailAsync(user.Email, subject, body);
-
-            // audit: Log verification email resend
-            await _auditLogService.LogAuditAsync(user.Id, "USER_VERIFICATION_RESENT", "User", user.Id, $"Email: {user.Email}");
+</div>",
+                "USER_VERIFICATION_RESENT"
+            );
         }
 
         // şifremi unuttum akışı - e-posta gönderimi

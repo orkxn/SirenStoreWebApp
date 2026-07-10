@@ -79,7 +79,7 @@ namespace SirenStore.Application.Services
         }
 
         // kategori güncelle
-        public async Task<CategoryDto> UpdateCategoryAsync(long userId, long id, UpdateCategoryDto dto)
+        public async Task<CategoryDto> UpdateCategoryAsync(long userId, long id, CreateCategoryDto dto)
         {
             var category = await _context.Set<Category>().FirstOrDefaultAsync(c => c.Id == id && !c.IsDeleted);
             if (category == null) throw new NotFoundException("Kategori bulunamadı.");
