@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+
+# Kullanıcıya özel sayfalar
+Disallow: /account
+Disallow: /cart
+Disallow: /checkout
+Disallow: /orders
+Disallow: /favorites
+Disallow: /seller
+Disallow: /admin
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /reset-password
+
+Sitemap: https://sirenstore.com/sitemap.xml
