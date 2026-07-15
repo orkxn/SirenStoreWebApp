@@ -2,6 +2,7 @@ using Entities.Enums;
 using Entities.Models;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using SirenStore.Application.DTOs;
 using SirenStore.Application.Exceptions;
 
@@ -12,15 +13,18 @@ namespace SirenStore.Application.Services
         private readonly DbContext _context;
         private readonly IValidator<CreateOrderDto> _validator;
         private readonly AuditLogService _auditLogService;
+        private readonly IMemoryCache _cache;
 
         public OrderService(
             DbContext context,
             IValidator<CreateOrderDto> validator,
-            AuditLogService auditLogService) 
+            AuditLogService auditLogService,
+            IMemoryCache cache) 
         {
             _context = context;
             _validator = validator;
             _auditLogService = auditLogService;
+            _cache = cache;
         }
 
         // sipariş oluşturma işlemi + transaction yönetimi
@@ -94,6 +98,13 @@ namespace SirenStore.Application.Services
 
                 // her şey kusursuz bittiyse veritabanına commit
                 await transaction.CommitAsync();
+
+                // cache invalidation: sipariş sonrası değişen ürün stoklarını temizle
+                _cache.Remove("Products_All");
+                foreach (var basketItem in activeBasketItems)
+                {
+                    _cache.Remove($"Product_Detail_{basketItem.ProductId}");
+                }
 
                 // audit: Sipariş oluşturma logu
                 await _auditLogService.LogAuditAsync(userId, "ORDER_CREATED", "Order", order.Id, $"TotalPrice: {order.TotalPrice}");
