@@ -6,11 +6,20 @@ import { AuthService } from '../../../services/auth.service';
 import { ToastService } from '../../../services/toast.service';
 import { InputComponent } from '../../../components/input/input.component';
 import { ButtonComponent } from '../../../components/button/button.component';
+import { LucideArrowRight, LucideSend } from '@lucide/angular';
 
 @Component({
   selector: 'app-forgot-password',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, InputComponent, ButtonComponent],
+  imports: [
+    CommonModule, 
+    RouterLink, 
+    FormsModule, 
+    InputComponent, 
+    ButtonComponent,
+    LucideArrowRight,
+    LucideSend
+  ],
   template: `
     <div class="min-h-[80vh] flex items-center justify-center px-6 py-12 text-left">
       <div class="w-full max-w-md glass-surface bg-zinc-950/[0.02] dark:bg-white/5 border border-zinc-950/5 dark:border-white/10 p-8 rounded-3xl shadow-xl">
@@ -45,7 +54,7 @@ import { ButtonComponent } from '../../../components/button/button.component';
             <span *ngIf="isLoading; else btnText">Bağlantı Gönderiliyor...</span>
             <ng-template #btnText>
               <span class="flex items-center gap-2">
-                Sıfırlama Bağlantısı Gönder <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 transition-transform group-hover:translate-x-1"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                Sıfırlama Bağlantısı Gönder <svg lucideArrowRight class="w-4 h-4 transition-transform group-hover:translate-x-1"></svg>
               </span>
             </ng-template>
           </app-button>
@@ -55,7 +64,7 @@ import { ButtonComponent } from '../../../components/button/button.component';
         <div *ngIf="emailSent" class="space-y-6">
           <div class="p-5 rounded-2xl bg-zinc-950/5 dark:bg-white/5 border border-zinc-950/10 dark:border-white/10 text-center space-y-4">
             <div class="w-12 h-12 bg-green-500/10 text-green-500 rounded-full flex items-center justify-center mx-auto">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+              <svg lucideSend class="w-6 h-6"></svg>
             </div>
             <div>
               <p class="text-sm font-semibold text-zinc-900 dark:text-white">Bağlantı Gönderildi</p>

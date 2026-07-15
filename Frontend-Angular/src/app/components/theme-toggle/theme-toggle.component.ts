@@ -1,11 +1,12 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ThemeService } from '../../services/theme.service';
+import { LucideMoon, LucideSun } from '@lucide/angular';
 
 @Component({
   selector: 'app-theme-toggle',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, LucideMoon, LucideSun],
   template: `
     <button
       (click)="themeService.toggleTheme()"
@@ -13,9 +14,9 @@ import { ThemeService } from '../../services/theme.service';
       aria-label="Temayı Değiştir"
     >
       <!-- Moon icon (shown in light mode) -->
-      <svg *ngIf="themeService.theme === 'light'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-zinc-950"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+      <svg *ngIf="themeService.theme === 'light'" lucideMoon class="text-zinc-950 w-5 h-5"></svg>
       <!-- Sun icon (shown in dark mode) -->
-      <svg *ngIf="themeService.theme === 'dark'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-zinc-50"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+      <svg *ngIf="themeService.theme === 'dark'" lucideSun class="text-zinc-50 w-5 h-5"></svg>
     </button>
   `
 })

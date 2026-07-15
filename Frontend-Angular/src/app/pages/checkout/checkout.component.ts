@@ -8,6 +8,7 @@ import { ToastService } from '../../services/toast.service';
 import { InputComponent } from '../../components/input/input.component';
 import { ButtonComponent } from '../../components/button/button.component';
 import { FormatPricePipe } from '../../pipes/format-price.pipe';
+import { LucideChevronLeft, LucideCheckCircle, LucideTrash2, LucideCreditCard, LucideShoppingCart } from '@lucide/angular';
 
 @Component({
   selector: 'app-checkout',
@@ -18,7 +19,12 @@ import { FormatPricePipe } from '../../pipes/format-price.pipe';
     FormsModule,
     InputComponent,
     ButtonComponent,
-    FormatPricePipe
+    FormatPricePipe,
+    LucideChevronLeft,
+    LucideCheckCircle,
+    LucideTrash2,
+    LucideCreditCard,
+    LucideShoppingCart
   ],
   template: `
     <div class="max-w-6xl mx-auto px-6 py-10 space-y-8 text-left">
@@ -26,7 +32,7 @@ import { FormatPricePipe } from '../../pipes/format-price.pipe';
       <!-- Back to Cart -->
       <div>
         <a routerLink="/cart" class="inline-flex items-center gap-1 text-xs font-semibold text-zinc-500 hover:text-zinc-950 dark:hover:text-white transition-colors">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="m15 18-6-6 6-6"/></svg> Sepetime Dön
+          <svg lucideChevronLeft class="w-4 h-4"></svg> Sepetime Dön
         </a>
       </div>
 
@@ -38,7 +44,7 @@ import { FormatPricePipe } from '../../pipes/format-price.pipe';
       <!-- Success Screen -->
       <div *ngIf="isSuccess && createdOrder" class="max-w-xl mx-auto px-6 py-20 text-center space-y-6">
         <div class="flex flex-col items-center justify-center space-y-4">
-          <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-16 h-16 text-zinc-950 dark:text-white"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m9 12 2 2 4-4"/></svg>
+          <svg lucideCheckCircle class="w-16 h-16 text-zinc-950 dark:text-white"></svg>
           <h1 class="text-3xl font-extrabold text-zinc-950 dark:text-white uppercase tracking-tight">Sipariş Alındı!</h1>
           <p class="text-sm text-zinc-500 dark:text-zinc-400">Sipariş numaranız: <strong>#{{ createdOrder.id }}</strong></p>
         </div>
@@ -112,7 +118,7 @@ import { FormatPricePipe } from '../../pipes/format-price.pipe';
                       class="px-3.5 py-3 border border-red-200 dark:border-red-900/30 text-red-600 hover:bg-red-500/10 rounded-xl transition-all flex items-center justify-center shrink-0"
                       title="Kayıtlı Adresi Sil"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-[18px] h-[18px]"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                      <svg lucideTrash2 class="w-[18px] h-[18px]"></svg>
                     </button>
                   </div>
                 </div>
@@ -151,7 +157,7 @@ import { FormatPricePipe } from '../../pipes/format-price.pipe';
               
               <div class="p-6 rounded-2xl glass-surface bg-zinc-950/[0.01] dark:bg-white/5 border border-zinc-950/5 dark:border-white/10 space-y-4">
                 <div class="flex items-center gap-2 text-zinc-700 dark:text-zinc-300 text-sm font-medium mb-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg> Kredi / Banka Kartı
+                  <svg lucideCreditCard class="w-5 h-5"></svg> Kredi / Banka Kartı
                 </div>
 
                 <app-input
@@ -201,7 +207,7 @@ import { FormatPricePipe } from '../../pipes/format-price.pipe';
           <div class="lg:col-span-1 space-y-6">
             <div class="glass-surface bg-zinc-950/[0.01] dark:bg-white/5 border border-zinc-950/5 dark:border-white/10 rounded-2xl p-6 space-y-6">
               <h3 class="font-bold text-sm text-zinc-900 dark:text-white uppercase tracking-wider border-b border-zinc-950/5 dark:border-white/5 pb-4 flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg> Sipariş Kalemleri
+                <svg lucideShoppingCart class="w-4 h-4"></svg> Sipariş Kalemleri
               </h3>
 
               <!-- List items briefly -->

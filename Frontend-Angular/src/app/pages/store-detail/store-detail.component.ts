@@ -6,6 +6,7 @@ import { SellerService } from '../../services/seller.service';
 import { ToastService } from '../../services/toast.service';
 import { ProductCardComponent } from '../../components/product-card/product-card.component';
 import { SkeletonComponent } from '../../components/skeleton/skeleton.component';
+import { LucideChevronLeft, LucideStore, LucideUser, LucidePhone } from '@lucide/angular';
 
 @Component({
   selector: 'app-store-detail',
@@ -14,7 +15,11 @@ import { SkeletonComponent } from '../../components/skeleton/skeleton.component'
     CommonModule,
     RouterLink,
     ProductCardComponent,
-    SkeletonComponent
+    SkeletonComponent,
+    LucideChevronLeft,
+    LucideStore,
+    LucideUser,
+    LucidePhone
   ],
   template: `
     <div class="max-w-7xl mx-auto px-6 py-10 space-y-12 text-left">
@@ -25,7 +30,7 @@ import { SkeletonComponent } from '../../components/skeleton/skeleton.component'
           routerLink="/products"
           class="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-500 hover:text-zinc-950 dark:hover:text-white transition-colors"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="m15 18-6-6 6-6"/></svg> Kataloğa Dön
+          <svg lucideChevronLeft class="w-4 h-4"></svg> Kataloğa Dön
         </a>
       </div>
 
@@ -59,7 +64,7 @@ import { SkeletonComponent } from '../../components/skeleton/skeleton.component'
             />
             <ng-template #defaultStoreIcon>
               <div class="w-20 h-20 rounded-2xl bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 flex items-center justify-center shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-10 h-10"><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/><path d="M22 7v3a2 2 0 0 1-2 2a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12a2 2 0 0 1-2-2V7"/></svg>
+                <svg lucideStore class="w-10 h-10"></svg>
               </div>
             </ng-template>
             
@@ -70,11 +75,11 @@ import { SkeletonComponent } from '../../components/skeleton/skeleton.component'
               
               <div class="flex flex-wrap gap-x-6 gap-y-2 text-sm text-zinc-500 dark:text-zinc-400">
                 <span class="flex items-center gap-1.5">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-zinc-400"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  <svg lucideUser class="w-4 h-4 text-zinc-400"></svg>
                   <strong>Mağaza Sahibi:</strong> {{ profile.ownerFullName }}
                 </span>
                 <span *ngIf="profile.contactLine" class="flex items-center gap-1.5">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-zinc-400"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                  <svg lucidePhone class="w-4 h-4 text-zinc-400"></svg>
                   <strong>Müşteri Destek Hattı:</strong> {{ profile.contactLine }}
                 </span>
               </div>

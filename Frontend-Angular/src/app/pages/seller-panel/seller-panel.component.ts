@@ -10,6 +10,7 @@ import { InputComponent } from '../../components/input/input.component';
 import { ButtonComponent } from '../../components/button/button.component';
 import { FormatPricePipe } from '../../pipes/format-price.pipe';
 import { PaginationComponent } from '../../components/pagination/pagination.component';
+import { LucidePlus, LucidePackage, LucideFolderPlus, LucideClipboardList, LucidePencil, LucideTrash2, LucideFileText } from '@lucide/angular';
 
 @Component({
   selector: 'app-seller-panel',
@@ -20,7 +21,14 @@ import { PaginationComponent } from '../../components/pagination/pagination.comp
     InputComponent,
     ButtonComponent,
     FormatPricePipe,
-    PaginationComponent
+    PaginationComponent,
+    LucidePlus,
+    LucidePackage,
+    LucideFolderPlus,
+    LucideClipboardList,
+    LucidePencil,
+    LucideTrash2,
+    LucideFileText
   ],
   template: `
     <div class="max-w-6xl mx-auto px-6 py-10 space-y-8 text-left">
@@ -35,7 +43,7 @@ import { PaginationComponent } from '../../components/pagination/pagination.comp
           (click)="handleNewProductClick()"
           class="flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 font-bold text-xs hover:opacity-85 transition-opacity cursor-pointer shadow-md"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M5 12h14"/><path d="M12 5v14"/></svg> Yeni Ürün Ekle
+          <svg lucidePlus class="w-4 h-4"></svg> Yeni Ürün Ekle
         </button>
       </div>
 
@@ -48,7 +56,7 @@ import { PaginationComponent } from '../../components/pagination/pagination.comp
               ? 'border-zinc-950 dark:border-white text-zinc-950 dark:text-white'
               : 'border-transparent text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300')"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg> Ürünlerim ({{ products.length }})
+          <svg lucidePackage class="w-4 h-4"></svg> Ürünlerim ({{ products.length }})
         </button>
 
         <button
@@ -58,7 +66,7 @@ import { PaginationComponent } from '../../components/pagination/pagination.comp
               ? 'border-zinc-950 dark:border-white text-zinc-950 dark:text-white'
               : 'border-transparent text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300')"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M12 20v-6M9 17v-3M15 17v-3M12 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-3.9a2 2 0 0 1-1.69-.9L13 3h-2L9.59 5.1a2 2 0 0 1-1.69.9H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16Z"/></svg> {{ editProduct ? 'Ürünü Düzenle' : 'Yeni Ürün' }}
+          <svg lucideFolderPlus class="w-4 h-4"></svg> {{ editProduct ? 'Ürünü Düzenle' : 'Yeni Ürün' }}
         </button>
 
         <button
@@ -68,7 +76,7 @@ import { PaginationComponent } from '../../components/pagination/pagination.comp
               ? 'border-zinc-950 dark:border-white text-zinc-950 dark:text-white'
               : 'border-transparent text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300')"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 17h6"/><path d="M9 12h6"/><path d="M9 7h6"/></svg> Gelen Siparişler ({{ orders.length }})
+          <svg lucideClipboardList class="w-4 h-4"></svg> Gelen Siparişler ({{ orders.length }})
         </button>
       </div>
 
@@ -121,14 +129,14 @@ import { PaginationComponent } from '../../components/pagination/pagination.comp
                         class="inline-flex items-center justify-center p-2 rounded-full border border-zinc-950/5 hover:border-zinc-950/15 dark:border-white/10 dark:hover:border-white/20 text-zinc-500 hover:text-zinc-950 dark:hover:text-white transition-colors cursor-pointer"
                         aria-label="Düzenle"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                        <svg lucidePencil class="w-3.5 h-3.5"></svg>
                       </button>
                       <button
                         (click)="handleDeleteProduct(prod.id)"
                         class="inline-flex items-center justify-center p-2 rounded-full border border-zinc-950/5 hover:border-red-200 dark:border-white/10 dark:hover:border-red-950/20 text-zinc-400 hover:text-red-600 transition-colors cursor-pointer"
                         aria-label="Sil"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                        <svg lucideTrash2 class="w-3.5 h-3.5"></svg>
                       </button>
                     </td>
                   </tr>
@@ -148,7 +156,7 @@ import { PaginationComponent } from '../../components/pagination/pagination.comp
         <div *ngIf="activeTab === 'upsert'" class="space-y-6">
           <form (ngSubmit)="onSubmit()" class="space-y-6">
             <h3 class="text-lg font-bold text-zinc-950 dark:text-white uppercase tracking-wide border-b border-zinc-950/5 dark:border-white/5 pb-2 flex items-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-zinc-400"><path d="M12 20v-6M9 17v-3M15 17v-3M12 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-3.9a2 2 0 0 1-1.69-.9L13 3h-2L9.59 5.1a2 2 0 0 1-1.69.9H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16Z"/></svg>
+              <svg lucideFolderPlus class="w-5 h-5 text-zinc-400"></svg>
               {{ editProduct ? 'Ürünü Düzenle: ' + editProduct.name : 'Yeni Ürün Oluştur' }}
             </h3>
 
@@ -301,7 +309,7 @@ import { PaginationComponent } from '../../components/pagination/pagination.comp
 
                 <!-- Client Delivery details -->
                 <div class="flex items-start gap-1 text-zinc-500">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 shrink-0 text-zinc-400 mt-0.5"><rect width="16" height="18" x="4" y="4" rx="2"/><path d="M9 9h6"/><path d="M9 13h6"/><path d="M9 17h6"/></svg>
+                  <svg lucideFileText class="w-4 h-4 shrink-0 text-zinc-400 mt-0.5"></svg>
                   <div>
                     <strong>Teslimat Bilgisi:</strong> {{ ord.addressTitle }} - {{ ord.shippingAddress }}
                   </div>

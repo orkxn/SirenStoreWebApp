@@ -9,6 +9,7 @@ import { ToastService } from '../../services/toast.service';
 import { ProductCardComponent } from '../../components/product-card/product-card.component';
 import { ProductGridSkeletonComponent } from '../../components/skeleton/skeleton.component';
 import { PaginationComponent } from '../../components/pagination/pagination.component';
+import { LucideSlidersHorizontal, LucideSearch, LucideArrowUpDown } from '@lucide/angular';
 
 @Component({
   selector: 'app-products',
@@ -18,7 +19,10 @@ import { PaginationComponent } from '../../components/pagination/pagination.comp
     FormsModule,
     ProductCardComponent,
     ProductGridSkeletonComponent,
-    PaginationComponent
+    PaginationComponent,
+    LucideSlidersHorizontal,
+    LucideSearch,
+    LucideArrowUpDown
   ],
   template: `
     <div class="max-w-7xl mx-auto px-6 py-10 space-y-8">
@@ -41,7 +45,7 @@ import { PaginationComponent } from '../../components/pagination/pagination.comp
           
           <div class="flex items-center justify-between border-b border-zinc-950/5 dark:border-white/5 pb-4">
             <span class="font-bold flex items-center gap-2 text-zinc-900 dark:text-white uppercase text-sm">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><line x1="4" x2="20" y1="21" y2="21"/><line x1="4" x2="20" y1="14" y2="14"/><line x1="4" x2="20" y1="7" y2="7"/><circle cx="9" cy="14" r="2"/><circle cx="16" cy="7" r="2"/><circle cx="12" cy="21" r="2"/></svg> Filtreler
+              <svg lucideSlidersHorizontal class="w-4 h-4"></svg> Filtreler
             </span>
             <button 
               (click)="handleResetFilters()"
@@ -62,7 +66,7 @@ import { PaginationComponent } from '../../components/pagination/pagination.comp
                 (ngModelChange)="currentPage = 1"
                 class="w-full text-xs bg-transparent border border-zinc-300 dark:border-zinc-800 rounded-xl pl-9 pr-4 py-2.5 text-zinc-900 dark:text-white outline-none focus:border-zinc-950 dark:focus:border-white transition-all"
               />
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-zinc-400 absolute left-3 top-3"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              <svg lucideSearch class="w-4 h-4 text-zinc-400 absolute left-3 top-3.5"></svg>
             </div>
           </div>
 
@@ -140,7 +144,7 @@ import { PaginationComponent } from '../../components/pagination/pagination.comp
             </span>
             
             <div class="flex items-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5"><path d="m3 16 4 4 4-4"/><path d="M7 20V4"/><path d="m21 8-4-4-4 4"/><path d="M17 4v16"/></svg>
+              <svg lucideArrowUpDown class="w-3.5 h-3.5"></svg>
               <span>Sıralama:</span>
               <select
                 [(ngModel)]="sortBy"

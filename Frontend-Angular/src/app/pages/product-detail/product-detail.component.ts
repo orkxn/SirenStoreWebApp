@@ -14,6 +14,7 @@ import { ProductCardComponent } from '../../components/product-card/product-card
 import { SkeletonComponent } from '../../components/skeleton/skeleton.component';
 import { FormatPricePipe } from '../../pipes/format-price.pipe';
 import { PaginationComponent } from '../../components/pagination/pagination.component';
+import { LucideChevronLeft, LucideTruck, LucideShieldCheck, LucideInfo, LucideMinus, LucidePlus, LucideShoppingCart, LucideStar } from '@lucide/angular';
 
 @Component({
   selector: 'app-product-detail',
@@ -26,7 +27,15 @@ import { PaginationComponent } from '../../components/pagination/pagination.comp
     ProductCardComponent,
     SkeletonComponent,
     FormatPricePipe,
-    PaginationComponent
+    PaginationComponent,
+    LucideChevronLeft,
+    LucideTruck,
+    LucideShieldCheck,
+    LucideInfo,
+    LucideMinus,
+    LucidePlus,
+    LucideShoppingCart,
+    LucideStar
   ],
   template: `
     <div class="max-w-7xl mx-auto px-6 py-10 space-y-16 text-left">
@@ -37,7 +46,7 @@ import { PaginationComponent } from '../../components/pagination/pagination.comp
           routerLink="/products"
           class="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-500 hover:text-zinc-950 dark:hover:text-white transition-colors"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="m15 18-6-6 6-6"/></svg> Kataloğa Dön
+          <svg lucideChevronLeft class="w-4 h-4"></svg> Kataloğa Dön
         </a>
       </div>
 
@@ -122,17 +131,17 @@ import { PaginationComponent } from '../../components/pagination/pagination.comp
             <!-- Specifications Box -->
             <div class="grid grid-cols-3 gap-4 py-4 border-y border-zinc-950/5 dark:border-white/5 text-center text-xs">
               <div class="flex flex-col items-center gap-1">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-zinc-400"><rect width="16" height="13" x="2" y="6" rx="2"/><path d="M16 8h4l3 3v7a2 2 0 0 1-2 2h-1"/><path d="M3 18h1"/><path d="M18 18h1"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="14.5" cy="18.5" r="2.5"/></svg>
+                <svg lucideTruck class="w-5 h-5 text-zinc-400"></svg>
                 <span class="font-semibold text-zinc-900 dark:text-white">Hızlı Kargo</span>
                 <span class="text-zinc-400">24-48 Saat</span>
               </div>
               <div class="flex flex-col items-center gap-1">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-zinc-400"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <svg lucideShieldCheck class="w-5 h-5 text-zinc-400"></svg>
                 <span class="font-semibold text-zinc-900 dark:text-white">Güvenilir Satıcı</span>
                 <span class="text-zinc-400">Onaylı Mağaza</span>
               </div>
               <div class="flex flex-col items-center gap-1">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-zinc-400"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                <svg lucideInfo class="w-5 h-5 text-zinc-400"></svg>
                 <span class="font-semibold text-zinc-900 dark:text-white">İade Garantisi</span>
                 <span class="text-zinc-400">14 Gün Kolay</span>
               </div>
@@ -146,9 +155,9 @@ import { PaginationComponent } from '../../components/pagination/pagination.comp
                 <button 
                   (click)="handleDecrement()"
                   [disabled]="product.stock === 0 || quantity <= 1"
-                  class="text-zinc-400 hover:text-zinc-950 dark:hover:text-white disabled:opacity-30"
+                  class="text-zinc-400 hover:text-zinc-950 dark:hover:text-white disabled:opacity-30 flex items-center justify-center"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M5 12h14"/></svg>
+                  <svg lucideMinus class="w-4 h-4"></svg>
                 </button>
                 <span class="text-sm font-bold text-zinc-900 dark:text-white select-none">
                   {{ product.stock === 0 ? 0 : quantity }}
@@ -156,9 +165,9 @@ import { PaginationComponent } from '../../components/pagination/pagination.comp
                 <button 
                   (click)="handleIncrement()"
                   [disabled]="product.stock === 0 || quantity >= product.stock"
-                  class="text-zinc-400 hover:text-zinc-950 dark:hover:text-white disabled:opacity-30"
+                  class="text-zinc-400 hover:text-zinc-950 dark:hover:text-white disabled:opacity-30 flex items-center justify-center"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                  <svg lucidePlus class="w-4 h-4"></svg>
                 </button>
               </div>
 
@@ -170,7 +179,7 @@ import { PaginationComponent } from '../../components/pagination/pagination.comp
                 size="lg"
                 className="flex-grow group shadow-lg"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 mr-2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                <svg lucideShoppingCart class="w-5 h-5 mr-2"></svg>
                 {{ isAdding ? 'Sepete Ekleniyor...' : 'Sepete Ekle' }}
               </app-button>
 
@@ -207,7 +216,7 @@ import { PaginationComponent } from '../../components/pagination/pagination.comp
             <div *ngIf="comments.length > 0" class="flex items-center gap-3 bg-zinc-950/[0.02] dark:bg-white/[0.02] border border-zinc-950/5 dark:border-white/10 px-4 py-2.5 rounded-2xl w-fit">
               <div class="flex items-center text-amber-500">
                 <span class="text-2xl font-black mr-2">{{ averageRating }}</span>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" /></svg>
+                <svg lucideStar class="w-5 h-5" fill="currentColor"></svg>
               </div>
               <div class="text-left">
                 <div class="text-xs font-semibold text-zinc-800 dark:text-zinc-200">Ortalama Puan</div>
@@ -242,7 +251,7 @@ import { PaginationComponent } from '../../components/pagination/pagination.comp
                 <ng-container *ngIf="isEligibleToComment; else notEligible">
                   <div class="flex items-center gap-2">
                     <span class="text-xs font-semibold text-zinc-500 mr-2">Ürün Puanı:</span>
-                    <div class="flex items-center gap-1 text-zinc-300 dark:text-zinc-755 text-zinc-400">
+                    <div class="flex items-center gap-1 text-zinc-300 dark:text-zinc-700">
                       <button 
                         *ngFor="let star of [1,2,3,4,5]" 
                         (click)="newCommentRating = star"
@@ -250,7 +259,7 @@ import { PaginationComponent } from '../../components/pagination/pagination.comp
                         class="transition-colors hover:scale-110 focus:outline-none"
                         [class.text-amber-500]="newCommentRating >= star"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" /></svg>
+                        <svg lucideStar class="w-6 h-6" [attr.fill]="newCommentRating >= star ? 'currentColor' : 'none'"></svg>
                       </button>
                     </div>
                     <span class="text-xs font-bold text-zinc-900 dark:text-zinc-100 ml-2">({{ newCommentRating }} / 5)</span>
@@ -310,16 +319,12 @@ import { PaginationComponent } from '../../components/pagination/pagination.comp
                     <div class="flex items-center text-amber-500">
                       <svg 
                         *ngFor="let star of getStarsArray(comment.rating)" 
-                        xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5"
-                      >
-                        <path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" />
-                      </svg>
+                        lucideStar class="w-3.5 h-3.5" fill="currentColor"
+                      ></svg>
                       <svg 
                         *ngFor="let star of getEmptyStarsArray(comment.rating)" 
-                        xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3.5 h-3.5 text-zinc-300 dark:text-zinc-700"
-                      >
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499c.173-.439.821-.439.993 0l3.181 3.183a.75.75 0 00.56.56l3.183 3.181c.439.173.439.821 0 .993l-3.181 3.182a.75.75 0 00-.56.56l-3.183 3.182a.75.75 0 00-.993 0l-3.183-3.182a.75.75 0 00-.56-.56l-3.182-3.182c-.439-.173-.439-.821 0-.993l3.182-3.182a.75.75 0 00.56-.56l3.182-3.182z" />
-                      </svg>
+                        lucideStar class="w-3.5 h-3.5 text-zinc-300 dark:text-zinc-700" fill="none"
+                      ></svg>
                     </div>
                   </div>
                   <span class="block text-[10px] text-zinc-400 dark:text-zinc-500">
@@ -349,7 +354,7 @@ import { PaginationComponent } from '../../components/pagination/pagination.comp
               <div *ngIf="editingCommentId === comment.id" class="space-y-3 pt-2">
                 <div class="flex items-center gap-2">
                   <span class="text-xs font-semibold text-zinc-500 mr-2">Yeni Puan:</span>
-                  <div class="flex items-center gap-1 text-zinc-300 dark:text-zinc-700">
+                  <div class="flex items-center gap-1 text-zinc-300 dark:text-zinc-755 text-zinc-700">
                     <button 
                       *ngFor="let star of [1,2,3,4,5]" 
                       (click)="editingCommentRating = star"
@@ -357,7 +362,7 @@ import { PaginationComponent } from '../../components/pagination/pagination.comp
                       class="transition-colors hover:scale-110 focus:outline-none"
                       [class.text-amber-500]="editingCommentRating >= star"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" /></svg>
+                      <svg lucideStar class="w-5 h-5" [attr.fill]="editingCommentRating >= star ? 'currentColor' : 'none'"></svg>
                     </button>
                   </div>
                 </div>

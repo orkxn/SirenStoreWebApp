@@ -9,6 +9,7 @@ import { ToastService } from '../../services/toast.service';
 import { InputComponent } from '../../components/input/input.component';
 import { ButtonComponent } from '../../components/button/button.component';
 import { PaginationComponent } from '../../components/pagination/pagination.component';
+import { LucideUsers, LucideStore, LucideFolderOpen, LucideFileText, LucideClock, LucideBan, LucideCheck, LucideX, LucidePencil, LucideTrash2 } from '@lucide/angular';
 
 @Component({
   selector: 'app-admin-panel',
@@ -18,7 +19,17 @@ import { PaginationComponent } from '../../components/pagination/pagination.comp
     FormsModule,
     InputComponent,
     ButtonComponent,
-    PaginationComponent
+    PaginationComponent,
+    LucideUsers,
+    LucideStore,
+    LucideFolderOpen,
+    LucideFileText,
+    LucideClock,
+    LucideBan,
+    LucideCheck,
+    LucideX,
+    LucidePencil,
+    LucideTrash2
   ],
   template: `
     <div class="max-w-6xl mx-auto px-6 py-10 space-y-8 text-left">
@@ -38,7 +49,7 @@ import { PaginationComponent } from '../../components/pagination/pagination.comp
               ? 'border-zinc-950 dark:border-white text-zinc-950 dark:text-white'
               : 'border-transparent text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300')"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Kullanıcılar ({{ users.length }})
+          <svg lucideUsers class="w-4 h-4"></svg> Kullanıcılar ({{ users.length }})
         </button>
 
         <button
@@ -48,7 +59,7 @@ import { PaginationComponent } from '../../components/pagination/pagination.comp
               ? 'border-zinc-950 dark:border-white text-zinc-950 dark:text-white'
               : 'border-transparent text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300')"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/></svg> Satıcı Başvuruları ({{ sellers.length }})
+          <svg lucideStore class="w-4 h-4"></svg> Satıcı Başvuruları ({{ sellers.length }})
         </button>
 
         <button
@@ -58,7 +69,7 @@ import { PaginationComponent } from '../../components/pagination/pagination.comp
               ? 'border-zinc-950 dark:border-white text-zinc-950 dark:text-white'
               : 'border-transparent text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300')"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/><path d="M12 10v6"/><path d="M9 13h6"/></svg> Kategori Yönetimi ({{ categories.length }})
+          <svg lucideFolderOpen class="w-4 h-4"></svg> Kategori Yönetimi ({{ categories.length }})
         </button>
 
         <button
@@ -68,7 +79,7 @@ import { PaginationComponent } from '../../components/pagination/pagination.comp
               ? 'border-zinc-950 dark:border-white text-zinc-950 dark:text-white'
               : 'border-transparent text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300')"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg> İşlem Logları ({{ auditLogs.length }})
+          <svg lucideFileText class="w-4 h-4"></svg> İşlem Logları ({{ auditLogs.length }})
         </button>
 
         <button
@@ -78,7 +89,7 @@ import { PaginationComponent } from '../../components/pagination/pagination.comp
               ? 'border-zinc-950 dark:border-white text-zinc-950 dark:text-white'
               : 'border-transparent text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300')"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Giriş Geçmişi ({{ loginHistories.length }})
+          <svg lucideClock class="w-4 h-4"></svg> Giriş Geçmişi ({{ loginHistories.length }})
         </button>
       </div>
 
@@ -139,7 +150,7 @@ import { PaginationComponent } from '../../components/pagination/pagination.comp
                         (click)="handleBanUser(u.id)"
                         class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-red-200 dark:border-red-950/30 text-red-600 font-semibold text-xs hover:bg-red-50 dark:hover:bg-red-950/20 transition-all cursor-pointer"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg> Kullanıcıyı Banla
+                        <svg lucideBan class="w-3.5 h-3.5"></svg> Kullanıcıyı Banla
                       </button>
                     </div>
                   </td>
@@ -181,13 +192,13 @@ import { PaginationComponent } from '../../components/pagination/pagination.comp
                   (click)="handleApproveSeller(sel.id)"
                   class="flex-grow flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 font-bold hover:opacity-85 transition-opacity cursor-pointer text-xs"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg> Onayla
+                  <svg lucideCheck class="w-4 h-4"></svg> Onayla
                 </button>
                 <button
                   (click)="handleRejectSeller(sel.id)"
                   class="flex-grow flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-red-200 dark:border-red-950/30 text-red-600 font-bold hover:bg-red-50 dark:hover:bg-red-950/20 transition-all cursor-pointer text-xs"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg> Reddet
+                  <svg lucideX class="w-4 h-4"></svg> Reddet
                 </button>
               </div>
             </div>
@@ -238,17 +249,17 @@ import { PaginationComponent } from '../../components/pagination/pagination.comp
                 <div class="flex gap-2">
                   <button
                     (click)="handleEditCategoryClick(cat)"
-                    class="p-1.5 rounded-full border border-zinc-950/5 dark:border-white/10 text-zinc-500 hover:text-zinc-950 dark:hover:text-white transition-colors cursor-pointer"
+                    class="p-1.5 rounded-full border border-zinc-950/5 dark:border-white/10 text-zinc-500 hover:text-zinc-950 dark:hover:text-white transition-colors cursor-pointer flex items-center justify-center"
                     aria-label="Düzenle"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                    <svg lucidePencil class="w-3.5 h-3.5"></svg>
                   </button>
                   <button
                     (click)="handleDeleteCategory(cat.id)"
-                    class="p-1.5 rounded-full border border-zinc-950/5 dark:border-white/10 text-zinc-400 hover:text-red-500 transition-colors cursor-pointer"
+                    class="p-1.5 rounded-full border border-zinc-950/5 dark:border-white/10 text-zinc-400 hover:text-red-500 transition-colors cursor-pointer flex items-center justify-center"
                     aria-label="Sil"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                    <svg lucideTrash2 class="w-3.5 h-3.5"></svg>
                   </button>
                 </div>
               </div>

@@ -6,6 +6,7 @@ import { AuthService } from '../../../services/auth.service';
 import { ToastService } from '../../../services/toast.service';
 import { InputComponent } from '../../../components/input/input.component';
 import { ButtonComponent } from '../../../components/button/button.component';
+import { LucideEye, LucideEyeOff, LucideArrowRight } from '@lucide/angular';
 
 @Component({
   selector: 'app-login',
@@ -15,7 +16,10 @@ import { ButtonComponent } from '../../../components/button/button.component';
     RouterLink,
     FormsModule,
     InputComponent,
-    ButtonComponent
+    ButtonComponent,
+    LucideEye,
+    LucideEyeOff,
+    LucideArrowRight
   ],
   template: `
     <div class="min-h-[80vh] flex items-center justify-center px-6 py-12">
@@ -56,10 +60,10 @@ import { ButtonComponent } from '../../../components/button/button.component';
               <button
                 type="button"
                 (click)="showPassword = !showPassword"
-                class="absolute right-4 top-[42px] text-zinc-400 hover:text-zinc-950 dark:hover:text-white transition-colors"
+                class="absolute right-4 top-[42px] text-zinc-400 hover:text-zinc-950 dark:hover:text-white transition-colors flex items-center justify-center"
               >
-                <svg *ngIf="showPassword" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/><path d="m15 13-3-3m0 0-3 3"/></svg>
-                <svg *ngIf="!showPassword" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>
+                <svg *ngIf="showPassword" lucideEye class="w-4 h-4"></svg>
+                <svg *ngIf="!showPassword" lucideEyeOff class="w-4 h-4"></svg>
               </button>
             </div>
 
@@ -80,7 +84,7 @@ import { ButtonComponent } from '../../../components/button/button.component';
               <span *ngIf="isLoading; else btnText">Giriş Yapılıyor...</span>
               <ng-template #btnText>
                 <span class="flex items-center gap-2">
-                  Giriş Yap <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 transition-transform group-hover:translate-x-1"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                  Giriş Yap <svg lucideArrowRight class="w-4 h-4 transition-transform group-hover:translate-x-1"></svg>
                 </span>
               </ng-template>
             </app-button>
@@ -150,7 +154,7 @@ import { ButtonComponent } from '../../../components/button/button.component';
               <span *ngIf="isVerifying; else verifyBtnText">Hesap Doğrulanıyor...</span>
               <ng-template #verifyBtnText>
                 <span class="flex items-center gap-2">
-                  Hesabı Doğrula <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 transition-transform group-hover:translate-x-1"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                  Hesabı Doğrula <svg lucideArrowRight class="w-4 h-4 transition-transform group-hover:translate-x-1"></svg>
                 </span>
               </ng-template>
             </app-button>

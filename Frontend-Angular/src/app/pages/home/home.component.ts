@@ -8,6 +8,7 @@ import { ButtonComponent } from '../../components/button/button.component';
 import { MarqueeComponent } from '../../components/marquee/marquee.component';
 import { ProductCardComponent } from '../../components/product-card/product-card.component';
 import { ProductGridSkeletonComponent } from '../../components/skeleton/skeleton.component';
+import { LucideSparkles, LucideArrowRight, LucideShieldCheck, LucideTruck, LucideStar } from '@lucide/angular';
 
 @Component({
   selector: 'app-home',
@@ -18,7 +19,12 @@ import { ProductGridSkeletonComponent } from '../../components/skeleton/skeleton
     ButtonComponent,
     MarqueeComponent,
     ProductCardComponent,
-    ProductGridSkeletonComponent
+    ProductGridSkeletonComponent,
+    LucideSparkles,
+    LucideArrowRight,
+    LucideShieldCheck,
+    LucideTruck,
+    LucideStar
   ],
   template: `
     <div class="space-y-20 pb-20">
@@ -30,8 +36,7 @@ import { ProductGridSkeletonComponent } from '../../components/skeleton/skeleton
         
         <div class="max-w-4xl space-y-6">
           <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass-surface bg-zinc-950/[0.03] dark:bg-white/5 border border-zinc-950/10 dark:border-white/10 text-xs font-semibold tracking-wide text-zinc-600 dark:text-zinc-300">
-            <!-- Sparkles Icon -->
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275Z"/><path d="m5 3 1 2.5L8.5 6 6 7 5 9.5 4 7 1.5 6 4 5.5Z"/><path d="m19 17 1 2.5 2.5.5-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1Z"/></svg>
+            <svg lucideSparkles class="w-3.5 h-3.5"></svg>
             Yeni Sezon Ürünleri
           </div>
           
@@ -50,7 +55,7 @@ import { ProductGridSkeletonComponent } from '../../components/skeleton/skeleton
             <a routerLink="/products">
               <app-button variant="primary" size="lg" className="group">
                 Alışverişe Başla
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                <svg lucideArrowRight class="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1"></svg>
               </app-button>
             </a>
             <a routerLink="/products" [queryParams]="{category: 1}">
@@ -66,19 +71,19 @@ import { ProductGridSkeletonComponent } from '../../components/skeleton/skeleton
       <section class="-mx-6">
         <app-marquee speed="medium">
           <span class="text-sm font-bold uppercase tracking-widest mx-4 flex items-center gap-3">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275Z"/><path d="m5 3 1 2.5L8.5 6 6 7 5 9.5 4 7 1.5 6 4 5.5Z"/><path d="m19 17 1 2.5 2.5.5-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1Z"/></svg> SIREN EXCLUSIVE
+            <svg lucideSparkles class="w-4 h-4"></svg> SIREN EXCLUSIVE
           </span>
           <span class="text-sm font-bold uppercase tracking-widest mx-4 flex items-center gap-3">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg> TREND ÜRÜNLER
+            <svg lucideSparkles class="w-4 h-4"></svg> TREND ÜRÜNLER
           </span>
           <span class="text-sm font-bold uppercase tracking-widest mx-4 flex items-center gap-3">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> PREMIUM QUALITY
+            <svg lucideShieldCheck class="w-4 h-4"></svg> PREMIUM QUALITY
           </span>
           <span class="text-sm font-bold uppercase tracking-widest mx-4 flex items-center gap-3">
-            <svg xmlns="http://www.w3.org/205" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><rect width="16" height="13" x="2" y="6" rx="2"/><path d="M16 8h4l3 3v7a2 2 0 0 1-2 2h-1"/><path d="M3 18h1"/><path d="M18 18h1"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="14.5" cy="18.5" r="2.5"/></svg> FAST SHIPPING
+            <svg lucideTruck class="w-4 h-4"></svg> FAST SHIPPING
           </span>
           <span class="text-sm font-bold uppercase tracking-widest mx-4 flex items-center gap-3">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275Z"/></svg> GÜVENLİ ALIŞVERİŞ
+            <svg lucideShieldCheck class="w-4 h-4"></svg> GÜVENLİ ÖDEME
           </span>
         </app-marquee>
       </section>
@@ -92,8 +97,8 @@ import { ProductGridSkeletonComponent } from '../../components/skeleton/skeleton
             </h2>
             <p class="text-sm text-zinc-500 mt-1">En çok tercih edilen modellerimiz.</p>
           </div>
-          <a routerLink="/products" class="text-sm font-bold text-zinc-950 dark:text-white hover:underline flex items-center gap-1">
-            Tümünü Gör <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          <a routerLink="/products" class="text-sm font-bold text-zinc-950 dark:text-white hover:underline flex items-center gap-1.5">
+            Tümünü Gör <svg lucideArrowRight class="w-4 h-4"></svg>
           </a>
         </div>
  
@@ -145,7 +150,7 @@ import { ProductGridSkeletonComponent } from '../../components/skeleton/skeleton
                 {{ cat.desc }}
               </p>
               <span class="inline-flex items-center gap-1 text-xs font-semibold text-white pt-2 group-hover:underline">
-                Keşfet <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                Keşfet <svg lucideArrowRight class="w-3 h-3"></svg>
               </span>
             </div>
           </a>
@@ -186,7 +191,13 @@ import { ProductGridSkeletonComponent } from '../../components/skeleton/skeleton
           >
             <div class="flex justify-between items-center">
               <span class="text-xs font-bold text-zinc-950 dark:text-white">{{ t.user }}</span>
-              <span class="text-xs text-zinc-900 dark:text-zinc-100 font-serif tracking-wider">{{ t.rating }}</span>
+              <div class="flex items-center gap-0.5 text-zinc-950 dark:text-white">
+                <svg lucideStar class="w-3 h-3" fill="currentColor"></svg>
+                <svg lucideStar class="w-3 h-3" fill="currentColor"></svg>
+                <svg lucideStar class="w-3 h-3" fill="currentColor"></svg>
+                <svg lucideStar class="w-3 h-3" fill="currentColor"></svg>
+                <svg lucideStar class="w-3 h-3" fill="currentColor"></svg>
+              </div>
             </div>
             <p class="text-xs text-zinc-500 dark:text-zinc-400 italic leading-relaxed">
               "{{ t.comment }}"

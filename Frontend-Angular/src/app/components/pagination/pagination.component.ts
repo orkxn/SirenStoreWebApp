@@ -1,10 +1,11 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { LucideChevronLeft, LucideChevronRight } from '@lucide/angular';
 
 @Component({
   selector: 'app-pagination',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, LucideChevronLeft, LucideChevronRight],
   template: `
     <div *ngIf="totalPages > 1" class="flex items-center justify-center gap-2 mt-8 select-none">
       <!-- Previous Button -->
@@ -14,7 +15,7 @@ import { CommonModule } from '@angular/common';
         class="w-10 h-10 rounded-xl border border-zinc-950/10 dark:border-white/10 flex items-center justify-center hover:bg-zinc-950/5 dark:hover:bg-white/5 transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
         aria-label="Önceki Sayfa"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-zinc-900 dark:text-zinc-100"><path d="m15 18-6-6 6-6"/></svg>
+        <svg lucideChevronLeft class="text-zinc-900 dark:text-zinc-100 w-4 h-4"></svg>
       </button>
 
       <!-- Page Numbers -->
@@ -36,7 +37,7 @@ import { CommonModule } from '@angular/common';
         class="w-10 h-10 rounded-xl border border-zinc-950/10 dark:border-white/10 flex items-center justify-center hover:bg-zinc-950/5 dark:hover:bg-white/5 transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
         aria-label="Sonraki Sayfa"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-zinc-900 dark:text-zinc-100"><path d="m9 18 6-6-6-6"/></svg>
+        <svg lucideChevronRight class="text-zinc-900 dark:text-zinc-100 w-4 h-4"></svg>
       </button>
     </div>
   `

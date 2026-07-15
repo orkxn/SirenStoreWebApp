@@ -6,11 +6,12 @@ import { CartService } from '../../services/cart.service';
 import { FavoriteService } from '../../services/favorite.service';
 import { AuthService } from '../../services/auth.service';
 import { FormatPricePipe } from '../../pipes/format-price.pipe';
+import { LucideHeart, LucideShoppingCart } from '@lucide/angular';
 
 @Component({
   selector: 'app-product-card',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormatPricePipe],
+  imports: [CommonModule, RouterLink, FormatPricePipe, LucideHeart, LucideShoppingCart],
   template: `
     <a
       [routerLink]="'/product/' + product.id"
@@ -29,24 +30,15 @@ import { FormatPricePipe } from '../../pipes/format-price.pipe';
         <button
           type="button"
           (click)="handleToggleFavorite($event)"
-          class="absolute top-2.5 right-2.5 z-10 p-2 rounded-full glass-surface bg-white/70 dark:bg-zinc-950/70 border border-zinc-950/10 dark:border-white/10 hover:bg-white dark:hover:bg-zinc-900 text-zinc-500 hover:text-red-500 dark:text-zinc-400 dark:hover:text-red-500 transition-all shadow-sm"
+          class="absolute top-2.5 right-2.5 z-10 p-2 rounded-full glass-surface bg-white/70 dark:bg-zinc-950/70 border border-zinc-950/10 dark:border-white/10 hover:bg-white dark:hover:bg-zinc-900 text-zinc-500 hover:text-red-500 dark:text-zinc-400 dark:hover:text-red-500 transition-all shadow-sm flex items-center justify-center"
           [attr.aria-label]="isFavorite ? 'Favorilerden Çıkar' : 'Favorilere Ekle'"
         >
           <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            [attr.fill]="isFavorite ? 'currentColor' : 'none'"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
+            lucideHeart
             [class.text-red-500]="isFavorite"
+            [attr.fill]="isFavorite ? 'currentColor' : 'none'"
             class="w-4 h-4 transition-transform active:scale-125"
-          >
-            <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
-          </svg>
+          ></svg>
         </button>
 
         <div *ngIf="product.stock === 0" class="absolute inset-0 bg-zinc-950/60 backdrop-blur-sm flex items-center justify-center">
@@ -72,7 +64,7 @@ import { FormatPricePipe } from '../../pipes/format-price.pipe';
             class="flex items-center justify-center p-2.5 rounded-full bg-zinc-950 text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-300 shadow-md"
             aria-label="Sepete Ekle"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+            <svg lucideShoppingCart class="w-4 h-4"></svg>
           </button>
         </div>
       </div>

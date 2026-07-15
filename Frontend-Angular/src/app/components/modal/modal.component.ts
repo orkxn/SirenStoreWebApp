@@ -1,10 +1,11 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { LucideX } from '@lucide/angular';
 
 @Component({
   selector: 'app-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, LucideX],
   template: `
     <div *ngIf="isOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
       <!-- Backdrop -->
@@ -15,10 +16,10 @@ import { CommonModule } from '@angular/common';
         <!-- Close Button -->
         <button
           (click)="onClose.emit()"
-          class="absolute top-4 right-4 p-1.5 rounded-full border border-zinc-950/10 dark:border-white/10 text-zinc-400 hover:text-zinc-950 dark:hover:text-white transition-colors"
+          class="absolute top-4 right-4 p-1.5 rounded-full border border-zinc-950/10 dark:border-white/10 text-zinc-400 hover:text-zinc-950 dark:hover:text-white transition-colors flex items-center justify-center"
           aria-label="Kapat"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          <svg lucideX class="w-4 h-4"></svg>
         </button>
 
         <!-- Header -->

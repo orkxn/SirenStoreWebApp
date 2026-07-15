@@ -8,11 +8,19 @@ import { ToastService } from '../../services/toast.service';
 import { ProductCardComponent } from '../../components/product-card/product-card.component';
 import { ButtonComponent } from '../../components/button/button.component';
 import { PaginationComponent } from '../../components/pagination/pagination.component';
+import { LucideHeart } from '@lucide/angular';
 
 @Component({
   selector: 'app-favorites',
   standalone: true,
-  imports: [CommonModule, RouterLink, ProductCardComponent, ButtonComponent, PaginationComponent],
+  imports: [
+    CommonModule, 
+    RouterLink, 
+    ProductCardComponent, 
+    ButtonComponent, 
+    PaginationComponent,
+    LucideHeart
+  ],
   template: `
     <div class="max-w-7xl mx-auto px-6 py-10 space-y-8 text-left">
       <!-- Header -->
@@ -37,9 +45,7 @@ import { PaginationComponent } from '../../components/pagination/pagination.comp
       <!-- Favorites Loaded -->
       <ng-container *ngIf="!isLoading">
         <div *ngIf="favorites.length === 0" class="text-center py-20 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-3xl space-y-4">
-          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-12 h-12 text-zinc-400 mx-auto">
-            <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
-          </svg>
+          <svg lucideHeart class="w-12 h-12 text-zinc-400 mx-auto"></svg>
           <p class="text-zinc-500 font-medium">Henüz favorilerinize hiçbir ürün eklemediniz.</p>
           <a routerLink="/products" class="inline-block mt-2">
             <app-button variant="primary">Ürünleri Keşfet</app-button>
