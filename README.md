@@ -13,23 +13,25 @@ Siren Store, .NET Core ve Angular kullanılarak geliştirilmiş modern bir full-
 The project is divided into two main parts:
 
 1. Backend (AspNetCore)
-- Entities: Contains database models and enumeration definitions.
-- Application: Contains interfaces, DTOs, business logic services, exception classes, validation rules, and mapping profiles.
-- Infrastructure: Contains repository implementations, database configurations, migrations, DbContext, and services like EmailService.
-- WebAPI: Serves the REST API endpoints and manages configurations, environment variables, middlewares, and controllers.
+- **Entities**: Contains database models and enumeration definitions.
+- **Application**: Contains interfaces, DTOs, business logic services, exception classes, validation rules, and mapping profiles. Implements in-memory caching (`IMemoryCache`) for products, categories, tags, and comments, with immediate invalidation upon database changes or stock adjustments.
+- **Infrastructure**: Contains repository implementations, database configurations, migrations, DbContext, and services like EmailService.
+- **WebAPI**: Serves the REST API endpoints and manages configurations, environment variables, middlewares, and controllers.
 
 2. Frontend (Angular)
-- Developed using Angular 19 (Standalone Components).
+- Developed using **Angular 20** (Standalone Components).
+- Styled and built with **Tailwind CSS v4** and **PrimeNG Aura** components.
+- Icons powered by **Lucide Icons** (`@lucide/angular` standalone components).
 - Managed with Services, Interceptors, Guards, and Pipes.
-- Designed with high-quality CSS styling and glassmorphism.
 
 ### Features
 
-- Product catalog, listing, and search.
+- Product catalog, listing, category filtering, and search.
 - User registration, login, and secure JWT-based authentication.
 - Email verification and password reset flows (Forgot & Reset Password).
 - Cart management (add, update, remove items, auto-calculating total).
 - Checkout and order placement.
+- Real-time stock adjustment on checkout with automatic cache invalidation of the products catalogue (`Products_All` and specific `Product_Detail_{id}`).
 - Saved address selection and address deletion from past orders.
 - Product favorites (toggle likes and list favorites).
 - Audit logging of all critical system actions.
@@ -85,7 +87,7 @@ dotnet run
 ```
 The backend API will start running at `https://localhost:7009` or `http://localhost:5290`.
 
-#### 2. Frontend Setup
+##### 2. Frontend Setup
 
 Navigate to the frontend directory:
 ```bash
@@ -112,23 +114,25 @@ Open your browser and navigate to `http://localhost:4200`.
 Proje iki ana bölümden oluşmaktadır:
 
 1. Backend (AspNetCore)
-- Entities: Veritabanı modellerini ve enum tanımlarını içerir.
-- Application: Arayüzler, DTO'lar, iş mantığı servisleri, özel hata sınıfları, FluentValidation kuralları ve mapping profillerini içerir.
-- Infrastructure: Depo (Repository) uygulamaları, veritabanı konfigürasyonları, migration dosyaları, DbContext ve EmailService gibi altyapı servislerini içerir.
-- WebAPI: REST API endpoint'lerini sunar ve konfigürasyonları, çevre değişkenlerini, middleware'leri ve controller'ları yönetir.
+- **Entities**: Veritabanı modellerini ve enum tanımlarını içerir.
+- **Application**: Arayüzler, DTO'lar, iş mantığı servisleri, özel hata sınıfları, FluentValidation kuralları ve mapping profillerini içerir. Ürünler, kategoriler, etiketler ve yorumlar için `IMemoryCache` tabanlı önbellekleme mimarisi sunar; veritabanı değişikliklerinde veya stok eksilmelerinde önbellekleri anında temizler.
+- **Infrastructure**: Depo (Repository) uygulamaları, veritabanı konfigürasyonları, migration dosyaları, DbContext ve EmailService gibi altyapı servislerini içerir.
+- **WebAPI**: REST API endpoint'lerini sunar ve konfigürasyonları, çevre değişkenlerini, middleware'leri ve controller'ları yönetir.
 
 2. Frontend (Angular)
-- Angular 19 (Standalone Components) kullanılarak geliştirilmiştir.
+- **Angular 20** (Standalone Bileşenler) kullanılarak geliştirilmiştir.
+- Tasarım dili olarak **Tailwind CSS v4** ve **PrimeNG Aura** bileşenleri kullanılmıştır.
+- İkon kütüphanesi olarak **Lucide İkonları** (`@lucide/angular` standalone paketleri) entegre edilmiştir.
 - Servisler, Interceptor'lar, Guard'lar ve Pipe'lar ile yönetilmektedir.
-- Premium CSS tasarımları ve cam efekti (glassmorphism) ile dizayn edilmiştir.
 
 ### Özellikler
 
-- Ürün kataloğu, listeleme ve arama.
+- Ürün kataloğu, listeleme, kategori filtreleme ve arama.
 - Kullanıcı kaydı, girişi ve JWT tabanlı güvenli kimlik doğrulama.
 - E-posta doğrulama ve şifre sıfırlama akışları (Şifremi Unuttum & Şifre Yenileme).
 - Sepet yönetimi (ürün ekleme, adet güncelleme, silme ve sepet tutarı hesaplama).
 - Ödeme adımı ve sipariş oluşturma.
+- Sipariş anında stok güncellemesi ve değişen stokların diğer kullanıcılara anında yansıması için otomatik cache temizleme desteği (`Products_All` ve ilgili `Product_Detail_{id}`).
 - Kayıtlı adres seçimi ve geçmiş siparişlerden adres silme özelliği.
 - Ürün favorileme (beğenme ve favorileri listeleme).
 - Kritik sistem işlemlerinin audit logları ile izlenmesi.
@@ -184,7 +188,7 @@ dotnet run
 ```
 Backend API `https://localhost:7009` veya `http://localhost:5290` adresinde çalışmaya başlayacaktır.
 
-#### 2. Frontend Kurulumu
+##### 2. Frontend Kurulumu
 
 Frontend dizinine geçiş yapın:
 ```bash
