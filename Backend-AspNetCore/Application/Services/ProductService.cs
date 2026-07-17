@@ -14,7 +14,6 @@ namespace SirenStore.Application.Services
         private readonly IValidator<UpdateProductDto> _updateValidator;
         private readonly AuditLogService _auditLogService;
         private readonly IMemoryCache _cache;
-        private const string CacheKeyAll = "Products_All";
         private static string CacheKeyDetail(long id) => $"Product_Detail_{id}";
 
         public ProductService(
@@ -32,7 +31,7 @@ namespace SirenStore.Application.Services
         }
 
         /// <summary>
-        /// Ürünleri ProjectDto'ya dönüştüren ortak SELECT mantığı
+        /// Ürünleri ProductListDto'ya dönüştüren ortak SELECT mantığı
         /// Include ve Select işlemlerini bu helper'da topladık (DRY prensibi)
         /// </summary>
         private IQueryable<ProductListDto> GetProductDtoQueryable(IQueryable<Product> query)
@@ -60,20 +59,54 @@ namespace SirenStore.Application.Services
                 });
         }
 
-        // tüm ürünleri listele
-        public async Task<IEnumerable<ProductListDto>> GetAllAsync()
+        // ürünleri filtrele, sırala ve sayfala (server-side)
+        public async Task<PagedResult<ProductListDto>> GetAllAsync(
+            int page = 1, int pageSize = 9, long? categoryId = null,
+            string? search = null, decimal? minPrice = null, decimal? maxPrice = null,
+            bool onlyInStock = false, string? sortBy = null)
         {
-            if (!_cache.TryGetValue(CacheKeyAll, out IEnumerable<ProductListDto> products))
+            var query = _context.Set<Product>().Where(p => !p.IsDeleted);
+
+            // filtreler
+            if (categoryId.HasValue)
+                query = query.Where(p => p.CategoryId == categoryId.Value);
+            if (!string.IsNullOrWhiteSpace(search))
             {
-                products = await GetProductDtoQueryable(_context.Set<Product>().Where(p => !p.IsDeleted)).ToListAsync();
-
-                var cacheEntryOptions = new MemoryCacheEntryOptions()
-                    .SetAbsoluteExpiration(TimeSpan.FromMinutes(10))
-                    .SetSlidingExpiration(TimeSpan.FromMinutes(2));
-
-                _cache.Set(CacheKeyAll, products, cacheEntryOptions);
+                var term = search.ToLower();
+                query = query.Where(p =>
+                    p.Name.ToLower().Contains(term) ||
+                    p.Description.ToLower().Contains(term) ||
+                    p.Seller.StoreName.ToLower().Contains(term) ||
+                    p.Tags.Any(t => !t.IsDeleted && t.Name.ToLower().Contains(term)));
             }
-            return products;
+            if (minPrice.HasValue)
+                query = query.Where(p => p.Price >= minPrice.Value);
+            if (maxPrice.HasValue)
+                query = query.Where(p => p.Price <= maxPrice.Value);
+            if (onlyInStock)
+                query = query.Where(p => p.Stock > 0);
+
+            // sıralama
+            var dtoQuery = GetProductDtoQueryable(query);
+            dtoQuery = sortBy switch
+            {
+                "price-low" => dtoQuery.OrderBy(p => p.Price),
+                "price-high" => dtoQuery.OrderByDescending(p => p.Price),
+                "name-asc" => dtoQuery.OrderBy(p => p.Name),
+                "name-desc" => dtoQuery.OrderByDescending(p => p.Name),
+                _ => dtoQuery.OrderByDescending(p => p.Id) // en yeni önce
+            };
+
+            var totalCount = await dtoQuery.CountAsync();
+            var items = await dtoQuery.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+
+            return new PagedResult<ProductListDto>
+            {
+                Items = items,
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize
+            };
         }
 
         // satıcının ürünlerini listele
@@ -173,7 +206,6 @@ namespace SirenStore.Application.Services
 
             await _context.Set<Product>().AddAsync(newProduct);
             await _context.SaveChangesAsync();
-            _cache.Remove(CacheKeyAll);
             _cache.Remove("Tags_All");
 
             // audit: Ürün oluşturma logu
@@ -247,7 +279,6 @@ namespace SirenStore.Application.Services
             }
 
             await _context.SaveChangesAsync();
-            _cache.Remove(CacheKeyAll);
             _cache.Remove(CacheKeyDetail(product.Id));
             _cache.Remove("Tags_All");
 
@@ -279,7 +310,6 @@ namespace SirenStore.Application.Services
             }
 
             await _context.SaveChangesAsync();
-            _cache.Remove(CacheKeyAll);
             _cache.Remove(CacheKeyDetail(productId));
 
             // audit: Ürün silme logu

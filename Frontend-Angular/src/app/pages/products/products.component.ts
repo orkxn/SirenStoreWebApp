@@ -63,7 +63,7 @@ import { LucideSlidersHorizontal, LucideSearch, LucideArrowUpDown } from '@lucid
                 type="text"
                 placeholder="İsim, açıklama veya mağaza..."
                 [(ngModel)]="searchTerm"
-                (ngModelChange)="currentPage = 1"
+                (ngModelChange)="onFilterChange()"
                 class="w-full text-xs bg-transparent border border-zinc-300 dark:border-zinc-800 rounded-xl pl-9 pr-4 py-2.5 text-zinc-900 dark:text-white outline-none focus:border-zinc-950 dark:focus:border-white transition-all"
               />
               <svg lucideSearch class="w-4 h-4 text-zinc-400 absolute left-3 top-3.5"></svg>
@@ -104,7 +104,7 @@ import { LucideSlidersHorizontal, LucideSearch, LucideArrowUpDown } from '@lucid
                 type="number"
                 placeholder="Min ₺"
                 [(ngModel)]="minPrice"
-                (ngModelChange)="currentPage = 1"
+                (ngModelChange)="onFilterChange()"
                 class="w-full text-xs bg-transparent border border-zinc-300 dark:border-zinc-800 rounded-xl px-3 py-2 text-zinc-900 dark:text-white outline-none focus:border-zinc-950 dark:focus:border-white"
               />
               <span class="text-zinc-400 text-xs">-</span>
@@ -112,7 +112,7 @@ import { LucideSlidersHorizontal, LucideSearch, LucideArrowUpDown } from '@lucid
                 type="number"
                 placeholder="Max ₺"
                 [(ngModel)]="maxPrice"
-                (ngModelChange)="currentPage = 1"
+                (ngModelChange)="onFilterChange()"
                 class="w-full text-xs bg-transparent border border-zinc-300 dark:border-zinc-800 rounded-xl px-3 py-2 text-zinc-900 dark:text-white outline-none focus:border-zinc-950 dark:focus:border-white"
               />
             </div>
@@ -125,7 +125,7 @@ import { LucideSlidersHorizontal, LucideSearch, LucideArrowUpDown } from '@lucid
               <input
                 type="checkbox"
                 [(ngModel)]="onlyInStock"
-                (ngModelChange)="currentPage = 1"
+                (ngModelChange)="onFilterChange()"
                 class="sr-only peer"
               />
               <div class="w-9 h-5 bg-zinc-200 dark:bg-zinc-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white dark:after:bg-zinc-900 after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-zinc-950 dark:peer-checked:bg-white"></div>
@@ -140,7 +140,7 @@ import { LucideSlidersHorizontal, LucideSearch, LucideArrowUpDown } from '@lucid
           <!-- Sorting / Header Actions -->
           <div class="flex items-center justify-between flex-wrap gap-4 glass-surface bg-zinc-950/[0.01] dark:bg-white/5 border border-zinc-950/5 dark:border-white/10 px-6 py-3 rounded-2xl text-xs text-zinc-500 text-left">
             <span>
-              Toplam <strong class="text-zinc-900 dark:text-white font-semibold">{{ filteredProducts.length }}</strong> ürün listeleniyor
+              Toplam <strong class="text-zinc-900 dark:text-white font-semibold">{{ totalCount }}</strong> ürün listeleniyor
             </span>
             
             <div class="flex items-center gap-2">
@@ -148,7 +148,7 @@ import { LucideSlidersHorizontal, LucideSearch, LucideArrowUpDown } from '@lucid
               <span>Sıralama:</span>
               <select
                 [(ngModel)]="sortBy"
-                (ngModelChange)="currentPage = 1"
+                (ngModelChange)="onFilterChange()"
                 class="bg-transparent border-none text-zinc-900 dark:text-white font-bold cursor-pointer outline-none focus:ring-0"
               >
                 <option value="default" class="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-zinc-100">Önerilen</option>
@@ -163,9 +163,9 @@ import { LucideSlidersHorizontal, LucideSearch, LucideArrowUpDown } from '@lucid
           <!-- Grid Products -->
           <app-product-grid-skeleton *ngIf="isLoading; else productsLoaded" [count]="6"></app-product-grid-skeleton>
           <ng-template #productsLoaded>
-            <div *ngIf="filteredProducts.length > 0; else noProducts" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            <div *ngIf="products.length > 0; else noProducts" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
               <app-product-card
-                *ngFor="let product of paginatedProducts"
+                *ngFor="let product of products"
                 [product]="product"
                 (added)="onProductAdded(product.name)"
                 (error)="onProductError($event)"
@@ -173,8 +173,8 @@ import { LucideSlidersHorizontal, LucideSearch, LucideArrowUpDown } from '@lucid
             </div>
             <app-pagination
               [currentPage]="currentPage"
-              [totalItems]="filteredProducts.length"
-              [pageSize]="9"
+              [totalItems]="totalCount"
+              [pageSize]="pageSize"
               (pageChange)="onPageChange($event)"
             ></app-pagination>
             <ng-template #noProducts>
@@ -199,9 +199,10 @@ import { LucideSlidersHorizontal, LucideSearch, LucideArrowUpDown } from '@lucid
 export class ProductsComponent implements OnInit {
   products: ProductListDto[] = [];
   categories: CategoryDto[] = [];
+  totalCount = 0;
   isLoading = true;
 
-  // Filter States
+  // Filter & Pagination State
   searchTerm = '';
   selectedCategory: number | null = null;
   minPrice: number | '' = '';
@@ -209,15 +210,10 @@ export class ProductsComponent implements OnInit {
   onlyInStock = false;
   sortBy = 'default';
   currentPage = 1;
+  pageSize = 9;
 
-  get paginatedProducts(): ProductListDto[] {
-    return this.filteredProducts.slice((this.currentPage - 1) * 9, this.currentPage * 9);
-  }
-
-  onPageChange(page: number) {
-    this.currentPage = page;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
+  // ponytail: debounce search to avoid hammering the API on every keystroke
+  private searchTimeout: any;
 
   constructor(
     private route: ActivatedRoute,
@@ -228,28 +224,31 @@ export class ProductsComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    this.loadFiltersAndProducts();
+    // ilk yükleme: kategorileri çek, sonra URL'den category parametresini oku ve ürünleri yükle
+    this.categoryService.getAll().then(cats => this.categories = cats);
 
-    // Subscribe to query parameters to sync selected category
     this.route.queryParams.subscribe(params => {
       const catQuery = params['category'];
-      if (catQuery) {
-        this.selectedCategory = parseInt(catQuery, 10);
-      } else {
-        this.selectedCategory = null;
-      }
+      this.selectedCategory = catQuery ? parseInt(catQuery, 10) : null;
+      this.loadProducts();
     });
   }
 
-  async loadFiltersAndProducts() {
+  async loadProducts() {
     this.isLoading = true;
     try {
-      const [prodData, catData] = await Promise.all([
-        this.productService.getAll(),
-        this.categoryService.getAll(),
-      ]);
-      this.products = prodData;
-      this.categories = catData;
+      const result = await this.productService.getAll({
+        page: this.currentPage,
+        pageSize: this.pageSize,
+        categoryId: this.selectedCategory,
+        search: this.searchTerm || undefined,
+        minPrice: this.minPrice !== '' ? this.minPrice : undefined,
+        maxPrice: this.maxPrice !== '' ? this.maxPrice : undefined,
+        onlyInStock: this.onlyInStock,
+        sortBy: this.sortBy
+      });
+      this.products = result.items;
+      this.totalCount = result.totalCount;
     } catch (err: any) {
       this.toastService.showToast(err.message || 'Ürün kataloğu yüklenemedi.', 'error');
     } finally {
@@ -257,22 +256,28 @@ export class ProductsComponent implements OnInit {
     }
   }
 
+  onFilterChange() {
+    this.currentPage = 1;
+    // debounce: arama yazılırken her karakter için istek atma
+    clearTimeout(this.searchTimeout);
+    this.searchTimeout = setTimeout(() => this.loadProducts(), 300);
+  }
+
+  onPageChange(page: number) {
+    this.currentPage = page;
+    this.loadProducts();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   handleCategorySelect(categoryId: number | null) {
     this.selectedCategory = categoryId;
     this.currentPage = 1;
-    if (categoryId) {
-      this.router.navigate([], {
-        relativeTo: this.route,
-        queryParams: { category: categoryId.toString() },
-        queryParamsHandling: 'merge'
-      });
-    } else {
-      this.router.navigate([], {
-        relativeTo: this.route,
-        queryParams: { category: null },
-        queryParamsHandling: 'merge'
-      });
-    }
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { category: categoryId?.toString() ?? null },
+      queryParamsHandling: 'merge'
+    });
+    // queryParams subscription içindeki loadProducts() çağrısı tetiklenecek
   }
 
   handleResetFilters() {
@@ -288,44 +293,6 @@ export class ProductsComponent implements OnInit {
       queryParams: { category: null },
       queryParamsHandling: 'merge'
     });
-  }
-
-  get filteredProducts(): ProductListDto[] {
-    return this.products
-      .filter((p) => {
-        // 1. Search term match
-        const matchesSearch = !this.searchTerm ||
-          p.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-          p.description.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-          p.storeName.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-          (p.tags && p.tags.some(t => t.toLowerCase().includes(this.searchTerm.toLowerCase())));
-
-        // 2. Category match
-        const matchesCategory = this.selectedCategory ? p.categoryId === this.selectedCategory : true;
-
-        // 3. Price range match
-        const matchesMinPrice = this.minPrice === '' || this.minPrice === null ? true : p.price >= this.minPrice;
-        const matchesMaxPrice = this.maxPrice === '' || this.maxPrice === null ? true : p.price <= this.maxPrice;
-
-        // 4. Stock match
-        const matchesStock = this.onlyInStock ? p.stock > 0 : true;
-
-        return matchesSearch && matchesCategory && matchesMinPrice && matchesMaxPrice && matchesStock;
-      })
-      .sort((a, b) => {
-        switch (this.sortBy) {
-          case 'price-low':
-            return a.price - b.price;
-          case 'price-high':
-            return b.price - a.price;
-          case 'name-asc':
-            return a.name.localeCompare(b.name);
-          case 'name-desc':
-            return b.name.localeCompare(a.name);
-          default:
-            return 0; // Natural API sort
-        }
-      });
   }
 
   onProductAdded(productName: string) {

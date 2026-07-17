@@ -100,7 +100,6 @@ namespace SirenStore.Application.Services
                 await transaction.CommitAsync();
 
                 // cache invalidation: sipariş sonrası değişen ürün stoklarını temizle
-                _cache.Remove("Products_All");
                 foreach (var basketItem in activeBasketItems)
                 {
                     _cache.Remove($"Product_Detail_{basketItem.ProductId}");

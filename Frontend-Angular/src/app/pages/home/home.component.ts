@@ -236,8 +236,8 @@ export class HomeComponent implements OnInit {
 
   async fetchFeaturedProducts() {
     try {
-      const allProducts = await this.productService.getAll();
-      this.products = allProducts.slice(0, 4);
+      const result = await this.productService.getAll({ page: 1, pageSize: 4 });
+      this.products = result.items;
     } catch (err: any) {
       this.toastService.showToast(err.message || 'Ürünler yüklenirken bir hata oluştu.', 'error');
     } finally {

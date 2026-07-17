@@ -19,13 +19,17 @@ namespace WebAPI.Controllers
         }
 
 
-        // tüm ürünleri listeleme
-        // GET: api/products
+        // ürünleri listele (filtreleme, sıralama, sayfalama destekli)
+        // GET: api/products?page=1&pageSize=9&categoryId=2&search=tshirt&sortBy=price-low
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll(
+            [FromQuery] int page = 1, [FromQuery] int pageSize = 9,
+            [FromQuery] long? categoryId = null, [FromQuery] string? search = null,
+            [FromQuery] decimal? minPrice = null, [FromQuery] decimal? maxPrice = null,
+            [FromQuery] bool onlyInStock = false, [FromQuery] string? sortBy = null)
         {
-            var products = await _productService.GetAllAsync();
-            return Ok(products);
+            var result = await _productService.GetAllAsync(page, pageSize, categoryId, search, minPrice, maxPrice, onlyInStock, sortBy);
+            return Ok(result);
         }
 
         // tüm benzersiz etiketleri listeleme

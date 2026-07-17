@@ -1,15 +1,35 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-import { ProductListDto } from '../models/api.types';
+import { ProductListDto, PagedResult } from '../models/api.types';
 import { API_BASE_URL } from '../interceptors/api.interceptor';
+
+export interface ProductQueryParams {
+  page?: number;
+  pageSize?: number;
+  categoryId?: number | null;
+  search?: string;
+  minPrice?: number | '' | null;
+  maxPrice?: number | '' | null;
+  onlyInStock?: boolean;
+  sortBy?: string;
+}
 
 @Injectable({ providedIn: 'root' })
 export class ProductService {
   constructor(private http: HttpClient) {}
 
-  getAll(): Promise<ProductListDto[]> {
-    return firstValueFrom(this.http.get<ProductListDto[]>(`${API_BASE_URL}/products`));
+  getAll(query: ProductQueryParams = {}): Promise<PagedResult<ProductListDto>> {
+    let params = new HttpParams();
+    if (query.page) params = params.set('page', query.page);
+    if (query.pageSize) params = params.set('pageSize', query.pageSize);
+    if (query.categoryId) params = params.set('categoryId', query.categoryId);
+    if (query.search) params = params.set('search', query.search);
+    if (query.minPrice != null && query.minPrice !== '') params = params.set('minPrice', String(query.minPrice));
+    if (query.maxPrice != null && query.maxPrice !== '') params = params.set('maxPrice', String(query.maxPrice));
+    if (query.onlyInStock) params = params.set('onlyInStock', true);
+    if (query.sortBy && query.sortBy !== 'default') params = params.set('sortBy', query.sortBy);
+    return firstValueFrom(this.http.get<PagedResult<ProductListDto>>(`${API_BASE_URL}/products`, { params }));
   }
 
   getAllTags(): Promise<string[]> {

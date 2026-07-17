@@ -1,5 +1,12 @@
 // TypeScript types corresponding to .NET Core Backend DTOs (camelCase)
 
+export interface PagedResult<T> {
+  items: T[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+}
+
 export enum UserTypes {
   Customer = 0,
   Seller = 1,
