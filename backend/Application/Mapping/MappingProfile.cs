@@ -18,15 +18,12 @@ namespace SirenStore.Application.Mapping
             CreateMap<Product, ProductDto>();
 
             // Admin
-            // kaydederken : CreateAdminDto'daki Username alanını User'ın FirstName alanına, LastName alanını boş string olarak yaz
             CreateMap<CreateAdminDto, User>()
-                .ForMember(dest => dest.FirstName, opt => opt.MapFrom(src => src.Username))
-                .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => string.Empty)); // Boş geçmemek için
-
-            // çekerken : User'daki FirstName alanını AdminDto'daki Username alanına, UserType alanını Role alanına yaz
+                .ForMember(d => d.FirstName, o => o.MapFrom(s => s.Username))
+                .ForMember(d => d.LastName, o => o.MapFrom(s => string.Empty));
             CreateMap<User, AdminDto>()
-                .ForMember(dest => dest.Username, opt => opt.MapFrom(src => src.FirstName))
-                .ForMember(dest => dest.Role, opt => opt.MapFrom(src => src.UserType.ToString()));
+                .ForMember(d => d.Username, o => o.MapFrom(s => s.FirstName))
+                .ForMember(d => d.Role, o => o.MapFrom(s => s.UserType.ToString()));
 
             // User
             CreateMap<User, UserProfileDto>();

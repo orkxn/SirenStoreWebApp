@@ -27,12 +27,10 @@ namespace SirenStore.WebAPI.Middleware
             {
                 _logger.LogError(ex, "Unhandled exception caught by middleware");
 
-                // veritabanına kaydetmek için ExceptionLog nesnesi oluştur
                 try
                 {
-                    var dbContext = serviceProvider.GetRequiredService<DbContext>();
-
-                    var exceptionLog = new ExceptionLog
+                    var db = serviceProvider.GetRequiredService<DbContext>();
+                    db.Set<ExceptionLog>().Add(new ExceptionLog
                     {
                         ExceptionType = ex.GetType().FullName!,
                         Message = ex.Message,
@@ -41,15 +39,10 @@ namespace SirenStore.WebAPI.Middleware
                         RequestMethod = context.Request.Method,
                         QueryString = context.Request.QueryString.ToString(),
                         Source = ex.Source
-                    };
-
-                    await dbContext.Set<ExceptionLog>().AddAsync(exceptionLog);
-                    await dbContext.SaveChangesAsync();
+                    });
+                    await db.SaveChangesAsync();
                 }
-                catch (Exception dbEx)
-                {
-                    _logger.LogError(dbEx, "Failed to log exception to database");
-                }
+                catch (Exception dbEx) { _logger.LogError(dbEx, "Failed to log exception to DB"); }
 
                 throw;
             }
