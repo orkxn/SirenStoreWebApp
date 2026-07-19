@@ -22,7 +22,11 @@ namespace SirenStore.Application.Validators
                 .Length(3, 100).WithMessage("Mağaza adı 3 ile 100 karakter arasında olmalıdır.");
             RuleFor(x => x.TaxNumber).NotEmpty().WithMessage("Vergi numarası boş bırakılamaz.")
                 .Matches(@"^\d{10,11}$").WithMessage("Vergi numarası 10 veya 11 haneli rakamlardan oluşmalıdır.");
-            RuleFor(x => x.ContactPhone).NotEmpty().WithMessage("Telefon numarası boş bırakılamaz.");
+            RuleFor(x => x.ContactPhone).NotEmpty().WithMessage("Telefon numarası boş bırakılamaz.")
+                .Matches(@"^5[0-9]{9}$").WithMessage("Geçerli bir telefon numarası giriniz (Örn: 5XX XXX XXXX).");
+            RuleFor(x => x.ContactEmail).NotEmpty().WithMessage("İletişim e-postası boş bırakılamaz.")
+                .EmailAddress().WithMessage("Geçerli bir e-posta adresi giriniz.");
+            RuleFor(x => x.TaxOffice).NotEmpty().WithMessage("Vergi dairesi boş bırakılamaz.");
         }
     }
 
@@ -33,6 +37,8 @@ namespace SirenStore.Application.Validators
             RuleFor(x => x.CurrentPassword).NotEmpty().WithMessage("Mevcut şifre boş bırakılamaz.");
             RuleFor(x => x.NewPassword).NotEmpty().WithMessage("Yeni şifre boş bırakılamaz.")
                 .MinimumLength(6).WithMessage("Yeni şifre en az 6 karakter olmalıdır.");
+            RuleFor(x => x.ConfirmNewPassword).NotEmpty().WithMessage("Şifre tekrarı boş bırakılamaz.")
+                .Equal(x => x.NewPassword).WithMessage("Şifreler eşleşmiyor.");
         }
     }
 
@@ -63,6 +69,23 @@ namespace SirenStore.Application.Validators
         {
             RuleFor(x => x.AddressTitle).NotEmpty().WithMessage("Adres başlığı boş bırakılamaz.");
             RuleFor(x => x.ShippingAddress).NotEmpty().WithMessage("Teslimat adresi boş bırakılamaz.");
+
+            RuleFor(x => x.CardHolderName)
+                .NotEmpty().WithMessage("Kart üzerindeki isim boş bırakılamaz.")
+                .Matches(@"^[a-zA-ZğüşıöçĞÜŞİÖÇ\s]+$").WithMessage("Kart üzerindeki isim yalnızca harf içermelidir.")
+                .Length(2, 100).WithMessage("Kart üzerindeki isim 2 ile 100 karakter arasında olmalıdır.");
+
+            RuleFor(x => x.CardNumber)
+                .NotEmpty().WithMessage("Kart numarası boş bırakılamaz.")
+                .Matches(@"^(\d{16}|\d{4}\s\d{4}\s\d{4}\s\d{4}|\d{4}-\d{4}-\d{4}-\d{4})$").WithMessage("Kart numarası 16 haneli bir sayı olmalıdır.");
+
+            RuleFor(x => x.CardExpiry)
+                .NotEmpty().WithMessage("Son kullanma tarihi boş bırakılamaz.")
+                .Matches(@"^(0[1-9]|1[0-2])\s?\/\s?(2[6-9]|[3-9][0-9])$").WithMessage("Son kullanma tarihi geçersiz.");
+
+            RuleFor(x => x.CardCvv)
+                .NotEmpty().WithMessage("CVV kodu boş bırakılamaz.")
+                .Matches(@"^\d{3}$").WithMessage("CVV kodu 3 haneli bir sayı olmalıdır.");
         }
     }
 
@@ -100,10 +123,14 @@ namespace SirenStore.Application.Validators
     {
         public RegisterDtoValidator()
         {
-            RuleFor(x => x.Email).NotEmpty().EmailAddress().WithMessage("Geçerli bir e-posta adresi giriniz.");
-            RuleFor(x => x.Password).NotEmpty().MinimumLength(6).WithMessage("Şifre en az 6 karakter olmalıdır.");
+            RuleFor(x => x.Email).NotEmpty().WithMessage("E-posta boş bırakılamaz.")
+                .EmailAddress().WithMessage("Geçerli bir e-posta adresi giriniz.");
+            RuleFor(x => x.Password).NotEmpty().WithMessage("Şifre boş bırakılamaz.")
+                .MinimumLength(6).WithMessage("Şifre en az 6 karakter olmalıdır.");
             RuleFor(x => x.FirstName).NotEmpty().WithMessage("Ad boş bırakılamaz.");
             RuleFor(x => x.LastName).NotEmpty().WithMessage("Soyad boş bırakılamaz.");
+            RuleFor(x => x.PhoneNumber).NotEmpty().WithMessage("Telefon numarası boş bırakılamaz.")
+                .Matches(@"^5[0-9]{9}$").WithMessage("Geçerli bir telefon numarası giriniz.");
         }
     }
 
@@ -119,9 +146,13 @@ namespace SirenStore.Application.Validators
     {
         public ResetPasswordDtoValidator()
         {
-            RuleFor(x => x.Email).NotEmpty().EmailAddress().WithMessage("Geçerli bir e-posta adresi giriniz.");
+            RuleFor(x => x.Email).NotEmpty().WithMessage("E-posta boş bırakılamaz.")
+                .EmailAddress().WithMessage("Geçerli bir e-posta adresi giriniz.");
             RuleFor(x => x.Token).NotEmpty().WithMessage("Doğrulama kodu boş olamaz.");
-            RuleFor(x => x.Password).NotEmpty().MinimumLength(6).WithMessage("Şifre en az 6 karakter olmalıdır.");
+            RuleFor(x => x.Password).NotEmpty().WithMessage("Şifre boş bırakılamaz.")
+                .MinimumLength(6).WithMessage("Şifre en az 6 karakter olmalıdır.");
+            RuleFor(x => x.ConfirmPassword).NotEmpty().WithMessage("Şifre tekrarı boş bırakılamaz.")
+                .Equal(x => x.Password).WithMessage("Şifreler eşleşmiyor.");
         }
     }
 
