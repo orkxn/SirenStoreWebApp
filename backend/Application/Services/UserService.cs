@@ -1,4 +1,3 @@
-using AutoMapper;
 using BCrypt.Net;
 using Entities.Models;
 using FluentValidation;
@@ -11,16 +10,14 @@ namespace SirenStore.Application.Services
     public class UserService
     {
         private readonly DbContext _context;
-        private readonly IMapper _mapper;
         private readonly IValidator<UpdateProfileDto> _updateProfileValidator;
         private readonly IValidator<ChangePasswordDto> _changePasswordValidator;
         private readonly AuditLogService _auditLogService;
 
-        public UserService(DbContext context, IMapper mapper, IValidator<UpdateProfileDto> updateProfileValidator,
+        public UserService(DbContext context, IValidator<UpdateProfileDto> updateProfileValidator,
             IValidator<ChangePasswordDto> changePasswordValidator, AuditLogService auditLogService)
         {
             _context = context;
-            _mapper = mapper;
             _updateProfileValidator = updateProfileValidator;
             _changePasswordValidator = changePasswordValidator;
             _auditLogService = auditLogService;
@@ -34,7 +31,16 @@ namespace SirenStore.Application.Services
             if (user == null)
                 throw new NotFoundException("Kullanıcı profili bulunamadı.");
 
-            return _mapper.Map<UserProfileDto>(user);
+            return new UserProfileDto
+            {
+                Id = user.Id,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Email = user.Email,
+                PhoneNumber = user.PhoneNumber,
+                UserType = user.UserType,
+                IsEmailConfirmed = user.IsEmailConfirmed
+            };
         }
 
         // profil bilgilerini güncelleme

@@ -30,25 +30,6 @@ namespace SirenStore.Application.Services
             _cache = cache;
         }
 
-        private string GetProductsVersion()
-        {
-            if (!_cache.TryGetValue("Products_Version", out string? version) || string.IsNullOrEmpty(version))
-            {
-                version = Guid.NewGuid().ToString();
-                _cache.Set("Products_Version", version, TimeSpan.FromDays(30));
-            }
-            return version;
-        }
-
-        public void InvalidateProductsVersion()
-        {
-            _cache.Set("Products_Version", Guid.NewGuid().ToString(), TimeSpan.FromDays(30));
-        }
-
-        /// <summary>
-        /// Ürünleri ProductListDto'ya dönüştüren ortak SELECT mantığı
-        /// AsNoTracking ekledik ve gereksiz join/include'ları çıkardık (EF Select projeksiyonu otomatik halleder)
-        /// </summary>
         private IQueryable<ProductListDto> GetProductDtoQueryable(IQueryable<Product> query)
         {
             return query
@@ -71,68 +52,54 @@ namespace SirenStore.Application.Services
                 });
         }
 
-        // ürünleri filtrele, sırala ve sayfala (server-side + query caching)
+        // ürünleri filtrele, sırala ve sayfala (server-side)
         public async Task<PagedResult<ProductListDto>> GetAllAsync(
             int page = 1, int pageSize = 9, long? categoryId = null,
             string? search = null, decimal? minPrice = null, decimal? maxPrice = null,
             bool onlyInStock = false, string? sortBy = null)
         {
-            var version = GetProductsVersion();
-            string cacheKey = $"Products_List_V_{version}_{page}_{pageSize}_{categoryId}_{search}_{minPrice}_{maxPrice}_{onlyInStock}_{sortBy}";
+            var query = _context.Set<Product>().Where(p => !p.IsDeleted);
 
-            if (!_cache.TryGetValue(cacheKey, out PagedResult<ProductListDto>? result) || result == null)
+            // filtreler
+            if (categoryId.HasValue)
+                query = query.Where(p => p.CategoryId == categoryId.Value);
+            if (!string.IsNullOrWhiteSpace(search))
             {
-                var query = _context.Set<Product>().Where(p => !p.IsDeleted);
-
-                // filtreler
-                if (categoryId.HasValue)
-                    query = query.Where(p => p.CategoryId == categoryId.Value);
-                if (!string.IsNullOrWhiteSpace(search))
-                {
-                    var term = search.ToLower();
-                    query = query.Where(p =>
-                        p.Name.ToLower().Contains(term) ||
-                        p.Description.ToLower().Contains(term) ||
-                        p.Seller.StoreName.ToLower().Contains(term) ||
-                        p.Tags.Any(t => !t.IsDeleted && t.Name.ToLower().Contains(term)));
-                }
-                if (minPrice.HasValue)
-                    query = query.Where(p => p.Price >= minPrice.Value);
-                if (maxPrice.HasValue)
-                    query = query.Where(p => p.Price <= maxPrice.Value);
-                if (onlyInStock)
-                    query = query.Where(p => p.Stock > 0);
-
-                // sıralama
-                var dtoQuery = GetProductDtoQueryable(query);
-                dtoQuery = sortBy switch
-                {
-                    "price-low" => dtoQuery.OrderBy(p => p.Price),
-                    "price-high" => dtoQuery.OrderByDescending(p => p.Price),
-                    "name-asc" => dtoQuery.OrderBy(p => p.Name),
-                    "name-desc" => dtoQuery.OrderByDescending(p => p.Name),
-                    _ => dtoQuery.OrderByDescending(p => p.Id) // en yeni önce
-                };
-
-                var totalCount = await dtoQuery.CountAsync();
-                var items = await dtoQuery.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
-
-                result = new PagedResult<ProductListDto>
-                {
-                    Items = items,
-                    TotalCount = totalCount,
-                    Page = page,
-                    PageSize = pageSize
-                };
-
-                var cacheEntryOptions = new MemoryCacheEntryOptions()
-                    .SetAbsoluteExpiration(TimeSpan.FromMinutes(10))
-                    .SetSlidingExpiration(TimeSpan.FromMinutes(2));
-
-                _cache.Set(cacheKey, result, cacheEntryOptions);
+                var term = search.ToLower();
+                query = query.Where(p =>
+                    p.Name.ToLower().Contains(term) ||
+                    p.Description.ToLower().Contains(term) ||
+                    p.Seller.StoreName.ToLower().Contains(term) ||
+                    p.Tags.Any(t => !t.IsDeleted && t.Name.ToLower().Contains(term)));
             }
+            if (minPrice.HasValue)
+                query = query.Where(p => p.Price >= minPrice.Value);
+            if (maxPrice.HasValue)
+                query = query.Where(p => p.Price <= maxPrice.Value);
+            if (onlyInStock)
+                query = query.Where(p => p.Stock > 0);
 
-            return result;
+            // sıralama
+            var dtoQuery = GetProductDtoQueryable(query);
+            dtoQuery = sortBy switch
+            {
+                "price-low" => dtoQuery.OrderBy(p => p.Price),
+                "price-high" => dtoQuery.OrderByDescending(p => p.Price),
+                "name-asc" => dtoQuery.OrderBy(p => p.Name),
+                "name-desc" => dtoQuery.OrderByDescending(p => p.Name),
+                _ => dtoQuery.OrderByDescending(p => p.Id) // en yeni önce
+            };
+
+            var totalCount = await dtoQuery.CountAsync();
+            var items = await dtoQuery.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+
+            return new PagedResult<ProductListDto>
+            {
+                Items = items,
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize
+            };
         }
 
         // satıcının ürünlerini listele
@@ -233,7 +200,6 @@ namespace SirenStore.Application.Services
             await _context.Set<Product>().AddAsync(newProduct);
             await _context.SaveChangesAsync();
             _cache.Remove("Tags_All");
-            InvalidateProductsVersion();
 
             // audit: Ürün oluşturma logu
             await _auditLogService.LogAuditAsync(userId, "PRODUCT_CREATED", "Product", newProduct.Id, $"Name: {newProduct.Name}");
@@ -308,7 +274,6 @@ namespace SirenStore.Application.Services
             await _context.SaveChangesAsync();
             _cache.Remove(CacheKeyDetail(product.Id));
             _cache.Remove("Tags_All");
-            InvalidateProductsVersion();
 
             // audit: Ürün güncelleme logu
             await _auditLogService.LogAuditAsync(userId, "PRODUCT_UPDATED", "Product", product.Id, $"Name: {product.Name}");
@@ -339,7 +304,6 @@ namespace SirenStore.Application.Services
 
             await _context.SaveChangesAsync();
             _cache.Remove(CacheKeyDetail(productId));
-            InvalidateProductsVersion();
 
             // audit: Ürün silme logu
             await _auditLogService.LogAuditAsync(userId, "PRODUCT_DELETED", "Product", productId, $"ProductId: {productId}");

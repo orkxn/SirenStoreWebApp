@@ -1,38 +1,44 @@
 using Application.DTOs.Comment;
-using AutoMapper;
 using Entities.Models;
 using Entities.Enums;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using SirenStore.Application.Exceptions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace SirenStore.Application.Services
 {
     public class CommentService
     {
         private readonly DbContext _context;
-        private readonly IMapper _mapper;
         private readonly AuditLogService _auditLogService;
         private readonly IValidator<CommentCreateDto> _createValidator;
         private readonly IValidator<CommentUpdateDto> _updateValidator;
         private readonly IMemoryCache _cache;
         private static string CacheKeyProductComments(long productId) => $"Product_Comments_{productId}";
 
+        private static CommentDto MapToDto(Comment c) => new CommentDto
+        {
+            Id = c.Id,
+            Text = c.Text,
+            Rating = c.Rating,
+            CreationDate = c.CreationDate,
+            UserId = c.UserId,
+            UserFullName = c.User != null ? $"{c.User.FirstName} {c.User.LastName}" : string.Empty,
+            ProductId = c.ProductId,
+            ProductName = c.Product?.Name,
+            ProductImageUrl = c.Product?.ProductImages.FirstOrDefault(img => img.IsMain)?.ImageUrl
+                              ?? c.Product?.ProductImages.FirstOrDefault()?.ImageUrl
+        };
+
         public CommentService(
             DbContext context, 
-            IMapper mapper, 
             AuditLogService auditLogService,
             IValidator<CommentCreateDto> createValidator,
             IValidator<CommentUpdateDto> updateValidator,
             IMemoryCache cache)
         {
             _context = context;
-            _mapper = mapper;
             _auditLogService = auditLogService;
             _createValidator = createValidator;
             _updateValidator = updateValidator;
@@ -42,15 +48,15 @@ namespace SirenStore.Application.Services
         public async Task<IEnumerable<CommentDto>> GetCommentsByProductIdAsync(long productId)
         {
             var key = CacheKeyProductComments(productId);
-            if (!_cache.TryGetValue(key, out IEnumerable<CommentDto> mappedComments))
+            if (!_cache.TryGetValue(key, out IEnumerable<CommentDto>? mappedComments) || mappedComments == null)
             {
                 var comments = await _context.Set<Comment>()
                     .Include(c => c.User)
-                    .Where(c => c.ProductId == productId)
+                    .Where(c => c.ProductId == productId && !c.IsDeleted)
                     .OrderByDescending(c => c.CreationDate)
                     .ToListAsync();
 
-                mappedComments = _mapper.Map<IEnumerable<CommentDto>>(comments);
+                mappedComments = comments.Select(MapToDto).ToList();
 
                 var cacheEntryOptions = new MemoryCacheEntryOptions()
                     .SetAbsoluteExpiration(TimeSpan.FromMinutes(20))
@@ -71,7 +77,7 @@ namespace SirenStore.Application.Services
                 .OrderByDescending(c => c.CreationDate)
                 .ToListAsync();
 
-            return _mapper.Map<IEnumerable<CommentDto>>(comments);
+            return comments.Select(MapToDto).ToList();
         }
 
         public async Task<bool> CanUserCommentOnProductAsync(long userId, long productId)
@@ -123,10 +129,15 @@ namespace SirenStore.Application.Services
             if (!canComment)
                 throw new BusinessRuleException("Yalnızca satın aldığınız ve teslim edilen ürünlere yorum yapabilirsiniz.");
 
-            var comment = _mapper.Map<Comment>(dto);
-            comment.UserId = userId;
-            comment.CreationDate = DateTime.UtcNow;
-            comment.IsDeleted = false;
+            var comment = new Comment
+            {
+                ProductId = dto.ProductId,
+                Rating = dto.Rating,
+                Text = dto.Text,
+                UserId = userId,
+                CreationDate = DateTime.UtcNow,
+                IsDeleted = false
+            };
 
             await _context.Set<Comment>().AddAsync(comment);
             await _context.SaveChangesAsync();
@@ -139,7 +150,7 @@ namespace SirenStore.Application.Services
                 .Include(c => c.User)
                 .FirstOrDefaultAsync(c => c.Id == comment.Id);
 
-            return _mapper.Map<CommentDto>(savedComment);
+            return MapToDto(savedComment!);
         }
 
         public async Task<CommentDto> UpdateCommentAsync(long commentId, CommentUpdateDto dto, long userId)
@@ -166,7 +177,7 @@ namespace SirenStore.Application.Services
             // audit: Yorum güncelleme logu
             await _auditLogService.LogAuditAsync(userId, "COMMENT_UPDATED", "Comment", comment.Id, $"NewRating: {comment.Rating}");
 
-            return _mapper.Map<CommentDto>(comment);
+            return MapToDto(comment);
         }
 
         public async Task DeleteCommentAsync(long commentId, long userId, bool isAdmin = false)

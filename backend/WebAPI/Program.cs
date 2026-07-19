@@ -1,22 +1,17 @@
-using AutoMapper;
-using dotenv.net;
 using Entities.Models;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using SirenStore.Application.Mapping;
 using SirenStore.Application.Services;
 using SirenStore.Application.Validators;
 using SirenStore.Infrastructure.Context;
-using SirenStore.WebAPI.Middleware;
 using System.Text;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
+using dotenv.net;
 
-// .env dosyasını program.cs içine yükler
 DotEnv.Load();
-
 var builder = WebApplication.CreateBuilder(args);
 
 // veri tabanı connection string bağlantısı
@@ -38,9 +33,6 @@ builder.Services.AddScoped<AuditLogService>();
 builder.Services.AddScoped<LoginHistoryService>();
 builder.Services.AddScoped<CommentService>();
 builder.Services.AddScoped<FavoriteService>();
-
-// automapper ve fluentvalidation kayıtları
-builder.Services.AddAutoMapper(cfg => cfg.AddProfile<SirenStore.Application.Mapping.MappingProfile>());
 
 builder.Services.AddValidatorsFromAssemblyContaining<CreateProductDtoValidator>();
 
@@ -202,9 +194,6 @@ app.UseExceptionHandler(errorApp =>
         await context.Response.WriteAsJsonAsync(response);
     });
 });
-
-// exception loglama — UseExceptionHandler'dan sonra register edilir ki exception'ı yakalayıp loglayabilsin
-app.UseMiddleware<ExceptionLoggingMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {

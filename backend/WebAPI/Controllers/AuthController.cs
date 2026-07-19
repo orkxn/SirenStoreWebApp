@@ -55,15 +55,6 @@ namespace SirenStore.WebAPI.Controllers
             return Ok(tokenResult);
         }
 
-        // ilk doğrulama e-postası gönderme endpointi
-        // POST: api/auth/send-verification-email
-        [HttpPost("send-verification-email")]
-        public async Task<IActionResult> SendVerificationEmail([FromBody] ResendVerificationEmailDto dto)
-        {
-            await authService.SendVerificationEmailAsync(dto);
-            return Ok(new { Message = "Doğrulama e-postası gönderildi." });
-        }
-
         // e-posta doğrulama kodunu tekrar gönderme endpointi
         // POST: api/auth/resend-verification-email
         [HttpPost("resend-verification-email")]
