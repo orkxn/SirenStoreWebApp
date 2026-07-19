@@ -56,11 +56,6 @@ builder.Services.AddCors(options =>
     options.AddPolicy("SirenStorePolicy", policy =>
     {
         policy.WithOrigins(allowedOrigins)
-              .SetIsOriginAllowed(origin =>
-              {
-                  return Uri.TryCreate(origin, UriKind.Absolute, out var uri) &&
-                         uri.Host == "localhost";
-              })
               .WithMethods(allowedMethods)
               .WithHeaders(allowedHeaders);
 
@@ -119,12 +114,6 @@ builder.Services.AddRateLimiter(options =>
             new { Type = "RateLimitExceeded", Message = "Çok fazla istek gönderildi. Lütfen biraz bekleyip tekrar deneyin." },
             cancellationToken);
     };
-    options.AddFixedWindowLimiter("fixed", opt =>
-    {
-        opt.PermitLimit = 100;
-        opt.Window = TimeSpan.FromMinutes(1);
-        opt.QueueLimit = 0;
-    });
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
         RateLimitPartition.GetFixedWindowLimiter(
             context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
@@ -139,7 +128,7 @@ builder.Services.AddRateLimiter(options =>
 var app = builder.Build();
 
 // ponytail: startup migration blocks the thread, which is fine for container restarts. Upgrade to an out-of-band migration step (like a migrations bundle or init container) in production if startup time budgets are strict.
-using (var scope = app.Services.CreateScope())
+await using (var scope = app.Services.CreateAsyncScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<DbContext>();
     int retries = 5;
@@ -147,7 +136,7 @@ using (var scope = app.Services.CreateScope())
     {
         try
         {
-            dbContext.Database.Migrate();
+            await dbContext.Database.MigrateAsync();
             break;
         }
         catch (Exception ex)
@@ -158,13 +147,10 @@ using (var scope = app.Services.CreateScope())
             {
                 throw;
             }
-            System.Threading.Thread.Sleep(3000);
+            await Task.Delay(3000);
         }
     }
 }
-
-// exception loglama
-app.UseMiddleware<ExceptionLoggingMiddleware>();
 
 // exception handling mekanizması (global)
 app.UseExceptionHandler(errorApp =>
@@ -216,6 +202,9 @@ app.UseExceptionHandler(errorApp =>
         await context.Response.WriteAsJsonAsync(response);
     });
 });
+
+// exception loglama — UseExceptionHandler'dan sonra register edilir ki exception'ı yakalayıp loglayabilsin
+app.UseMiddleware<ExceptionLoggingMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
