@@ -26,7 +26,8 @@ namespace SirenStore.Application.Validators
                 .Matches(@"^5[0-9]{9}$").WithMessage("Geçerli bir telefon numarası giriniz (Örn: 5XX XXX XXXX).");
             RuleFor(x => x.ContactEmail).NotEmpty().WithMessage("İletişim e-postası boş bırakılamaz.")
                 .EmailAddress().WithMessage("Geçerli bir e-posta adresi giriniz.");
-            RuleFor(x => x.TaxOffice).NotEmpty().WithMessage("Vergi dairesi boş bırakılamaz.");
+            RuleFor(x => x.TaxOffice).NotEmpty().WithMessage("Vergi dairesi boş bırakılamaz.")
+                .Matches(@"[a-zA-ZğüşıöçĞÜŞİÖÇ]").WithMessage("Vergi dairesi ismi en az bir harf içermelidir (sadece sayılardan oluşamaz).");
         }
     }
 

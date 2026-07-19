@@ -15,7 +15,7 @@ namespace Infrastructure.Configurations
                 .HasMaxLength(100);
 
             builder.Property(s => s.TaxNumber)
-                .HasMaxLength(10);
+                .HasMaxLength(11);
 
             builder.Property(s => s.TaxOffice)
                 .HasMaxLength(50);
