@@ -262,11 +262,7 @@ export class LoginComponent {
     this.isCodeSending = true;
     this.codeError = '';
     try {
-      if (this.hasCodeBeenSent) {
-        await this.authService.resendVerificationEmail({ email: this.verificationEmail });
-      } else {
-        await this.authService.sendVerificationEmail({ email: this.verificationEmail });
-      }
+      await this.authService.resendVerificationEmail({ email: this.verificationEmail });
       this.hasCodeBeenSent = true;
       this.toastService.showToast('Doğrulama kodu e-postanıza gönderildi!', 'success');
     } catch (err: any) {

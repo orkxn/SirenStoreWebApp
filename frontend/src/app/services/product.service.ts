@@ -17,9 +17,17 @@ export interface ProductQueryParams {
 
 @Injectable({ providedIn: 'root' })
 export class ProductService {
+  // ponytail: 30-second client cache for product queries to prevent duplicate API hits on back/forward navigation. Upgrade to HTTP interceptor or state store if global cache policies are required.
+  private cache = new Map<string, { data: PagedResult<ProductListDto>; expiry: number }>();
+  private readonly CACHE_TTL_MS = 30000;
+
   constructor(private http: HttpClient) {}
 
-  getAll(query: ProductQueryParams = {}): Promise<PagedResult<ProductListDto>> {
+  clearCache(): void {
+    this.cache.clear();
+  }
+
+  async getAll(query: ProductQueryParams = {}): Promise<PagedResult<ProductListDto>> {
     let params = new HttpParams();
     if (query.page) params = params.set('page', query.page);
     if (query.pageSize) params = params.set('pageSize', query.pageSize);
@@ -29,7 +37,18 @@ export class ProductService {
     if (query.maxPrice != null && query.maxPrice !== '') params = params.set('maxPrice', String(query.maxPrice));
     if (query.onlyInStock) params = params.set('onlyInStock', true);
     if (query.sortBy && query.sortBy !== 'default') params = params.set('sortBy', query.sortBy);
-    return firstValueFrom(this.http.get<PagedResult<ProductListDto>>(`${API_BASE_URL}/products`, { params }));
+
+    const cacheKey = params.toString();
+    const now = Date.now();
+    const cached = this.cache.get(cacheKey);
+
+    if (cached && cached.expiry > now) {
+      return cached.data;
+    }
+
+    const data = await firstValueFrom(this.http.get<PagedResult<ProductListDto>>(`${API_BASE_URL}/products`, { params }));
+    this.cache.set(cacheKey, { data, expiry: now + this.CACHE_TTL_MS });
+    return data;
   }
 
   getAllTags(): Promise<string[]> {
@@ -48,15 +67,21 @@ export class ProductService {
     return firstValueFrom(this.http.get<ProductListDto[]>(`${API_BASE_URL}/products/my-products`));
   }
 
-  create(dto: { name: string; description: string; price: number; stock: number; categoryId: number; imageUrls: string[]; tags?: string[] }): Promise<any> {
-    return firstValueFrom(this.http.post(`${API_BASE_URL}/products`, dto));
+  async create(dto: { name: string; description: string; price: number; stock: number; categoryId: number; imageUrls: string[]; tags?: string[] }): Promise<any> {
+    const res = await firstValueFrom(this.http.post(`${API_BASE_URL}/products`, dto));
+    this.clearCache();
+    return res;
   }
 
-  update(dto: { id: number; name: string; description: string; price: number; stock: number; categoryId: number; imageUrls: string[]; tags?: string[] }): Promise<any> {
-    return firstValueFrom(this.http.put(`${API_BASE_URL}/products`, dto));
+  async update(dto: { id: number; name: string; description: string; price: number; stock: number; categoryId: number; imageUrls: string[]; tags?: string[] }): Promise<any> {
+    const res = await firstValueFrom(this.http.put(`${API_BASE_URL}/products`, dto));
+    this.clearCache();
+    return res;
   }
 
-  delete(id: number): Promise<any> {
-    return firstValueFrom(this.http.delete(`${API_BASE_URL}/products/${id}`));
+  async delete(id: number): Promise<any> {
+    const res = await firstValueFrom(this.http.delete(`${API_BASE_URL}/products/${id}`));
+    this.clearCache();
+    return res;
   }
 }

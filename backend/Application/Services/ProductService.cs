@@ -58,6 +58,17 @@ namespace SirenStore.Application.Services
             string? search = null, decimal? minPrice = null, decimal? maxPrice = null,
             bool onlyInStock = false, string? sortBy = null)
         {
+            bool isDefaultQuery = page == 1 && pageSize == 9 && !categoryId.HasValue
+                && string.IsNullOrWhiteSpace(search) && !minPrice.HasValue && !maxPrice.HasValue
+                && !onlyInStock && (string.IsNullOrWhiteSpace(sortBy) || sortBy == "default");
+
+            const string defaultCacheKey = "Products_Default_Catalog";
+
+            if (isDefaultQuery && _cache.TryGetValue(defaultCacheKey, out PagedResult<ProductListDto>? cachedResult) && cachedResult != null)
+            {
+                return cachedResult;
+            }
+
             var query = _context.Set<Product>().Where(p => !p.IsDeleted);
 
             // filtreler
@@ -79,27 +90,36 @@ namespace SirenStore.Application.Services
             if (onlyInStock)
                 query = query.Where(p => p.Stock > 0);
 
+            // ponytail: count on base entity query avoids heavy JOINs and subqueries generated during DTO projection.
+            var totalCount = await query.CountAsync();
+
             // sıralama
-            var dtoQuery = GetProductDtoQueryable(query);
-            dtoQuery = sortBy switch
+            query = sortBy switch
             {
-                "price-low" => dtoQuery.OrderBy(p => p.Price),
-                "price-high" => dtoQuery.OrderByDescending(p => p.Price),
-                "name-asc" => dtoQuery.OrderBy(p => p.Name),
-                "name-desc" => dtoQuery.OrderByDescending(p => p.Name),
-                _ => dtoQuery.OrderByDescending(p => p.Id) // en yeni önce
+                "price-low" => query.OrderBy(p => p.Price),
+                "price-high" => query.OrderByDescending(p => p.Price),
+                "name-asc" => query.OrderBy(p => p.Name),
+                "name-desc" => query.OrderByDescending(p => p.Name),
+                _ => query.OrderByDescending(p => p.Id) // en yeni önce
             };
 
-            var totalCount = await dtoQuery.CountAsync();
-            var items = await dtoQuery.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+            // ponytail: apply Skip/Take BEFORE projection so EF Core only fetches DTO details (images/tags/seller) for the current page items (e.g. 9 products).
+            var items = await GetProductDtoQueryable(query.Skip((page - 1) * pageSize).Take(pageSize)).ToListAsync();
 
-            return new PagedResult<ProductListDto>
+            var result = new PagedResult<ProductListDto>
             {
                 Items = items,
                 TotalCount = totalCount,
                 Page = page,
                 PageSize = pageSize
             };
+
+            if (isDefaultQuery)
+            {
+                _cache.Set(defaultCacheKey, result, TimeSpan.FromMinutes(2));
+            }
+
+            return result;
         }
 
         // satıcının ürünlerini listele
@@ -199,6 +219,7 @@ namespace SirenStore.Application.Services
 
             await _context.Set<Product>().AddAsync(newProduct);
             await _context.SaveChangesAsync();
+            _cache.Remove("Products_Default_Catalog");
             _cache.Remove("Tags_All");
 
             // audit: Ürün oluşturma logu
@@ -273,6 +294,7 @@ namespace SirenStore.Application.Services
 
             await _context.SaveChangesAsync();
             _cache.Remove(CacheKeyDetail(product.Id));
+            _cache.Remove("Products_Default_Catalog");
             _cache.Remove("Tags_All");
 
             // audit: Ürün güncelleme logu
@@ -304,6 +326,7 @@ namespace SirenStore.Application.Services
 
             await _context.SaveChangesAsync();
             _cache.Remove(CacheKeyDetail(productId));
+            _cache.Remove("Products_Default_Catalog");
 
             // audit: Ürün silme logu
             await _auditLogService.LogAuditAsync(userId, "PRODUCT_DELETED", "Product", productId, $"ProductId: {productId}");

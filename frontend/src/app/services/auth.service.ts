@@ -98,10 +98,6 @@ export class AuthService {
     await this.fetchProfile();
   }
 
-  async sendVerificationEmail(dto: { email: string }): Promise<void> {
-    await firstValueFrom(this.http.post(`${API_BASE_URL}/auth/send-verification-email`, dto));
-  }
-
   async resendVerificationEmail(dto: { email: string }): Promise<void> {
     await firstValueFrom(this.http.post(`${API_BASE_URL}/auth/resend-verification-email`, dto));
   }

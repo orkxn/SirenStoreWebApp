@@ -12,11 +12,7 @@ export const roleGuard: CanActivateFn = async (route: ActivatedRouteSnapshot) =>
     await firstValueFrom(authService.isLoading$.pipe(filter(loading => !loading), take(1)));
   }
 
-  if (!authService.isAuthenticated) {
-    router.navigate(['/login']);
-    return false;
-  }
-  if (authService.user?.role === requiredRole) return true;
-  router.navigate(['/']);
+  if (authService.user?.role === (route.data['role'] as string)) return true;
+  router.navigate([authService.isAuthenticated ? '/' : '/login']);
   return false;
 };
