@@ -39,21 +39,12 @@ builder.Services.AddValidatorsFromAssemblyContaining<CreateProductDtoValidator>(
 // cors policy
 builder.Services.AddCors(options =>
 {
-    var corsSettings = builder.Configuration.GetSection("CorsSettings");
-    var allowedOrigins = corsSettings.GetSection("AllowedOrigins").Get<string[]>() ?? new[] { "http://localhost:4200" };
-    var allowedMethods = corsSettings.GetSection("AllowedMethods").Get<string[]>() ?? new[] { "GET", "POST", "PUT", "DELETE" };
-    var allowedHeaders = corsSettings.GetSection("AllowedHeaders").Get<string[]>() ?? new[] { "Content-Type", "Authorization" };
-    var allowCredentials = corsSettings.GetValue<bool>("AllowCredentials");
-
+    var allowedOrigins = builder.Configuration.GetSection("CorsSettings:AllowedOrigins").Get<string[]>() ?? new[] { "http://localhost:4200", "http://localhost:8080" };
     options.AddPolicy("SirenStorePolicy", policy =>
-    {
         policy.WithOrigins(allowedOrigins)
-              .WithMethods(allowedMethods)
-              .WithHeaders(allowedHeaders);
-
-        if (allowCredentials)
-            policy.AllowCredentials();
-    });
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials());
 });
 
 // jwt bearer configuration ayarları
@@ -120,28 +111,9 @@ builder.Services.AddRateLimiter(options =>
 var app = builder.Build();
 
 // ponytail: startup migration blocks the thread, which is fine for container restarts. Upgrade to an out-of-band migration step (like a migrations bundle or init container) in production if startup time budgets are strict.
-await using (var scope = app.Services.CreateAsyncScope())
+using (var scope = app.Services.CreateScope())
 {
-    var dbContext = scope.ServiceProvider.GetRequiredService<DbContext>();
-    int retries = 5;
-    while (retries > 0)
-    {
-        try
-        {
-            await dbContext.Database.MigrateAsync();
-            break;
-        }
-        catch (Exception ex)
-        {
-            retries--;
-            Console.WriteLine($"Veritabanına bağlanılamadı, yeniden deneniyor... Kalan deneme: {retries}. Hata: {ex.Message}");
-            if (retries == 0)
-            {
-                throw;
-            }
-            await Task.Delay(3000);
-        }
-    }
+    await scope.ServiceProvider.GetRequiredService<DbContext>().Database.MigrateAsync();
 }
 
 // exception handling mekanizması (global)
