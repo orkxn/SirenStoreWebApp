@@ -35,14 +35,20 @@ import { ToastContainerComponent } from './components/toast/toast-container.comp
   `
 })
 export class AppComponent implements OnInit {
+  private previousPath = '';
+
   constructor(private router: Router) {}
 
   ngOnInit() {
-    // Scroll to top on every successful navigation
+    // Sadece farklı bir sayfa yoluna (path) gidildiğinde en üste kaydır, queryParams / sıralama değişimlerinde sayfa yerinde kalsın
     this.router.events
-      .pipe(filter(event => event instanceof NavigationEnd))
-      .subscribe(() => {
-        window.scrollTo(0, 0);
+      .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
+      .subscribe(event => {
+        const currentPath = event.urlAfterRedirects.split('?')[0];
+        if (currentPath !== this.previousPath) {
+          this.previousPath = currentPath;
+          window.scrollTo(0, 0);
+        }
       });
   }
 }
