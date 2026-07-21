@@ -16,12 +16,17 @@ namespace Infrastructure.Configurations
                 .IsRequired()
                 .HasMaxLength(150);
 
+            builder.HasIndex(p => p.Name);
+
             builder.Property(p => p.Description)
                 .IsRequired()
                 .HasMaxLength(10000);
 
             builder.Property(p => p.Price)
                 .HasColumnType("decimal(18,2)");
+
+            builder.HasIndex(p => p.Price);
+            builder.HasIndex(p => new { p.CategoryId, p.Price });
 
             // Global Query Filter: silinmiş ürünler veya silinmiş satıcıların ürünleri default olarak sorgularda gelmez
             builder.HasQueryFilter(p => !p.IsDeleted && !p.Seller.IsDeleted);

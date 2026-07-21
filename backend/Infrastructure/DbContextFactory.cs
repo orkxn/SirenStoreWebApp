@@ -20,6 +20,16 @@ namespace SirenStore.Infrastructure
             if (!Directory.Exists(webApiPath)) webApiPath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "WebAPI"));
             if (!Directory.Exists(webApiPath)) webApiPath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "../WebAPI"));
 
+            var envPath = Path.Combine(webApiPath, ".env");
+            if (File.Exists(envPath))
+            {
+                foreach (var line in File.ReadAllLines(envPath))
+                {
+                    var parts = line.Split('=', 2);
+                    if (parts.Length == 2) Environment.SetEnvironmentVariable(parts[0].Trim(), parts[1].Trim());
+                }
+            }
+
 
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(webApiPath)

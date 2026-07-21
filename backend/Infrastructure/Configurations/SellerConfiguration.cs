@@ -14,8 +14,12 @@ namespace Infrastructure.Configurations
                 .IsRequired()
                 .HasMaxLength(100);
 
+            builder.HasIndex(s => s.StoreName);
+
             builder.Property(s => s.TaxNumber)
                 .HasMaxLength(11);
+
+            builder.HasIndex(s => s.TaxNumber);
 
             builder.Property(s => s.TaxOffice)
                 .HasMaxLength(50);

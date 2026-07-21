@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SirenStore.Infrastructure.Context;
@@ -11,9 +12,11 @@ using SirenStore.Infrastructure.Context;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260721074023_AddCustomPerformanceIndexes")]
+    partial class AddCustomPerformanceIndexes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -143,9 +146,6 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_audit_logs");
-
-                    b.HasIndex("CreationDate")
-                        .HasDatabaseName("ix_audit_logs_creation_date");
 
                     b.ToTable("audit_logs");
                 });
@@ -544,9 +544,6 @@ namespace Infrastructure.Migrations
                     b.HasKey("Id")
                         .HasName("pk_login_histories");
 
-                    b.HasIndex("CreationDate")
-                        .HasDatabaseName("ix_login_histories_creation_date");
-
                     b.HasIndex("UserId")
                         .HasDatabaseName("ix_login_histories_user_id");
 
@@ -715,17 +712,14 @@ namespace Infrastructure.Migrations
                     b.HasKey("Id")
                         .HasName("pk_products");
 
+                    b.HasIndex("CategoryId")
+                        .HasDatabaseName("ix_products_category_id");
+
                     b.HasIndex("Name")
                         .HasDatabaseName("ix_products_name");
 
-                    b.HasIndex("Price")
-                        .HasDatabaseName("ix_products_price");
-
                     b.HasIndex("SellerId")
                         .HasDatabaseName("ix_products_seller_id");
-
-                    b.HasIndex("CategoryId", "Price")
-                        .HasDatabaseName("ix_products_category_id_price");
 
                     b.ToTable("products", (string)null);
                 });
@@ -841,12 +835,6 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_sellers");
-
-                    b.HasIndex("StoreName")
-                        .HasDatabaseName("ix_sellers_store_name");
-
-                    b.HasIndex("TaxNumber")
-                        .HasDatabaseName("ix_sellers_tax_number");
 
                     b.HasIndex("UserId")
                         .IsUnique()
