@@ -286,6 +286,8 @@ import { LucideUser, LucideLock, LucideMessageSquare, LucideStore, LucideAlertCi
                     [(ngModel)]="sellerData.contactPhone"
                     name="contactPhone"
                     [error]="sellerErrors.contactPhone"
+                    maxLength="10"
+                    [onlyNumbers]="true"
                   ></app-input>
                 </div>
 
@@ -300,10 +302,12 @@ import { LucideUser, LucideLock, LucideMessageSquare, LucideStore, LucideAlertCi
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <app-input
                     label="Vergi Numarası"
-                    placeholder="10 Haneli"
+                    placeholder="10 ya da 11 Haneli"
                     [(ngModel)]="sellerData.taxNumber"
                     name="taxNumber"
                     [error]="sellerErrors.taxNumber"
+                    maxLength="11"
+                    [onlyNumbers]="true"
                   ></app-input>
                   <app-input
                     label="Vergi Dairesi"

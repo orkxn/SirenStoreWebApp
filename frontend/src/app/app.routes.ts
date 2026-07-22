@@ -107,7 +107,12 @@ export const routes: Routes = [
     title: 'Satıcı Ol | SIRENSTORE'
   },
   {
+    path: 'not-found',
+    loadComponent: () => import('./pages/not-found/not-found.component').then(m => m.NotFoundComponent),
+    title: 'Sayfa Bulunamadı | SIRENSTORE'
+  },
+  {
     path: '**',
-    redirectTo: ''
+    redirectTo: 'not-found'
   }
 ];

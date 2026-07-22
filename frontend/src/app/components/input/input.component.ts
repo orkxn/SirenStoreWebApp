@@ -28,6 +28,7 @@ export class InputComponent implements ControlValueAccessor {
   @Input() step = '';
   @Input() className = '';
   @Input() maxLength: string | number = '';
+  @Input() onlyNumbers = false;
 
   value = '';
   isDisabled = false;
@@ -42,7 +43,13 @@ export class InputComponent implements ControlValueAccessor {
   }
 
   onInput(e: Event) {
-    this.value = (e.target as HTMLInputElement).value;
+    const inputEl = e.target as HTMLInputElement;
+    let val = inputEl.value;
+    if (this.onlyNumbers) {
+      val = val.replace(/\D/g, '');
+      inputEl.value = val;
+    }
+    this.value = val;
     this.onChange(this.value);
   }
 
