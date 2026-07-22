@@ -9,9 +9,10 @@ using SirenStore.Infrastructure.Context;
 using System.Text;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
-using dotenv.net;
+if (File.Exists(".env"))
+    foreach (var line in File.ReadAllLines(".env"))
+        if (line.Split('=', 2) is [var k, var v]) Environment.SetEnvironmentVariable(k.Trim(), v.Trim('"'));
 
-DotEnv.Load();
 var builder = WebApplication.CreateBuilder(args);
 
 // veri tabanı connection string bağlantısı
@@ -20,19 +21,8 @@ builder.Services.AddDbContextPool<DbContext, ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString, o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
 
 // service kayıtları, dependecy injection
-builder.Services.AddScoped<EmailService>();
-builder.Services.AddScoped<AuthService>();
-builder.Services.AddScoped<UserService>();
-builder.Services.AddScoped<SellerService>();
-builder.Services.AddScoped<ProductService>();
-builder.Services.AddScoped<BasketService>();
-builder.Services.AddScoped<OrderService>();
-builder.Services.AddScoped<CategoryService>();
-builder.Services.AddScoped<AdminService>();
-builder.Services.AddScoped<AuditLogService>();
-builder.Services.AddScoped<LoginHistoryService>();
-builder.Services.AddScoped<CommentService>();
-builder.Services.AddScoped<FavoriteService>();
+foreach (var type in typeof(AuthService).Assembly.GetTypes().Where(t => t.IsClass && !t.IsAbstract && t.Name.EndsWith("Service")))
+    builder.Services.AddScoped(type);
 
 builder.Services.AddValidatorsFromAssemblyContaining<CreateProductDtoValidator>();
 
@@ -83,7 +73,6 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
     });
 
-builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
 
 // ponytail: fixed-window rate limit, 100 req/min per IP. Upgrade to sliding window or token bucket if traffic patterns need smoother throttling.
@@ -172,10 +161,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-if (!app.Environment.IsDevelopment())
-{
-    app.UseHttpsRedirection();
-}
+if (!app.Environment.IsDevelopment()) app.UseHttpsRedirection();
 
 // cors policy uygulamaya geçirme
 app.UseCors("SirenStorePolicy");
