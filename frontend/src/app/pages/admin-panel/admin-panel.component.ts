@@ -59,7 +59,7 @@ import { LucideUsers, LucideStore, LucideFolderOpen, LucideFileText, LucideClock
               ? 'border-zinc-950 dark:border-white text-zinc-950 dark:text-white'
               : 'border-transparent text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300')"
         >
-          <svg lucideStore class="w-4 h-4"></svg> Satıcı Başvuruları ({{ sellers.length }})
+          <svg lucideStore class="w-4 h-4"></svg> Satıcı Başvuruları ({{ pendingSellers.length > 0 ? pendingSellers.length + ' Bekleyen' : sellers.length }})
         </button>
 
         <button
@@ -168,11 +168,57 @@ import { LucideUsers, LucideStore, LucideFolderOpen, LucideFileText, LucideClock
 
         <!-- Tab 2: Seller applications -->
         <div *ngIf="activeTab === 'sellers'" class="space-y-6">
-          <div *ngIf="sellers.length === 0" class="text-center py-12 text-zinc-500">Kayıtlı satıcı veya başvuru bulunmamaktadır.</div>
           
-          <div *ngIf="sellers.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Sub Filter Tabs -->
+          <div class="flex items-center gap-2 border-b border-zinc-950/5 dark:border-white/10 pb-4 overflow-x-auto">
+            <button
+              (click)="sellerSubTab = 'pending'"
+              [class]="'px-4 py-2 rounded-xl font-bold text-xs transition-all cursor-pointer flex items-center gap-2 ' +
+                (sellerSubTab === 'pending'
+                  ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
+                  : 'bg-zinc-950/5 dark:bg-white/5 text-zinc-500 hover:text-zinc-900 dark:hover:text-white')"
+            >
+              Bekleyen Başvurular ({{ pendingSellers.length }})
+            </button>
+
+            <button
+              (click)="sellerSubTab = 'approved'"
+              [class]="'px-4 py-2 rounded-xl font-bold text-xs transition-all cursor-pointer flex items-center gap-2 ' +
+                (sellerSubTab === 'approved'
+                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                  : 'bg-zinc-950/5 dark:bg-white/5 text-zinc-500 hover:text-zinc-900 dark:hover:text-white')"
+            >
+              Onaylanan Satıcılar ({{ approvedSellers.length }})
+            </button>
+
+            <button
+              (click)="sellerSubTab = 'rejected'"
+              [class]="'px-4 py-2 rounded-xl font-bold text-xs transition-all cursor-pointer flex items-center gap-2 ' +
+                (sellerSubTab === 'rejected'
+                  ? 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20'
+                  : 'bg-zinc-950/5 dark:bg-white/5 text-zinc-500 hover:text-zinc-900 dark:hover:text-white')"
+            >
+              Reddedilen Başvurular ({{ rejectedSellers.length }})
+            </button>
+
+            <button
+              (click)="sellerSubTab = 'all'"
+              [class]="'px-4 py-2 rounded-xl font-bold text-xs transition-all cursor-pointer flex items-center gap-2 ' +
+                (sellerSubTab === 'all'
+                  ? 'bg-zinc-950 text-white dark:bg-white dark:text-zinc-950'
+                  : 'bg-zinc-950/5 dark:bg-white/5 text-zinc-500 hover:text-zinc-900 dark:hover:text-white')"
+            >
+              Tümü ({{ sellers.length }})
+            </button>
+          </div>
+
+          <div *ngIf="filteredSellers.length === 0" class="text-center py-12 text-zinc-500">
+            Bu kategoride gösterilecek satıcı kaydı bulunmamaktadır.
+          </div>
+          
+          <div *ngIf="filteredSellers.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div
-              *ngFor="let sel of sellers"
+              *ngFor="let sel of filteredSellers"
               class="border border-zinc-950/5 dark:border-white/10 rounded-2xl p-5 bg-zinc-950/[0.01] dark:bg-white/[0.01] text-xs space-y-4"
             >
               <div class="flex justify-between items-center border-b border-zinc-950/5 dark:border-white/5 pb-2.5">
@@ -371,6 +417,7 @@ import { LucideUsers, LucideStore, LucideFolderOpen, LucideFileText, LucideClock
 })
 export class AdminPanelComponent implements OnInit {
   activeTab: 'users' | 'sellers' | 'categories' | 'auditLogs' | 'loginHistories' = 'users';
+  sellerSubTab: 'pending' | 'approved' | 'rejected' | 'all' = 'pending';
   users: UserManagementDto[] = [];
   sellers: SellerManagementDto[] = [];
   categories: CategoryDto[] = [];
@@ -379,6 +426,25 @@ export class AdminPanelComponent implements OnInit {
   isLoading = false;
   isSubmitLoading = false;
   editCategory: CategoryDto | null = null;
+
+  get pendingSellers(): SellerManagementDto[] {
+    return this.sellers.filter(s => s.status === SellerStatus.Pending);
+  }
+
+  get approvedSellers(): SellerManagementDto[] {
+    return this.sellers.filter(s => s.status === SellerStatus.Approved);
+  }
+
+  get rejectedSellers(): SellerManagementDto[] {
+    return this.sellers.filter(s => s.status === SellerStatus.Rejected);
+  }
+
+  get filteredSellers(): SellerManagementDto[] {
+    if (this.sellerSubTab === 'pending') return this.pendingSellers;
+    if (this.sellerSubTab === 'approved') return this.approvedSellers;
+    if (this.sellerSubTab === 'rejected') return this.rejectedSellers;
+    return this.sellers;
+  }
 
   usersPage = 1;
   logsPage = 1;
@@ -404,7 +470,7 @@ export class AdminPanelComponent implements OnInit {
     private sellerService: SellerService,
     private categoryService: CategoryService,
     private toastService: ToastService
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.loadAdminData();
